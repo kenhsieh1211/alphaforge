@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="命運羅盤">
+<meta name="theme-color" content="#130F0A">
+<title>命運羅盤 · Ken</title>
+<link rel="manifest" href='data:application/json;utf8,{"name":"命運羅盤","short_name":"羅盤","start_url":".","display":"standalone","background_color":"#130F0A","theme_color":"#130F0A","icons":[{"src":"data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 192 192%22><rect width=%22192%22 height=%22192%22 fill=%22%23130F0A%22/><text x=%2296%22 y=%22128%22 font-size=%22112%22 text-anchor=%22middle%22 fill=%22%23F0C030%22 font-family=%22serif%22 font-weight=%22900%22>盤</text></svg>","sizes":"192x192","type":"image/svg+xml"}]}'>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=DM+Mono:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --r3:#E85A2A;--g3:#D4960A;--g4:#F0C030;
+  --bg:#130F0A;--sf:#1E1610;--sf2:#2A1E12;--sf3:#341E0A;
+  --bd:rgba(180,130,40,0.25);--bd2:rgba(200,160,60,0.4);
+  --tx:#F5E8D0;--txm:#9A8060;--txd:#6A5040;
+}
+html,body{background:var(--bg);font-family:'Noto Serif TC',serif;color:var(--tx);min-height:100vh;overscroll-behavior-y:contain;}
+.app{padding:14px;max-width:430px;margin:0 auto;padding-bottom:calc(env(safe-area-inset-bottom) + 8px);}
+.hdr{text-align:center;padding:14px 0 16px;margin-bottom:16px;position:relative;}
+.hdr::after{content:'';display:block;height:1px;background:linear-gradient(90deg,transparent,var(--g3),transparent);margin-top:14px;}
+.hdr-t{font-size:18px;font-weight:900;letter-spacing:5px;color:var(--g4);}
+.hdr-s{font-size:9px;letter-spacing:3px;color:var(--txm);margin-top:4px;font-family:'DM Mono',monospace;}
+.cog{position:absolute;top:14px;right:0;background:none;border:none;color:var(--txm);font-size:18px;cursor:pointer;padding:6px;}
+.sec{font-size:9px;letter-spacing:3px;color:var(--g3);margin-bottom:10px;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:8px;}
+.sec::before{content:'';display:block;width:3px;height:12px;background:linear-gradient(180deg,var(--r3),var(--g3));}
+.sec::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--bd),transparent);}
+.now-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px;}
+.pc{background:linear-gradient(145deg,var(--sf3),var(--sf));border:1px solid var(--bd);border-radius:10px;padding:12px 8px;text-align:center;position:relative;overflow:hidden;}
+.pc::before{content:'';position:absolute;top:0;left:10%;right:10%;height:2px;background:var(--ac,var(--g3));border-radius:0 0 2px 2px;}
+.pc-lbl{font-size:8px;color:var(--txm);letter-spacing:3px;margin-bottom:5px;font-family:'DM Mono',monospace;}
+.pc-gz{font-size:30px;font-weight:900;line-height:1;margin-bottom:3px;}
+.pc-el{font-size:9px;margin-bottom:8px;color:var(--txm);}
+.pc-sc{font-size:32px;font-weight:900;line-height:1;}
+.pc-sl{font-size:8px;color:var(--txd);letter-spacing:1px;margin-top:2px;}
+.tot{background:linear-gradient(135deg,var(--sf3),var(--sf2));border:1px solid var(--bd2);border-radius:12px;padding:14px 16px;margin-bottom:16px;}
+.tot-top{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:10px;}
+.tot-lbl{font-size:9px;color:var(--txm);letter-spacing:3px;font-family:'DM Mono',monospace;line-height:1.6;}
+.tot-num{font-size:44px;font-weight:900;line-height:1;transition:color .4s;}
+.tot-bar-bg{height:8px;background:rgba(0,0,0,0.4);border-radius:4px;overflow:hidden;margin-bottom:10px;}
+.tot-bar-f{height:100%;border-radius:4px;transition:width .6s ease;}
+.tot-adv{font-size:11px;color:var(--txm);line-height:1.7;padding-top:8px;border-top:1px solid var(--bd);}
+.tot-note{font-size:10px;color:var(--r3);margin-top:6px;line-height:1.6;font-family:'DM Mono',monospace;}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.nav-b{background:var(--sf);border:1px solid var(--bd);border-radius:7px;color:var(--tx);padding:7px 14px;font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;}
+.nav-b:active{background:var(--sf2);}
+.mo-lbl{font-size:13px;font-weight:600;color:var(--g4);}
+.cal-hdr-row{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;}
+.ch{text-align:center;font-size:9px;color:var(--txd);padding:2px;font-family:'DM Mono',monospace;}
+.cal-wrap{touch-action:pan-y;user-select:none;-webkit-user-select:none;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:14px;transition:transform .22s ease,opacity .18s ease;}
+.cd{background:var(--sf);border:1px solid transparent;border-radius:6px;padding:5px 2px;text-align:center;cursor:pointer;min-height:52px;}
+.cd.today{border-color:var(--g3);}
+.cd.sel{border-color:var(--r3);background:rgba(200,50,26,.18);}
+.cd.empty{background:transparent;border:none;cursor:default;}
+.cd-n{font-size:10px;color:var(--txd);margin-bottom:2px;font-family:'DM Mono',monospace;}
+.cd-gz{font-size:9px;font-weight:700;}
+.cd-bar{height:3px;border-radius:2px;margin-top:3px;}
+.cd-sc{font-size:8px;margin-top:2px;font-family:'DM Mono',monospace;}
+.det{background:linear-gradient(135deg,var(--sf3),var(--sf));border:1px solid var(--bd2);border-radius:12px;padding:14px 16px;margin-bottom:16px;animation:fadeIn .3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+.det-dt{font-size:11px;color:var(--g3);margin-bottom:10px;font-family:'DM Mono',monospace;}
+.det-g{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.di-lbl{font-size:9px;color:var(--txd);margin-bottom:3px;}
+.di-val{font-size:13px;font-weight:700;}
+.det-sc-big{text-align:center;margin-bottom:12px;}
+.det-sc-n{font-size:52px;font-weight:900;line-height:1;}
+.det-sc-l{font-size:9px;color:var(--txm);letter-spacing:2px;margin-top:4px;}
+.det-adv{font-size:11px;color:var(--txm);line-height:1.8;padding-top:10px;border-top:1px solid var(--bd);}
+.det-note{font-size:10px;color:var(--r3);margin-top:6px;line-height:1.6;}
+.calc-box{background:rgba(0,0,0,0.3);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;margin-top:10px;font-family:'DM Mono',monospace;font-size:10px;color:var(--txm);line-height:1.9;}
+.calc-box .hi{color:var(--g4);}
+.calc-box .warn{color:var(--r3);}
+.calc-box .he{color:#D4960A;}
+.hr-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:16px;}
+.hc{background:var(--sf);border:1px solid var(--bd);border-radius:7px;padding:8px 4px;text-align:center;}
+.hc.now{border-color:var(--r3);background:rgba(200,50,26,.15);}
+.hc-lbl{font-size:8px;color:var(--txd);margin-bottom:3px;font-family:'DM Mono',monospace;}
+.hc-gz{font-size:15px;font-weight:900;margin-bottom:4px;}
+.hc-bar{height:3px;border-radius:2px;margin-bottom:3px;}
+.hc-sc{font-size:11px;font-family:'DM Mono',monospace;font-weight:500;}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:99;padding:20px;}
+.modal.on{display:flex;}
+.modal-box{background:var(--sf2);border:1px solid var(--bd2);border-radius:12px;padding:18px;max-width:360px;width:100%;}
+.modal-t{font-size:13px;color:var(--g4);font-weight:600;margin-bottom:14px;letter-spacing:2px;}
+.fld{margin-bottom:12px;}
+.fld label{display:block;font-size:10px;color:var(--txm);margin-bottom:4px;font-family:'DM Mono',monospace;}
+.fld input,.fld select{width:100%;background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:8px 10px;color:var(--tx);font-family:'DM Mono',monospace;font-size:12px;}
+.modal-btns{display:flex;gap:8px;margin-top:14px;}
+.modal-btns button{flex:1;padding:9px;border-radius:7px;border:1px solid var(--bd2);background:var(--sf);color:var(--tx);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;}
+.modal-btns .pri{background:var(--g3);color:var(--bg);font-weight:600;}
+.foot{text-align:center;font-size:9px;color:var(--txd);font-family:'DM Mono',monospace;padding:8px 0 12px;letter-spacing:2px;}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="hdr">
+  <div class="hdr-t">命 運 羅 盤</div>
+  <div class="hdr-s">KEN HSIEH · 甲木日主 · 身強格 · 喜火土金</div>
+  <button class="cog" id="cogBtn" aria-label="設定">⚙</button>
+</div>
+
+<div class="sec">當下四柱賭運</div>
+<div class="now-grid" id="nowGrid" aria-live="polite"></div>
+<div class="tot">
+  <div class="tot-top">
+    <div>
+      <div class="tot-lbl">綜合賭運指數</div>
+      <div id="nowTime" style="font-size:8px;color:var(--txd);font-family:'DM Mono',monospace;"></div>
+    </div>
+    <div class="tot-num" id="totNum">—</div>
+  </div>
+  <div class="tot-bar-bg"><div class="tot-bar-f" id="totBar"></div></div>
+  <div class="tot-adv" id="totAdv"></div>
+  <div class="tot-note" id="totNote"></div>
+</div>
+
+<div class="sec">月曆覽勢</div>
+<div class="cal-nav">
+  <button class="nav-b" id="prev" aria-label="上一月">◀</button>
+  <div class="mo-lbl" id="moLbl"></div>
+  <button class="nav-b" id="next" aria-label="下一月">▶</button>
+</div>
+<div class="cal-hdr-row" id="calHdr"></div>
+<div class="cal-wrap" id="calWrap">
+  <div class="cal-grid" id="calGrid"></div>
+</div>
+
+<div class="det" id="det" style="display:none">
+  <div class="det-dt" id="detDt"></div>
+  <div class="det-sc-big">
+    <div class="det-sc-n" id="detScN">—</div>
+    <div class="det-sc-l">當日綜合賭運指數</div>
+  </div>
+  <div class="det-g" id="detG"></div>
+  <div class="det-adv" id="detAdv"></div>
+  <div class="det-note" id="detNote"></div>
+  <div class="calc-box" id="calcBox"></div>
+</div>
+
+<div class="sec">今日流時</div>
+<div class="hr-grid" id="hrGrid"></div>
+
+<div class="foot">節氣換月 · 真太陽時 · 子時跨日</div>
+</div>
+
+<div class="modal" id="setModal" role="dialog" aria-label="設定">
+  <div class="modal-box">
+    <div class="modal-t">設 定</div>
+    <div class="fld">
+      <label>所在經度（東經，預設 121.5 台北）</label>
+      <input type="number" id="cfgLng" step="0.1" min="-180" max="180">
+    </div>
+    <div class="fld">
+      <label>標準時區經度（預設 120）</label>
+      <input type="number" id="cfgRefLng" step="1" min="-180" max="180">
+    </div>
+    <div class="fld">
+      <label>啟用真太陽時校正</label>
+      <select id="cfgSolar">
+        <option value="1">是</option>
+        <option value="0">否</option>
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button id="cfgCancel">取消</button>
+      <button class="pri" id="cfgSave">儲存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+const TG=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const DZ=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const TE=['木','木','火','火','土','土','金','金','水','水'];
+const DE=['水','土','木','木','土','火','火','土','金','金','土','水'];
+const SH=['子時','丑時','寅時','卯時','辰時','巳時','午時','未時','申時','酉時','戌時','亥時'];
+
+// ───── 設定 ─────
+const DEFAULT_CFG={lng:121.5, refLng:120, solar:1};
+function loadCfg(){try{return Object.assign({},DEFAULT_CFG,JSON.parse(localStorage.getItem('compass.cfg')||'{}'));}catch(e){return{...DEFAULT_CFG};}}
+function saveCfg(c){try{localStorage.setItem('compass.cfg',JSON.stringify(c));}catch(e){}}
+let CFG=loadCfg();
+
+// 真太陽時：經度差 1° = 4 分鐘（不含均時差，誤差約 ±15 分）
+function toSolar(d){
+  if(!CFG.solar)return new Date(d);
+  return new Date(d.getTime()+(CFG.lng-CFG.refLng)*4*60000);
+}
+
+// ───── 節氣（通式壽星公式，1900-2099）─────
+// 12 節（換月柱）：小寒/立春/驚蟄/清明/立夏/芒種/小暑/立秋/白露/寒露/立冬/大雪
+const TERM_C20={xh:6.11,lc:4.6295,jz:6.85,qm:5.5295,lx:7.108,mz:6.318,xs:8.414,lq:9.107,bl:9.6155,hl:9.929,ld:9.2715,dx:8.35};
+const TERM_C21={xh:5.4055,lc:3.87,jz:5.63,qm:4.81,lx:5.52,mz:5.678,xs:7.108,lq:7.5,bl:7.646,hl:8.318,ld:7.438,dx:7.18};
+const TERM_M=  [1,2,3,4,5,6,7,8,9,10,11,12];
+const TERM_K= ['xh','lc','jz','qm','lx','mz','xs','lq','bl','hl','ld','dx'];
+// 對應月支：小寒→丑 立春→寅 驚蟄→卯 清明→辰 立夏→巳 芒種→午 小暑→未 立秋→申 白露→酉 寒露→戌 立冬→亥 大雪→子
+const TERM_DZ=[1,2,3,4,5,6,7,8,9,10,11,0];
+
+function termDay(year,key){
+  const C=year>=2000?TERM_C21[key]:TERM_C20[key];
+  const Y=year%100;
+  return Math.floor(Y*0.2422+C)-Math.floor((Y-1)/4);
+}
+
+// 取得某日所屬八字年/月支
+function bzYearMonth(d){
+  const y=d.getFullYear(),m=d.getMonth()+1,day=d.getDate();
+  let bzYear=y;
+  if(m<2 || (m===2 && day<termDay(y,'lc'))) bzYear=y-1;
+  let idx=-1;
+  for(let i=0;i<12;i++){
+    const td=termDay(y,TERM_K[i]);
+    if(TERM_M[i]<m || (TERM_M[i]===m && td<=day)) idx=i;
+  }
+  if(idx===-1) idx=11; // 1月小寒前 → 去年大雪 → 子月
+  return{bzYear,dzIdx:TERM_DZ[idx]};
+}
+
+// 日柱：以 2000/1/1 戊午（干 4、支 6）為基準
+function dyGZ(d){
+  const ref=Date.UTC(2000,0,1);
+  const dUtc=Date.UTC(d.getFullYear(),d.getMonth(),d.getDate());
+  const df=Math.round((dUtc-ref)/86400000);
+  const ti=((df%10)+10+4)%10;
+  const zi=((df%12)+12+6)%12;
+  return{tg:TG[ti],dz:DZ[zi],te:TE[ti],ze:DE[zi],ti,zi};
+}
+
+function yrGZ(d){
+  const{bzYear}=bzYearMonth(d);
+  const ti=((bzYear-4)%10+10)%10;
+  const zi=((bzYear-4)%12+12)%12;
+  return{tg:TG[ti],dz:DZ[zi],te:TE[ti],ze:DE[zi],ti,zi};
+}
+
+// 五虎遁：年干→寅月干 / 甲己丙寅、乙庚戊寅、丙辛庚寅、丁壬壬寅、戊癸甲寅
+function moGZ(d){
+  const{bzYear,dzIdx}=bzYearMonth(d);
+  const yt=((bzYear-4)%10+10)%10;
+  const yinTi=[2,4,6,8,0,2,4,6,8,0][yt];
+  const step=(dzIdx-2+12)%12;
+  const ti=(yinTi+step)%10;
+  return{tg:TG[ti],dz:DZ[dzIdx],te:TE[ti],ze:DE[dzIdx],ti,zi:dzIdx};
+}
+
+// 23 點後屬下一日子時 → 日柱進位
+function getEffectiveDay(d){
+  if(d.getHours()===23){const n=new Date(d);n.setDate(n.getDate()+1);return n;}
+  return d;
+}
+// 五鼠遁：日干→子時干 / 甲己甲子、乙庚丙子、丙辛戊子、丁壬庚子、戊癸壬子
+function hrGZ(d){
+  const eff=getEffectiveDay(d);
+  const dy=dyGZ(eff);
+  const h=d.getHours();
+  const si=h===23?0:Math.floor((h+1)/2);
+  const ziStart=[0,2,4,6,8,0,2,4,6,8][dy.ti];
+  const ti=(ziStart+si)%10;
+  return{tg:TG[ti],dz:DZ[si],te:TE[ti],ze:DE[si],ti,si};
+}
+
+// ───── 評分 ─────
+const ELS={'火':28,'土':23,'金':18,'木':6,'水':4};
+function elSc(e){return ELS[e]??12;}
+function pillarScore(te,ze){
+  const raw=elSc(te)+elSc(ze);
+  return Math.max(30,Math.min(100,Math.round(30+(raw-8)/(56-8)*70)));
+}
+const W={yr:0.10, mo:0.30, dy:0.35, hr:0.25};
+const NAT_DZ=['申','子','卯'];
+const CLASH_PAIRS=[['子','午'],['丑','未'],['寅','申'],['卯','酉'],['辰','戌'],['巳','亥']];
+
+function getClashInfo(pilDZ){
+  const notes=[];let totalPen=0;
+  for(const p of pilDZ)for(const n of NAT_DZ){
+    for(const[a,b]of CLASH_PAIRS){
+      if((p===a&&n===b)||(p===b&&n===a)){notes.push(`${p}沖原局${n}（-8）`);totalPen+=8;}
+    }
+    if((p==='子'&&n==='卯')||(p==='卯'&&n==='子')){notes.push(`${p}刑原局${n}（-5）`);totalPen+=5;}
+  }
+  return{notes,raw:totalPen,capped:Math.min(totalPen,12)};
+}
+const HE_PAIRS=[['子','丑'],['寅','亥'],['卯','戌'],['辰','酉'],['巳','申'],['午','未']];
+function getHeInfo(pilDZ){
+  const notes=[];let bon=0;
+  for(let i=0;i<pilDZ.length;i++)for(let j=i+1;j<pilDZ.length;j++)for(const[a,b]of HE_PAIRS){
+    if((pilDZ[i]===a&&pilDZ[j]===b)||(pilDZ[i]===b&&pilDZ[j]===a)){notes.push(`${pilDZ[i]}${pilDZ[j]}六合（+4）`);bon+=4;}
+  }
+  return{notes,raw:bon,capped:Math.min(bon,8)};
+}
+
+function calcAll(yr,mo,dy,hr){
+  const yrS=pillarScore(yr.te,yr.ze),moS=pillarScore(mo.te,mo.ze),dyS=pillarScore(dy.te,dy.ze),hrS=pillarScore(hr.te,hr.ze);
+  const weighted=yrS*W.yr+moS*W.mo+dyS*W.dy+hrS*W.hr;
+  const pilDZ=[yr.dz,mo.dz,dy.dz,hr.dz];
+  const clash=getClashInfo(pilDZ),he=getHeInfo(pilDZ);
+  const total=Math.max(28,Math.min(100,Math.round(weighted-clash.capped+he.capped)));
+  const process=
+    `流年 ${yr.tg}${yr.dz}（${yr.te}·${yr.ze}）× 10% = ${(yrS*0.10).toFixed(1)}\n`+
+    `流月 ${mo.tg}${mo.dz}（${mo.te}·${mo.ze}）× 30% = ${(moS*0.30).toFixed(1)}\n`+
+    `流日 ${dy.tg}${dy.dz}（${dy.te}·${dy.ze}）× 35% = ${(dyS*0.35).toFixed(1)}\n`+
+    `流時 ${hr.tg}${hr.dz}（${hr.te}·${hr.ze}）× 25% = ${(hrS*0.25).toFixed(1)}\n`+
+    `加權合計 = ${weighted.toFixed(1)}\n`+
+    (clash.notes.length?`沖刑：${clash.notes.join('、')}（上限-12）= -${clash.capped}\n`:'')+
+    (he.notes.length?`六合：${he.notes.join('、')}（上限+8）= +${he.capped}\n`:'')+
+    `最終 = ${total}`;
+  const clashWarning=clash.notes.length?'⚠ '+clash.notes.join('、')+'。原局根基受擾，建議降低槓桿。':'';
+  return{yrS,moS,dyS,hrS,total,process,clashWarning};
+}
+
+// 全日綜合：12 時辰平均（取代寫死丙午）
+function dayAvgScore(date){
+  const yr=yrGZ(date),mo=moGZ(date),dy=dyGZ(date);
+  const ziStart=[0,2,4,6,8,0,2,4,6,8][dy.ti];
+  let sum=0;
+  for(let i=0;i<12;i++){
+    const ti=(ziStart+i)%10;
+    const hr={tg:TG[ti],dz:DZ[i],te:TE[ti],ze:DE[i],ti,si:i};
+    sum+=calcAll(yr,mo,dy,hr).total;
+  }
+  return Math.round(sum/12);
+}
+
+function scCol(s){return s>=88?'#E85A2A':s>=75?'#D4960A':s>=60?'#A07828':s>=45?'#6A7A8A':'#5A4A40';}
+function scGrad(s){return s>=88?'linear-gradient(90deg,#8B1A0A,#E85A2A)':s>=75?'linear-gradient(90deg,#7A4A08,#F0C030)':s>=60?'linear-gradient(90deg,#5A4020,#C8A060)':s>=45?'linear-gradient(90deg,#2A3A4A,#6A8A9A)':'linear-gradient(90deg,#3A2A20,#6A4A40)';}
+function scTxt(s){
+  if(s>=90)return'🔥 火旺大吉，主動出擊，重倉可為';
+  if(s>=80)return'火土有力，氣勢順暢，穩健進攻';
+  if(s>=70)return'運勢不錯，正常佈局，注意節奏';
+  if(s>=60)return'中性偏好，謹慎操作，小注試水';
+  if(s>=48)return'局面平淡，保守為主，看盤為宜';
+  if(s>=38)return'水木偏重，降低槓桿，守住本金';
+  return'運勢偏弱，建議旁觀，等待時機';
+}
+function elCol(e){return e==='火'?'#E85A2A':e==='土'?'#D4960A':e==='金'?'#B0A080':e==='木'?'#5A8A5A':e==='水'?'#4A7A9A':'#888';}
+
+let viewDate, selDate=new Date();
+try{
+  const sv=JSON.parse(localStorage.getItem('compass.view')||'null');
+  viewDate=sv?new Date(sv.y,sv.m,1):new Date();
+}catch(e){viewDate=new Date();}
+
+function pad2(n){return n<10?'0'+n:n;}
+function persistView(){try{localStorage.setItem('compass.view',JSON.stringify({y:viewDate.getFullYear(),m:viewDate.getMonth()}));}catch(e){}}
+
+function renderNow(){
+  const real=new Date(),now=toSolar(real);
+  const yr=yrGZ(now),mo=moGZ(now),dy=dyGZ(getEffectiveDay(now)),hr=hrGZ(now);
+  const sc=calcAll(yr,mo,dy,hr);
+  const pils=[{l:'流年',g:yr,s:sc.yrS},{l:'流月',g:mo,s:sc.moS},{l:'流日',g:dy,s:sc.dyS},{l:'流時',g:hr,s:sc.hrS}];
+  const col=scCol(sc.total),grad=scGrad(sc.total);
+  const frag=document.createDocumentFragment();
+  pils.forEach(p=>{
+    const pc=scCol(p.s),el=document.createElement('div');
+    el.className='pc';el.style.setProperty('--ac',pc);
+    el.innerHTML=`<div class="pc-lbl">${p.l}</div>
+      <div class="pc-gz" style="color:${elCol(p.g.te)}">${p.g.tg}${p.g.dz}</div>
+      <div class="pc-el"><span style="color:${elCol(p.g.te)}">${p.g.te}</span> · <span style="color:${elCol(p.g.ze)}">${p.g.ze}</span></div>
+      <div class="pc-sc" style="color:${pc}">${p.s}</div>
+      <div class="pc-sl">分</div>`;
+    frag.appendChild(el);
+  });
+  const ng=document.getElementById('nowGrid');ng.replaceChildren(frag);
+
+  const tn=document.getElementById('totNum');
+  tn.textContent=sc.total;tn.style.color=col;
+  document.getElementById('totBar').style.cssText=`width:${sc.total}%;background:${grad}`;
+  document.getElementById('totAdv').textContent=scTxt(sc.total);
+  document.getElementById('totNote').textContent=sc.clashWarning;
+  const tail=CFG.solar?` · 真太陽時 ${pad2(now.getHours())}:${pad2(now.getMinutes())}`:'';
+  document.getElementById('nowTime').textContent=`${real.getFullYear()}/${pad2(real.getMonth()+1)}/${pad2(real.getDate())} ${pad2(real.getHours())}:${pad2(real.getMinutes())}${tail}`;
+}
+
+function renderCal(){
+  const y=viewDate.getFullYear(),m=viewDate.getMonth(),today=new Date();
+  const fd=new Date(y,m,1).getDay(),dim=new Date(y,m+1,0).getDate();
+  const mn=['一','二','三','四','五','六','七','八','九','十','十一','十二'];
+  document.getElementById('moLbl').textContent=`${y} · ${mn[m]}月`;
+  document.getElementById('calHdr').innerHTML=['日','一','二','三','四','五','六'].map(h=>`<div class="ch">${h}</div>`).join('');
+  const frag=document.createDocumentFragment();
+  for(let i=0;i<fd;i++){const e=document.createElement('div');e.className='cd empty';frag.appendChild(e);}
+  for(let d=1;d<=dim;d++){
+    const date=new Date(y,m,d),dy=dyGZ(date);
+    const sc=dayAvgScore(date),col=scCol(sc);
+    const isT=date.toDateString()===today.toDateString(),isS=date.toDateString()===selDate.toDateString();
+    const cell=document.createElement('div');
+    cell.className=`cd${isT?' today':''}${isS?' sel':''}`;
+    cell.setAttribute('role','button');
+    cell.setAttribute('aria-label',`${m+1}月${d}日 ${dy.tg}${dy.dz} ${sc}分`);
+    cell.innerHTML=`<div class="cd-n">${d}</div>
+      <div class="cd-gz" style="color:${elCol(dy.te)}">${dy.tg}${dy.dz}</div>
+      <div class="cd-bar" style="background:${col}"></div>
+      <div class="cd-sc" style="color:${col}">${sc}</div>`;
+    cell.addEventListener('click',()=>selDay(y,m,d));
+    frag.appendChild(cell);
+  }
+  document.getElementById('calGrid').replaceChildren(frag);
+  persistView();
+}
+
+function selDay(y,m,d){
+  selDate=new Date(y,m,d);
+  // 局部更新月曆 sel class，不全量重建
+  document.querySelectorAll('#calGrid .cd.sel').forEach(e=>e.classList.remove('sel'));
+  // 找到對應 cell
+  const cells=document.querySelectorAll('#calGrid .cd:not(.empty)');
+  if(cells[d-1])cells[d-1].classList.add('sel');
+
+  const date=selDate,yr=yrGZ(date),mo=moGZ(date),dy=dyGZ(date);
+  const dyAvg=dayAvgScore(date);
+  const ziStart=[0,2,4,6,8,0,2,4,6,8][dy.ti];
+  const ti=(ziStart+6)%10;
+  const sample={tg:TG[ti],dz:'午',te:TE[ti],ze:'火',ti,si:6};
+  const sc=calcAll(yr,mo,dy,sample);
+  const col=scCol(dyAvg);
+
+  const det=document.getElementById('det');
+  det.style.display='';
+  det.style.animation='none';void det.offsetWidth;det.style.animation='';
+  document.getElementById('detDt').textContent=`${date.getFullYear()} 年 ${date.getMonth()+1} 月 ${date.getDate()} 日　${dy.tg}${dy.dz} 日`;
+  const dn=document.getElementById('detScN');
+  dn.textContent=dyAvg;dn.style.color=col;
+  document.getElementById('detG').innerHTML=`
+    <div><div class="di-lbl">流　年</div><div class="di-val" style="color:${elCol(yr.te)}">${yr.tg}${yr.dz}（${yr.te}·${yr.ze}）</div></div>
+    <div><div class="di-lbl">流　月</div><div class="di-val" style="color:${elCol(mo.te)}">${mo.tg}${mo.dz}（${mo.te}·${mo.ze}）</div></div>
+    <div><div class="di-lbl">流　日</div><div class="di-val" style="color:${elCol(dy.te)}">${dy.tg}${dy.dz}（${dy.te}·${dy.ze}）</div></div>
+    <div><div class="di-lbl">全日均分</div><div class="di-val" style="color:${col}">${dyAvg} 分</div></div>`;
+  document.getElementById('detAdv').textContent=scTxt(dyAvg);
+  document.getElementById('detNote').textContent=sc.clashWarning;
+  const lines=(`【午時取樣計算】\n`+sc.process+`\n（全日均分 = 12 時辰平均 = ${dyAvg}）`).split('\n');
+  document.getElementById('calcBox').innerHTML=lines.map(l=>{
+    if(l.includes('沖')||l.includes('刑'))return`<div><span class="warn">${l}</span></div>`;
+    if(l.includes('最終')||l.includes('全日均分'))return`<div><span class="hi">${l}</span></div>`;
+    if(l.includes('六合'))return`<div><span class="he">${l}</span></div>`;
+    return`<div>${l||'&nbsp;'}</div>`;
+  }).join('');
+}
+
+function renderHours(){
+  const real=new Date(),now=toSolar(real);
+  const dy=dyGZ(getEffectiveDay(now)),h=now.getHours(),curSh=h===23?0:Math.floor((h+1)/2);
+  const yr=yrGZ(now),mo=moGZ(now);
+  const ziStart=[0,2,4,6,8,0,2,4,6,8][dy.ti];
+  const frag=document.createDocumentFragment();
+  for(let i=0;i<12;i++){
+    const ti=(ziStart+i)%10;
+    const hr={tg:TG[ti],dz:DZ[i],te:TE[ti],ze:DE[i],ti,si:i};
+    const s=calcAll(yr,mo,dy,hr).total,col=scCol(s),grad=scGrad(s);
+    const el=document.createElement('div');
+    el.className=`hc${i===curSh?' now':''}`;
+    el.innerHTML=`<div class="hc-lbl">${SH[i]}</div>
+      <div class="hc-gz" style="color:${elCol(hr.te)}">${hr.tg}${hr.dz}</div>
+      <div class="hc-bar" style="background:${grad};width:${s}%;max-width:100%"></div>
+      <div class="hc-sc" style="color:${col}">${s}</div>`;
+    frag.appendChild(el);
+  }
+  document.getElementById('hrGrid').replaceChildren(frag);
+}
+
+// 切月帶滑入動畫
+function shiftMonth(delta){
+  viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()+delta,1);
+  const grid=document.getElementById('calGrid');
+  grid.style.transform=`translateX(${delta<0?'30px':'-30px'})`;grid.style.opacity='0';
+  setTimeout(()=>{
+    renderCal();
+    grid.style.transition='none';grid.style.transform=`translateX(${delta<0?'-30px':'30px'})`;grid.style.opacity='0';
+    requestAnimationFrame(()=>{grid.style.transition='';grid.style.transform='';grid.style.opacity='';});
+  },180);
+}
+document.getElementById('prev').onclick=()=>shiftMonth(-1);
+document.getElementById('next').onclick=()=>shiftMonth(1);
+
+// 滑動切月
+(function(){
+  const wrap=document.getElementById('calWrap');
+  let sx=0,sy=0,act=false;
+  wrap.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;act=true;},{passive:true});
+  wrap.addEventListener('touchend',e=>{
+    if(!act)return;act=false;
+    const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+    if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5)shiftMonth(dx<0?1:-1);
+  },{passive:true});
+})();
+
+// 設定面板
+const modal=document.getElementById('setModal');
+document.getElementById('cogBtn').onclick=()=>{
+  document.getElementById('cfgLng').value=CFG.lng;
+  document.getElementById('cfgRefLng').value=CFG.refLng;
+  document.getElementById('cfgSolar').value=String(CFG.solar);
+  modal.classList.add('on');
+};
+document.getElementById('cfgCancel').onclick=()=>modal.classList.remove('on');
+document.getElementById('cfgSave').onclick=()=>{
+  CFG={lng:parseFloat(document.getElementById('cfgLng').value)||121.5,
+       refLng:parseFloat(document.getElementById('cfgRefLng').value)||120,
+       solar:parseInt(document.getElementById('cfgSolar').value,10)?1:0};
+  saveCfg(CFG);modal.classList.remove('on');
+  renderNow();renderCal();renderHours();
+};
+modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('on');});
+
+// 對齊下一個時辰邊界刷新（時辰邊界 = 奇數小時整點：1,3,5,7,9,11,13,15,17,19,21,23）
+function scheduleNextTick(){
+  const real=new Date(),now=toSolar(real);
+  const h=now.getHours(),m=now.getMinutes(),s=now.getSeconds();
+  const nextOdd=h%2===0?h+1:h+2;
+  let ms=((nextOdd-h)*3600-m*60-s)*1000+1500;
+  if(ms<60000)ms=60000;if(ms>3600000)ms=3600000;
+  setTimeout(()=>{renderNow();renderHours();scheduleNextTick();},ms);
+}
+
+renderNow();renderCal();
+selDay(selDate.getFullYear(),selDate.getMonth(),selDate.getDate());
+renderHours();
+setInterval(renderNow,60000);
+scheduleNextTick();
+</script>
+</body>
+</html>
