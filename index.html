@@ -666,11 +666,14 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
       <div class="cp-title">交易所連線</div>
       <div class="cp-desc">串接 API 實現自動執行</div>
       <div style="margin-bottom:8px;">
-        <div class="api-row2"><span class="api-n">Binance</span><span class="api-no">未連線</span></div>
+        <div class="api-row2"><span class="api-n">Binance</span><span id="bnc-status" class="api-no">未連線</span></div>
+        <div class="api-row2"><span class="api-n">帳戶餘額</span><span id="bnc-balance" class="api-no">—</span></div>
+        <div class="api-row2"><span class="api-n">行情串流</span><span id="bnc-ws" class="api-no">—</span></div>
         <div class="api-row2"><span class="api-n">OKX</span><span class="api-no">未連線</span></div>
         <div class="api-row2"><span class="api-n">台股券商</span><span class="api-no">設定中</span></div>
       </div>
-      <button class="cp-btn" onclick="document.getElementById('api-modal').classList.add('show')">設定 API 串接</button>
+      <button class="cp-btn" id="bnc-connect-btn" onclick="connectBinance()">連線 Binance</button>
+      <button class="cp-btn" onclick="document.getElementById('api-modal').classList.add('show')" style="margin-top:5px;">設定 API 串接</button>
     </div>
     <button onclick="addLog()" style="padding:7px;background:rgba(212,160,23,0.08);border:1px solid var(--border2);border-radius:5px;color:var(--gold2);font-size:10px;cursor:pointer;font-family:'Space Mono',monospace;">▶ 模擬下一個 AI 動作</button>
   </div>
@@ -986,6 +989,17 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
     <input class="key-input" id="gdrive-client-input" placeholder="xxxx.apps.googleusercontent.com">
     <div style="font-size:10px;color:var(--text3);margin-bottom:1rem;font-family:'Space Mono',monospace;" id="gdrive-input-status"></div>
 
+    <!-- Binance -->
+    <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.12em;color:var(--text3);text-transform:uppercase;margin-bottom:6px;margin-top:4px;">Binance API</div>
+    <div class="modal-steps" style="margin-bottom:8px;">
+      <div class="ms"><div class="ms-num">1</div><span>登入 Binance → 右上角頭像 →「API Management」→「Create API」</span></div>
+      <div class="ms"><div class="ms-num">2</div><span>權限勾選 <b style="color:var(--gold2);">Read Info</b>（唯讀，不需要交易權限）</span></div>
+      <div class="ms"><div class="ms-num">3</div><span>複製 API Key 和 Secret Key 貼到下方（Secret 只顯示一次）</span></div>
+    </div>
+    <input class="key-input" id="bnc-key-input" type="password" placeholder="Binance API Key">
+    <input class="key-input" id="bnc-secret-input" type="password" placeholder="Binance Secret Key" style="margin-top:6px;">
+    <div style="font-size:10px;color:var(--text3);margin-bottom:1rem;font-family:'Space Mono',monospace;" id="bnc-input-status"></div>
+
     <div class="modal-btns">
       <button class="mbtn save" onclick="saveKey()">儲存並啟用</button>
       <button class="mbtn cancel" onclick="document.getElementById('api-modal').classList.remove('show')">取消</button>
@@ -1237,6 +1251,8 @@ function addLogEntry(t,ag,c,tc,m,tg,tc2){
 function saveKey(){
   var k=document.getElementById('api-key-input').value.trim();
   var gid=document.getElementById('gdrive-client-input')?document.getElementById('gdrive-client-input').value.trim():'';
+  var bk=document.getElementById('bnc-key-input')?document.getElementById('bnc-key-input').value.trim():'';
+  var bs=document.getElementById('bnc-secret-input')?document.getElementById('bnc-secret-input').value.trim():'';
   if(k.length>0&&!k.startsWith('sk-ant-')){
     document.getElementById('key-test-result').style.color='var(--red2)';
     document.getElementById('key-test-result').textContent='格式錯誤：應以 sk-ant- 開頭';
@@ -1247,11 +1263,18 @@ function saveKey(){
     var gs=document.getElementById('gdrive-input-status');
     if(gs){ gs.style.color='var(--green2)'; gs.textContent='✓ Client ID 已儲存'; }
   }
+  if(bk){ localStorage.setItem('af_bnc_key',bk);
+    var bi=document.getElementById('bnc-input-status');
+    if(bi){ bi.style.color='var(--green2)'; bi.textContent='✓ API Key 已儲存'; }
+  }
+  if(bs){ localStorage.setItem('af_bnc_secret',bs); }
   document.getElementById('api-modal').classList.remove('show');
   var msg=[];
   if(k) msg.push('Claude API 已啟用');
-  if(gid) msg.push('GDrive Client ID 已儲存');
+  if(gid) msg.push('GDrive 已設定');
+  if(bk||bs) msg.push('Binance Key 已儲存');
   toast('🔑','設定已儲存', msg.join(' · ')||'設定完成');
+  if(bk&&bs) setTimeout(connectBinance, 500);
 }
 function updateKeyStatus(ok){
   var sb=document.getElementById('api-status-bar');
@@ -1269,6 +1292,110 @@ function updateKeyStatus(ok){
     });
   }
 }
+
+// ─── BINANCE ───
+var bncKey = localStorage.getItem('af_bnc_key') || '';
+var bncSecret = localStorage.getItem('af_bnc_secret') || '';
+var bncWS = null;
+
+async function hmacSHA256(secret, message){
+  var enc = new TextEncoder();
+  var key = await crypto.subtle.importKey('raw', enc.encode(secret), {name:'HMAC',hash:'SHA-256'}, false, ['sign']);
+  var sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
+  return Array.from(new Uint8Array(sig)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+}
+
+async function fetchBinanceAccount(){
+  if(!bncKey||!bncSecret) return;
+  var ts = Date.now();
+  var qs = 'timestamp='+ts;
+  var sig = await hmacSHA256(bncSecret, qs);
+  try{
+    var r = await fetch('https://api.binance.com/api/v3/account?'+qs+'&signature='+sig, {
+      headers:{'X-MBX-APIKEY': bncKey},
+      signal: AbortSignal.timeout(8000)
+    });
+    if(!r.ok){
+      var err = await r.json().catch(function(){return {};});
+      if(err.code===-2015||err.code===-1022){
+        setBncStatus('Key 格式錯誤','api-no');
+      } else {
+        setBncStatus('錯誤 '+r.status,'api-no');
+      }
+      return;
+    }
+    var d = await r.json();
+    var usdt = (d.balances||[]).find(function(b){ return b.asset==='USDT'; });
+    var free = usdt ? parseFloat(usdt.free).toFixed(2) : '0.00';
+    setBncStatus('已連線','api-ok');
+    var bb = document.getElementById('bnc-balance');
+    if(bb){ bb.textContent='USDT '+free; bb.className='api-ok'; }
+    var cb = document.getElementById('bnc-connect-btn');
+    if(cb){ cb.textContent='✓ 已連線'; cb.style.background='var(--green2)'; cb.style.color='var(--bg)'; }
+    toast('✅','Binance 已連線','帳戶餘額：USDT '+free);
+  }catch(e){
+    // CORS 限制時只顯示行情連線
+    if(e.message&&e.message.includes('fetch')){
+      setBncStatus('行情連線中','api-ok');
+      var bb2 = document.getElementById('bnc-balance');
+      if(bb2){ bb2.textContent='瀏覽器限制，請參閱說明'; bb2.className='api-no'; }
+    } else {
+      setBncStatus('連線失敗','api-no');
+    }
+  }
+}
+
+function setBncStatus(text, cls){
+  var el = document.getElementById('bnc-status');
+  if(el){ el.textContent=text; el.className=cls; }
+}
+
+function startBinanceWS(){
+  if(bncWS && bncWS.readyState < 2) bncWS.close();
+  var streams = 'btcusdt@miniTicker/ethusdt@miniTicker/solusdt@miniTicker/bnbusdt@miniTicker/dogeusdt@miniTicker';
+  bncWS = new WebSocket('wss://stream.binance.com:9443/stream?streams='+streams);
+  bncWS.onopen = function(){
+    var ws = document.getElementById('bnc-ws');
+    if(ws){ ws.textContent='串流中'; ws.className='api-ok'; }
+  };
+  bncWS.onmessage = function(e){
+    try{
+      var d = JSON.parse(e.data).data;
+      if(!d||!d.s) return;
+      var sym = d.s.toLowerCase();
+      var p = parseFloat(d.c);
+      if(sym==='btcusdt'){ prices.btc.prev=prices.btc.base; prices.btc.base=p; }
+      else if(sym==='ethusdt'){ prices.eth.prev=prices.eth.base; prices.eth.base=p; }
+      else if(sym==='solusdt'){ prices.sol.prev=prices.sol.base; prices.sol.base=p; }
+      else if(sym==='bnbusdt'){ prices.bnb.prev=prices.bnb.base; prices.bnb.base=p; }
+      else if(sym==='dogeusdt'){ prices.doge.prev=prices.doge.base; prices.doge.base=p; }
+    }catch(err){}
+  };
+  bncWS.onerror = function(){
+    var ws = document.getElementById('bnc-ws');
+    if(ws){ ws.textContent='串流失敗'; ws.className='api-no'; }
+  };
+  bncWS.onclose = function(){
+    // 斷線後 10 秒重連
+    setTimeout(function(){ if(bncKey) startBinanceWS(); }, 10000);
+  };
+}
+
+function connectBinance(){
+  bncKey = localStorage.getItem('af_bnc_key') || '';
+  bncSecret = localStorage.getItem('af_bnc_secret') || '';
+  if(!bncKey||!bncSecret){
+    document.getElementById('api-modal').classList.add('show');
+    toast('⚠','請先填入 Binance Key','點設定 → 輸入 API Key 和 Secret Key');
+    return;
+  }
+  setBncStatus('連線中...','api-no');
+  startBinanceWS();
+  fetchBinanceAccount();
+}
+
+// 頁面載入時若已有 key 自動連線
+if(bncKey && bncSecret){ setTimeout(connectBinance, 2000); }
 
 // ─── AI CALLS ───
 var prompts={
