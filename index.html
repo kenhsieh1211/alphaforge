@@ -3,284 +3,149 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AlphaForge AI — 智能投顧系統 V2</title>
+<title>AlphaForge AI — 智能投顧系統 V3</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root {
-  --bg:      #0e0a06;
-  --bg2:     #141008;
-  --bg3:     #1a140a;
-  --panel:   #1c1510;
-  --panel2:  #221a10;
-  --terracotta: #c1440e;
-  --terra2:  #e05520;
-  --terra3:  #f07040;
-  --gold:    #d4a017;
-  --gold2:   #f0c030;
-  --gold3:   #ffd95a;
-  --cream:   #f5e8c8;
-  --cream2:  #e8d4a0;
-  --brown:   #6b3a1f;
-  --brown2:  #8b4a2a;
-  --green:   #4a9060;
-  --green2:  #5ab070;
-  --red:     #d03020;
-  --red2:    #ff4030;
-  --border:  rgba(212,160,23,0.15);
-  --border2: rgba(212,160,23,0.35);
-  --border3: rgba(192,68,14,0.25);
-  --text:    #f0e0c0;
-  --text2:   #c8a880;
-  --text3:   #806040;
-  --grid:    rgba(212,160,23,0.03);
+  --bg:#0e0a06; --bg2:#141008; --bg3:#1a140a;
+  --panel:#1c1510; --panel2:#221a10;
+  --terracotta:#c1440e; --terra2:#e05520; --terra3:#f07040;
+  --gold:#d4a017; --gold2:#f0c030; --gold3:#ffd95a;
+  --cream:#f5e8c8; --cream2:#e8d4a0;
+  --brown:#6b3a1f; --brown2:#8b4a2a;
+  --green:#4a9060; --green2:#5ab070;
+  --red:#d03020; --red2:#ff4030;
+  --border:rgba(212,160,23,0.15); --border2:rgba(212,160,23,0.35); --border3:rgba(192,68,14,0.25);
+  --text:#f0e0c0; --text2:#c8a880; --text3:#806040;
+  --grid:rgba(212,160,23,0.03);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
-
-/* GRID */
-.grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;
-  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
-  background-size:48px 48px;}
-.grid-bg::after{content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(212,160,23,0.07) 0%,transparent 70%);}
-
-/* SCANLINE */
-.scanline{position:fixed;top:0;left:0;width:100%;height:1px;z-index:1;pointer-events:none;
-  background:linear-gradient(90deg,transparent,rgba(212,160,23,0.5),transparent);
-  animation:scan 10s linear infinite;}
+.grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:48px 48px;}
+.grid-bg::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(212,160,23,0.07) 0%,transparent 70%);}
+.scanline{position:fixed;top:0;left:0;width:100%;height:1px;z-index:1;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(212,160,23,0.5),transparent);animation:scan 10s linear infinite;}
 @keyframes scan{from{top:-2px}to{top:100vh}}
-
 .app{position:relative;z-index:2;display:flex;flex-direction:column;min-height:100vh;}
-
-/* HEADER */
-header{display:flex;align-items:center;justify-content:space-between;
-  padding:0 1.5rem;height:54px;
-  background:rgba(14,10,6,0.95);border-bottom:1px solid var(--border2);
-  backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;}
-.logo{font-family:'Cinzel',serif;font-weight:700;font-size:17px;letter-spacing:0.08em;
-  background:linear-gradient(135deg,var(--terra2),var(--gold2));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  display:flex;align-items:center;gap:10px;}
-.logo-gem{width:10px;height:10px;background:var(--gold2);transform:rotate(45deg);
-  box-shadow:0 0 8px var(--gold2);animation:gemPulse 2s ease-in-out infinite;}
+header{display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:54px;background:rgba(14,10,6,0.95);border-bottom:1px solid var(--border2);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;}
+.logo{font-family:'Cinzel',serif;font-weight:700;font-size:17px;letter-spacing:0.08em;background:linear-gradient(135deg,var(--terra2),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;display:flex;align-items:center;gap:10px;}
+.logo-gem{width:10px;height:10px;background:var(--gold2);transform:rotate(45deg);box-shadow:0 0 8px var(--gold2);animation:gemPulse 2s ease-in-out infinite;}
 @keyframes gemPulse{0%,100%{opacity:1;transform:rotate(45deg) scale(1)}50%{opacity:0.6;transform:rotate(45deg) scale(0.8)}}
-
 .hdr-prices{display:flex;gap:1.25rem;}
 .hdr-p{font-family:'Space Mono',monospace;font-size:10px;}
 .hdr-pl{color:var(--text3);}
 .hdr-pv{color:var(--gold2);}
 .hdr-pv.dn{color:var(--red2);}
-
-.live-pill{display:flex;align-items:center;gap:5px;
-  background:rgba(74,144,96,0.15);border:1px solid rgba(74,144,96,0.35);
-  border-radius:20px;padding:3px 10px;font-size:10px;color:var(--green2);
-  font-family:'Space Mono',monospace;}
+.live-pill{display:flex;align-items:center;gap:5px;background:rgba(74,144,96,0.15);border:1px solid rgba(74,144,96,0.35);border-radius:20px;padding:3px 10px;font-size:10px;color:var(--green2);font-family:'Space Mono',monospace;}
 .live-dot{width:5px;height:5px;border-radius:50%;background:var(--green2);animation:blink 1.2s ease-in-out infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
-
-/* NAV */
-nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);padding:0 1.5rem;}
-.nav-btn{padding:11px 16px;font-size:12px;font-weight:500;color:var(--text3);
-  cursor:pointer;border:none;border-bottom:2px solid transparent;background:none;
-  font-family:'Inter',sans-serif;transition:all 0.2s;letter-spacing:0.02em;}
+nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);padding:0 1.5rem;overflow-x:auto;}
+.nav-btn{padding:11px 16px;font-size:12px;font-weight:500;color:var(--text3);cursor:pointer;border:none;border-bottom:2px solid transparent;background:none;font-family:'Inter',sans-serif;transition:all 0.2s;letter-spacing:0.02em;white-space:nowrap;}
 .nav-btn:hover{color:var(--text2);}
 .nav-btn.active{color:var(--gold2);border-bottom-color:var(--gold);}
-
-/* PAGES */
 .page{display:none;flex:1;}
 .page.active{display:flex;flex-direction:column;}
-
-/* ─── PAGE 1: OFFICE ─── */
 .office-layout{display:grid;grid-template-columns:220px 1fr 260px;flex:1;min-height:0;}
-
-/* SIDEBAR LEFT */
-.sl{border-right:1px solid var(--border);background:var(--panel);padding:0.875rem;
-  display:flex;flex-direction:column;gap:0.5rem;overflow-y:auto;}
-.sl-title{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.14em;
-  color:var(--text3);text-transform:uppercase;padding:0.4rem 0 0.25rem;
-  border-bottom:1px solid var(--border);}
-.agent-row{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;
-  cursor:pointer;transition:all 0.2s;border:1px solid transparent;}
+.sl{border-right:1px solid var(--border);background:var(--panel);padding:0.875rem;display:flex;flex-direction:column;gap:0.5rem;overflow-y:auto;}
+.sl-title{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.14em;color:var(--text3);text-transform:uppercase;padding:0.4rem 0 0.25rem;border-bottom:1px solid var(--border);}
+.agent-row{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer;transition:all 0.2s;border:1px solid transparent;}
 .agent-row:hover{background:rgba(212,160,23,0.05);border-color:var(--border);}
 .agent-row.sel{background:rgba(212,160,23,0.08);border-color:var(--border2);}
-.agent-row.sel::before{content:'';display:inline-block;} 
-.av{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;
-  justify-content:center;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;
-  flex-shrink:0;position:relative;}
-.av::after{content:'';position:absolute;bottom:-1px;right:-1px;width:7px;height:7px;
-  border-radius:50%;border:1.5px solid var(--panel);}
+.av{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;flex-shrink:0;position:relative;}
+.av::after{content:'';position:absolute;bottom:-1px;right:-1px;width:7px;height:7px;border-radius:50%;border:1.5px solid var(--panel);}
 .on::after{background:var(--green2);}
 .bz::after{background:var(--gold2);}
 .a-info{flex:1;min-width:0;}
 .a-nm{font-size:11px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .a-rl{font-size:9px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-
-/* TICKER */
-.tkr{display:flex;justify-content:space-between;padding:4px 0;
-  border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;font-size:10px;}
+.tkr{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;font-size:10px;}
 .tkr:last-child{border-bottom:none;}
 .tkr-s{color:var(--text2);}
 .tkr-p{color:var(--text);}
 .up{color:var(--green2);}
 .dn{color:var(--red2);}
-
-/* OFFICE CENTER */
 .office-center{display:flex;flex-direction:column;overflow:hidden;}
-
-.office-scene{height:300px;background:var(--bg2);border-bottom:1px solid var(--border);
-  position:relative;overflow:hidden;flex-shrink:0;}
-
-/* TERRACOTTA FLOOR */
-.floor-tiles{position:absolute;bottom:0;left:0;right:0;height:70px;
-  background:repeating-linear-gradient(90deg,rgba(193,68,14,0.08) 0px,rgba(193,68,14,0.08) 1px,transparent 1px,transparent 60px),
-             repeating-linear-gradient(rgba(193,68,14,0.05) 0px,rgba(193,68,14,0.05) 1px,transparent 1px,transparent 60px),
-             linear-gradient(180deg,transparent,rgba(20,16,8,0.6));}
-
-/* GOLD ACCENT WALL */
-.wall-accent{position:absolute;top:0;left:0;right:0;height:4px;
-  background:linear-gradient(90deg,transparent,var(--gold),var(--terra2),var(--gold),transparent);}
-
-/* WALL DECOR */
-.wall-chart-frame{position:absolute;top:20px;left:28px;width:130px;height:80px;
-  background:rgba(20,16,8,0.8);border:1px solid var(--border2);border-radius:4px;overflow:hidden;}
-.wall-motto{position:absolute;top:22px;right:28px;
-  font-family:'Cinzel',serif;font-size:10px;color:var(--gold);opacity:0.7;
-  background:rgba(212,160,23,0.08);border:1px solid rgba(212,160,23,0.2);
-  border-radius:4px;padding:5px 10px;animation:sway 6s ease-in-out infinite;transform-origin:top center;}
+.office-scene{height:300px;background:var(--bg2);border-bottom:1px solid var(--border);position:relative;overflow:hidden;flex-shrink:0;}
+.floor-tiles{position:absolute;bottom:0;left:0;right:0;height:70px;background:repeating-linear-gradient(90deg,rgba(193,68,14,0.08) 0px,rgba(193,68,14,0.08) 1px,transparent 1px,transparent 60px),repeating-linear-gradient(rgba(193,68,14,0.05) 0px,rgba(193,68,14,0.05) 1px,transparent 1px,transparent 60px),linear-gradient(180deg,transparent,rgba(20,16,8,0.6));}
+.wall-accent{position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,transparent,var(--gold),var(--terra2),var(--gold),transparent);}
+.wall-chart-frame{position:absolute;top:20px;left:28px;width:130px;height:80px;background:rgba(20,16,8,0.8);border:1px solid var(--border2);border-radius:4px;overflow:hidden;}
+.wall-motto{position:absolute;top:22px;right:28px;font-family:'Cinzel',serif;font-size:10px;color:var(--gold);opacity:0.7;background:rgba(212,160,23,0.08);border:1px solid rgba(212,160,23,0.2);border-radius:4px;padding:5px 10px;animation:sway 6s ease-in-out infinite;transform-origin:top center;}
 @keyframes sway{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(1.5deg)}}
-
-/* DESKS */
-.desks-row{position:absolute;bottom:38px;left:0;right:0;
-  display:flex;justify-content:center;gap:14px;padding:0 1.5rem;}
-.desk{display:flex;flex-direction:column;align-items:center;gap:3px;
-  cursor:pointer;transition:transform 0.2s;position:relative;}
+.desks-row{position:absolute;bottom:38px;left:0;right:0;display:flex;justify-content:center;gap:14px;padding:0 1.5rem;}
+.desk{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;transition:transform 0.2s;position:relative;}
 .desk:hover{transform:translateY(-3px);}
-.char{position:absolute;font-size:16px;bottom:58px;
-  animation:breathe 4s ease-in-out infinite;}
+.char{position:absolute;font-size:16px;bottom:58px;animation:breathe 4s ease-in-out infinite;}
 .char.spin{animation:spin 8s linear infinite;}
 @keyframes breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-.monitor{width:50px;height:34px;border-radius:4px 4px 0 0;border:1.5px solid;
-  display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
-.screen{position:absolute;inset:2px;border-radius:2px;display:flex;align-items:center;
-  justify-content:center;font-size:5.5px;text-align:center;font-family:'Space Mono',monospace;
-  line-height:1.3;animation:scr 3s ease-in-out infinite;}
+.monitor{width:50px;height:34px;border-radius:4px 4px 0 0;border:1.5px solid;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
+.screen{position:absolute;inset:2px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:5.5px;text-align:center;font-family:'Space Mono',monospace;line-height:1.3;animation:scr 3s ease-in-out infinite;}
 @keyframes scr{0%,100%{opacity:1}45%{opacity:0.75}50%{opacity:0.95}}
 .stand{width:4px;height:7px;margin:0 auto;}
 .deskbase{width:62px;height:5px;border-radius:2px;}
 .dnm{font-size:7px;font-family:'Space Mono',monospace;color:var(--text3);text-align:center;margin-top:1px;}
-
-/* SURPRISE */
 .surp-egg{position:absolute;cursor:pointer;transition:transform 0.2s;font-size:14px;z-index:20;}
 .surp-egg:hover{transform:scale(1.3);}
-
-/* SPEECH */
-.speech{position:absolute;background:var(--panel2);border:1px solid var(--border2);
-  border-radius:8px;padding:6px 10px;font-size:10px;color:var(--text2);
-  max-width:170px;line-height:1.4;z-index:30;pointer-events:none;
-  animation:spIn 0.3s ease;}
+.speech{position:absolute;background:var(--panel2);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;font-size:10px;color:var(--text2);max-width:170px;line-height:1.4;z-index:30;pointer-events:none;animation:spIn 0.3s ease;}
 @keyframes spIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.speech::after{content:'';position:absolute;bottom:-6px;left:14px;
-  border-left:5px solid transparent;border-right:5px solid transparent;
-  border-top:6px solid var(--border2);}
-
-/* SURPRISE OVERLAY */
-.surp-ov{position:absolute;inset:0;background:rgba(14,10,6,0.88);
-  display:flex;align-items:center;justify-content:center;z-index:50;
-  opacity:0;pointer-events:none;transition:opacity 0.3s;}
+.speech::after{content:'';position:absolute;bottom:-6px;left:14px;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid var(--border2);}
+.surp-ov{position:absolute;inset:0;background:rgba(14,10,6,0.88);display:flex;align-items:center;justify-content:center;z-index:50;opacity:0;pointer-events:none;transition:opacity 0.3s;}
 .surp-ov.show{opacity:1;pointer-events:all;}
 .surp-inner{text-align:center;padding:2rem;max-width:280px;}
 .surp-em{font-size:2.5rem;margin-bottom:0.5rem;}
 .surp-t{font-family:'Cinzel',serif;font-size:16px;color:var(--gold2);margin-bottom:0.5rem;}
 .surp-d{font-size:12px;color:var(--text2);line-height:1.5;}
-
-/* TABS */
-.office-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--panel);}
-.tb{padding:9px 16px;font-size:11px;font-weight:500;color:var(--text3);
-  cursor:pointer;border:none;border-bottom:2px solid transparent;background:none;
-  font-family:'Inter',sans-serif;transition:all 0.2s;}
+.office-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--panel);overflow-x:auto;}
+.tb{padding:9px 16px;font-size:11px;font-weight:500;color:var(--text3);cursor:pointer;border:none;border-bottom:2px solid transparent;background:none;font-family:'Inter',sans-serif;transition:all 0.2s;white-space:nowrap;}
 .tb:hover{color:var(--text2);}
 .tb.act{color:var(--gold2);border-bottom-color:var(--gold);}
 .tab-content{flex:1;overflow-y:auto;padding:0.875rem;}
 .tp{display:none;}
 .tp.act{display:block;}
-
-/* LOG */
-.log-e{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);
-  font-size:11px;animation:logIn 0.3s ease;}
+.log-e{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:11px;animation:logIn 0.3s ease;}
 @keyframes logIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
 .log-e:last-child{border-bottom:none;}
 .lt{font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);min-width:42px;padding-top:1px;}
-.la{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;
-  justify-content:center;font-size:7.5px;font-family:'Space Mono',monospace;font-weight:700;flex-shrink:0;}
+.la{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:7.5px;font-family:'Space Mono',monospace;font-weight:700;flex-shrink:0;}
 .ln{font-weight:600;min-width:76px;font-size:10px;}
 .lm{color:var(--text2);flex:1;line-height:1.4;}
 .ltg{font-size:9px;padding:1px 6px;border-radius:10px;align-self:flex-start;white-space:nowrap;}
-
-/* PROGRESS */
 .pr-row{margin-bottom:9px;}
 .pr-hd{display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:3px;}
 .pr-tr{height:3px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;}
 .pr-fl{height:100%;border-radius:2px;transition:width 1.5s cubic-bezier(0.4,0,0.2,1);}
-
-/* STRATEGY CARDS */
-.sc{background:var(--panel2);border:1px solid var(--border);border-radius:6px;
-  padding:9px 11px;margin-bottom:7px;cursor:pointer;transition:border-color 0.2s;}
+.sc{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:9px 11px;margin-bottom:7px;cursor:pointer;transition:border-color 0.2s;}
 .sc:hover{border-color:var(--border2);}
 .sc-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;}
 .sc-nm{font-size:11px;font-weight:600;color:var(--text);}
 .sc-bg{font-size:9px;padding:2px 7px;border-radius:10px;}
 .sc-ds{font-size:10px;color:var(--text3);line-height:1.4;margin-bottom:5px;}
 .sc-mt{display:flex;gap:6px;flex-wrap:wrap;}
-.sc-m{font-family:'Space Mono',monospace;font-size:9px;
-  background:rgba(255,255,255,0.04);padding:2px 6px;border-radius:3px;color:var(--text2);}
+.sc-m{font-family:'Space Mono',monospace;font-size:9px;background:rgba(255,255,255,0.04);padding:2px 6px;border-radius:3px;color:var(--text2);}
 .sc-m span{color:var(--gold2);}
-
-/* CHAT */
 .chat-e{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;animation:logIn 0.3s ease;}
-.chat-av{width:26px;height:26px;border-radius:5px;display:flex;align-items:center;
-  justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;font-family:'Space Mono',monospace;}
-.chat-bub{background:var(--panel2);border:1px solid var(--border);border-radius:8px;
-  border-top-left-radius:2px;padding:7px 10px;font-size:11px;color:var(--text2);
-  line-height:1.5;max-width:88%;}
+.chat-av{width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;font-family:'Space Mono',monospace;}
+.chat-bub{background:var(--panel2);border:1px solid var(--border);border-radius:8px;border-top-left-radius:2px;padding:7px 10px;font-size:11px;color:var(--text2);line-height:1.5;max-width:88%;}
 .chat-meta{font-size:9px;color:var(--text3);margin-bottom:2px;}
-
-/* HISTORY */
-.hist-c{background:var(--panel2);border:1px solid var(--border);border-radius:6px;
-  padding:9px 11px;margin-bottom:7px;cursor:pointer;transition:border-color 0.2s;}
+.hist-c{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:9px 11px;margin-bottom:7px;cursor:pointer;transition:border-color 0.2s;}
 .hist-c:hover{border-color:var(--border2);}
 .hist-hd{display:flex;justify-content:space-between;margin-bottom:4px;}
 .hist-t{font-size:12px;font-weight:500;color:var(--text);}
 .hist-d{font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);}
 .hist-s{font-size:10px;color:var(--text3);line-height:1.4;}
-
-/* SIDEBAR RIGHT */
-.sr{border-left:1px solid var(--border);background:var(--panel);padding:0.875rem;
-  display:flex;flex-direction:column;gap:0.875rem;overflow-y:auto;}
-.sr-title{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.12em;
-  color:var(--text3);text-transform:uppercase;margin-bottom:0.5rem;}
+.sr{border-left:1px solid var(--border);background:var(--panel);padding:0.875rem;display:flex;flex-direction:column;gap:0.875rem;overflow-y:auto;}
+.sr-title{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.12em;color:var(--text3);text-transform:uppercase;margin-bottom:0.5rem;}
 .kpi-g{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
 .kpi{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:8px 9px;}
 .kpi-l{font-size:9px;color:var(--text3);margin-bottom:3px;font-family:'Space Mono',monospace;letter-spacing:0.07em;}
 .kpi-v{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;}
-
-.ev-item{display:flex;gap:7px;padding:5px 0;border-bottom:1px solid var(--border);
-  font-size:10px;align-items:flex-start;}
+.ev-item{display:flex;gap:7px;padding:5px 0;border-bottom:1px solid var(--border);font-size:10px;align-items:flex-start;}
 .ev-item:last-child{border-bottom:none;}
 .ev-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:3px;}
 .ev-txt{color:var(--text2);flex:1;line-height:1.4;}
 .ev-tm{font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);}
-
-/* ─── PAGE 2: POSITIONS ─── */
-/* ─── PAGE 3: PnL DASHBOARD ─── */
-/* ─── PAGE 4: STRATEGY LAB ─── */
 .page-inner{padding:1.25rem;max-width:1200px;margin:0 auto;width:100%;}
-.page-title{font-family:'Cinzel',serif;font-size:20px;font-weight:600;
-  color:var(--gold2);margin-bottom:0.25rem;letter-spacing:0.04em;}
+.page-title{font-family:'Cinzel',serif;font-size:20px;font-weight:600;color:var(--gold2);margin-bottom:0.25rem;letter-spacing:0.04em;}
 .page-sub{font-size:12px;color:var(--text3);margin-bottom:1.25rem;}
-
-/* METRIC ROW */
 .metric-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:1.25rem;}
 .metric-box{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:1rem;position:relative;overflow:hidden;}
 .metric-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
@@ -291,12 +156,8 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
 .metric-lbl{font-size:10px;color:var(--text3);margin-bottom:6px;font-family:'Space Mono',monospace;letter-spacing:0.07em;text-transform:uppercase;}
 .metric-val{font-family:'Space Mono',monospace;font-size:22px;font-weight:700;}
 .metric-sub{font-size:10px;color:var(--text3);margin-top:3px;}
-
-/* POSITIONS TABLE */
 .pos-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:1.25rem;}
-.pos-table th{padding:8px 10px;text-align:left;font-size:10px;font-weight:500;
-  color:var(--text3);border-bottom:1px solid var(--border2);
-  font-family:'Space Mono',monospace;letter-spacing:0.06em;text-transform:uppercase;}
+.pos-table th{padding:8px 10px;text-align:left;font-size:10px;font-weight:500;color:var(--text3);border-bottom:1px solid var(--border2);font-family:'Space Mono',monospace;letter-spacing:0.06em;text-transform:uppercase;}
 .pos-table td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top;}
 .pos-table tr:last-child td{border-bottom:none;}
 .pos-table tr:hover td{background:rgba(212,160,23,0.03);}
@@ -305,76 +166,45 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
 .pos-logic{font-size:10px;color:var(--text3);line-height:1.4;max-width:200px;}
 .pos-agent{font-size:9px;padding:1px 6px;border-radius:10px;display:inline-block;}
 .pos-pnl{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;}
-.pos-action{font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;
-  background:rgba(212,160,23,0.1);border:1px solid rgba(212,160,23,0.3);
-  color:var(--gold2);transition:all 0.2s;font-family:'Inter',sans-serif;}
+.pos-action{font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;background:rgba(212,160,23,0.1);border:1px solid rgba(212,160,23,0.3);color:var(--gold2);transition:all 0.2s;font-family:'Inter',sans-serif;}
 .pos-action:hover{background:rgba(212,160,23,0.2);}
-
-/* CHART SVG */
 .chart-wrap{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-bottom:1.25rem;}
 .chart-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.75rem;}
 .chart-title-sm{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;}
-
-/* STRATEGY LAB */
-.ai-trigger{width:100%;padding:12px;background:linear-gradient(135deg,rgba(193,68,14,0.15),rgba(212,160,23,0.15));
-  border:1px solid var(--border2);border-radius:8px;color:var(--gold2);
-  font-size:13px;font-weight:500;cursor:pointer;font-family:'Cinzel',serif;
-  letter-spacing:0.05em;transition:all 0.2s;margin-bottom:0.75rem;}
+.ai-trigger{width:100%;padding:12px;background:linear-gradient(135deg,rgba(193,68,14,0.15),rgba(212,160,23,0.15));border:1px solid var(--border2);border-radius:8px;color:var(--gold2);font-size:13px;font-weight:500;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:0.05em;transition:all 0.2s;margin-bottom:0.75rem;}
 .ai-trigger:hover{background:linear-gradient(135deg,rgba(193,68,14,0.25),rgba(212,160,23,0.25));}
 .ai-trigger:disabled{opacity:0.5;cursor:not-allowed;}
-.ai-response{background:var(--panel2);border:1px solid var(--border);border-radius:8px;
-  padding:1rem;font-size:12px;color:var(--text2);line-height:1.7;min-height:80px;
-  white-space:pre-wrap;font-family:'Space Mono',monospace;}
-
-/* API KEY MODAL */
-.modal-bg{position:fixed;inset:0;background:rgba(14,10,6,0.9);z-index:200;
-  display:flex;align-items:center;justify-content:center;
-  opacity:0;pointer-events:none;transition:opacity 0.3s;}
+.ai-trigger.stop{background:linear-gradient(135deg,rgba(208,48,32,0.25),rgba(255,64,48,0.18));border-color:rgba(255,64,48,0.5);color:var(--red2);}
+.ai-response{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:1rem;font-size:12px;color:var(--text2);line-height:1.7;min-height:80px;white-space:pre-wrap;font-family:'Space Mono',monospace;}
+.modal-bg{position:fixed;inset:0;background:rgba(14,10,6,0.9);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s;}
 .modal-bg.show{opacity:1;pointer-events:all;}
-.modal{background:var(--panel);border:1px solid var(--border2);border-radius:12px;
-  padding:1.5rem;width:min(440px,90vw);max-height:88vh;overflow-y:auto;}
-.modal-title{font-family:'Cinzel',serif;font-size:16px;color:var(--gold2);
-  margin-bottom:0.25rem;letter-spacing:0.05em;}
+.modal{background:var(--panel);border:1px solid var(--border2);border-radius:12px;padding:1.5rem;width:min(440px,90vw);}
+.modal-title{font-family:'Cinzel',serif;font-size:16px;color:var(--gold2);margin-bottom:0.25rem;letter-spacing:0.05em;}
 .modal-sub{font-size:11px;color:var(--text3);margin-bottom:1rem;line-height:1.5;}
 .modal-steps{margin-bottom:1rem;}
 .ms{display:flex;gap:8px;padding:5px 0;font-size:11px;color:var(--text2);line-height:1.4;}
-.ms-num{width:18px;height:18px;border-radius:50%;background:rgba(212,160,23,0.15);
-  border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;
-  font-size:9px;color:var(--gold2);flex-shrink:0;font-family:'Space Mono',monospace;font-weight:700;}
+.ms-num{width:18px;height:18px;border-radius:50%;background:rgba(212,160,23,0.15);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--gold2);flex-shrink:0;font-family:'Space Mono',monospace;font-weight:700;}
 .ms a{color:var(--terra3);}
-.key-input{width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);
-  border-radius:6px;color:var(--text);font-family:'Space Mono',monospace;font-size:11px;
-  margin-bottom:0.75rem;outline:none;transition:border-color 0.2s;}
+.key-input{width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-family:'Space Mono',monospace;font-size:11px;margin-bottom:0.75rem;outline:none;transition:border-color 0.2s;}
 .key-input:focus{border-color:var(--gold);}
 .key-input::placeholder{color:var(--text3);}
 .modal-btns{display:flex;gap:8px;}
-.mbtn{flex:1;padding:9px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;
-  font-family:'Inter',sans-serif;transition:all 0.2s;}
+.mbtn{flex:1;padding:9px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;}
 .mbtn.save{background:var(--gold);color:var(--bg);border:none;}
 .mbtn.save:hover{background:var(--gold2);}
 .mbtn.cancel{background:transparent;border:1px solid var(--border2);color:var(--text2);}
 .mbtn.cancel:hover{border-color:var(--border3);}
-
-/* CONNECT PANEL */
-.connect-panel{background:linear-gradient(135deg,rgba(193,68,14,0.1),rgba(212,160,23,0.08));
-  border:1px solid var(--border2);border-radius:8px;padding:1rem;margin-top:auto;}
+.connect-panel{background:linear-gradient(135deg,rgba(193,68,14,0.1),rgba(212,160,23,0.08));border:1px solid var(--border2);border-radius:8px;padding:1rem;margin-top:auto;}
 .cp-title{font-family:'Cinzel',serif;font-size:12px;color:var(--gold2);margin-bottom:4px;}
 .cp-desc{font-size:9px;color:var(--text3);margin-bottom:8px;line-height:1.4;}
-.cp-btn{display:block;width:100%;padding:7px;background:var(--terracotta);border:none;
-  border-radius:5px;color:var(--cream);font-size:10px;font-weight:600;cursor:pointer;
-  font-family:'Cinzel',serif;letter-spacing:0.05em;transition:all 0.2s;text-align:center;}
+.cp-btn{display:block;width:100%;padding:7px;background:var(--terracotta);border:none;border-radius:5px;color:var(--cream);font-size:10px;font-weight:600;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:0.05em;transition:all 0.2s;text-align:center;}
 .cp-btn:hover{background:var(--terra2);}
 .api-row2{display:flex;justify-content:space-between;font-size:9px;padding:3px 0;border-bottom:1px solid var(--border);}
 .api-row2:last-child{border-bottom:none;}
 .api-n{color:var(--text2);}
 .api-ok{color:var(--green2);}
 .api-no{color:var(--text3);}
-
-/* TOAST */
-.toast{position:fixed;top:62px;right:1.25rem;z-index:999;
-  background:var(--panel2);border:1px solid var(--border2);border-radius:8px;
-  padding:10px 14px;max-width:280px;display:flex;gap:8px;align-items:flex-start;
-  animation:toIn 0.3s ease;box-shadow:0 6px 24px rgba(0,0,0,0.5);}
+.toast{position:fixed;top:62px;right:1.25rem;z-index:999;background:var(--panel2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;max-width:280px;display:flex;gap:8px;align-items:flex-start;animation:toIn 0.3s ease;box-shadow:0 6px 24px rgba(0,0,0,0.5);}
 @keyframes toIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
 .toast.out{animation:toOut 0.3s ease forwards;}
 @keyframes toOut{to{opacity:0;transform:translateX(16px)}}
@@ -382,23 +212,65 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
 .tb2{flex:1;}
 .tt{font-size:11px;font-weight:600;color:var(--text);margin-bottom:1px;}
 .tm{font-size:10px;color:var(--text2);line-height:1.4;}
-
-/* NEW POSITION FORM */
 .new-pos-form{background:var(--panel2);border:1px solid var(--border2);border-radius:8px;padding:1rem;margin-bottom:1.25rem;}
 .nf-title{font-family:'Cinzel',serif;font-size:13px;color:var(--gold2);margin-bottom:0.75rem;}
 .nf-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:0.75rem;}
 .nf-field{display:flex;flex-direction:column;gap:3px;}
 .nf-label{font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;letter-spacing:0.06em;text-transform:uppercase;}
-.nf-input{padding:7px 9px;background:var(--bg3);border:1px solid var(--border);
-  border-radius:5px;color:var(--text);font-size:11px;font-family:'Inter',sans-serif;
-  outline:none;transition:border-color 0.2s;}
+.nf-input{padding:7px 9px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:11px;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s;}
 .nf-input:focus{border-color:var(--gold);}
 .nf-input option{background:var(--panel);}
-.nf-btn{padding:8px 20px;background:var(--terracotta);border:none;border-radius:5px;
-  color:var(--cream);font-size:11px;font-weight:600;cursor:pointer;
-  font-family:'Cinzel',serif;letter-spacing:0.04em;transition:background 0.2s;}
+.nf-btn{padding:8px 20px;background:var(--terracotta);border:none;border-radius:5px;color:var(--cream);font-size:11px;font-weight:600;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:0.04em;transition:background 0.2s;}
 .nf-btn:hover{background:var(--terra2);}
 
+/* === V3 NEW STYLES === */
+.ai-cursor{display:inline-block;animation:curBlink 0.7s ease-in-out infinite;color:var(--gold2);font-weight:700;}
+@keyframes curBlink{0%,100%{opacity:1}50%{opacity:0.1}}
+.copy-btn{display:none;margin-top:6px;padding:6px 10px;background:rgba(212,160,23,0.06);border:1px solid var(--border);border-radius:4px;color:var(--text3);font-size:10px;cursor:pointer;font-family:'Space Mono',monospace;transition:all 0.2s;width:100%;letter-spacing:0.04em;}
+.copy-btn:hover{background:rgba(212,160,23,0.16);color:var(--gold2);}
+.copy-btn.shown{display:block;}
+.clr-btn{font-size:9px;padding:3px 8px;background:rgba(208,48,32,0.08);border:1px solid rgba(208,48,32,0.2);border-radius:3px;color:var(--red2);cursor:pointer;font-family:'Space Mono',monospace;transition:all 0.2s;margin-left:auto;}
+.clr-btn:hover{background:rgba(208,48,32,0.18);}
+.wl-add-btn{background:rgba(212,160,23,0.12);border:1px solid var(--border2);color:var(--gold2);width:18px;height:18px;border-radius:3px;cursor:pointer;font-size:13px;line-height:14px;text-align:center;padding:0;transition:all 0.2s;flex-shrink:0;font-family:'Space Mono',monospace;}
+.wl-add-btn:hover{background:rgba(212,160,23,0.28);transform:scale(1.1);}
+.wl-add-row{display:none;gap:4px;margin:4px 0 6px;}
+.wl-add-row.show{display:flex;}
+.wl-item{display:flex;align-items:center;gap:5px;padding:3px 0;border-bottom:1px solid var(--border);font-size:9px;}
+.wl-item:last-child{border-bottom:none;}
+.wl-sym{color:var(--text2);font-family:'Space Mono',monospace;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.wl-price{color:var(--text);font-family:'Space Mono',monospace;font-size:9px;}
+.wl-pct{font-family:'Space Mono',monospace;font-size:9px;min-width:42px;text-align:right;}
+.wl-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:0 2px;line-height:1;transition:color 0.15s;}
+.wl-del:hover{color:var(--red2);}
+.wl-empty{font-size:9px;color:var(--text3);padding:4px 0;font-style:italic;}
+.run-all-btn{width:100%;padding:11px;background:linear-gradient(135deg,rgba(193,68,14,0.18),rgba(212,160,23,0.18));border:1px solid var(--border2);border-radius:8px;color:var(--gold2);font-size:13px;font-weight:500;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:0.04em;transition:all 0.2s;margin-bottom:14px;}
+.run-all-btn:hover{background:linear-gradient(135deg,rgba(193,68,14,0.28),rgba(212,160,23,0.28));}
+.run-all-btn:disabled{opacity:0.5;cursor:not-allowed;}
+.stop-btn{padding:5px 14px;background:rgba(208,48,32,0.15);border:1px solid rgba(255,64,48,0.4);border-radius:4px;color:var(--red2);font-size:11px;cursor:pointer;font-family:'Space Mono',monospace;transition:all 0.2s;display:none;}
+.stop-btn:hover{background:rgba(208,48,32,0.25);}
+.stop-btn.show{display:inline-block;}
+.agent-card-hd{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+@media(max-width:900px){
+  .office-layout{grid-template-columns:1fr;}
+  .sr{display:none;}
+  .desks-row{gap:8px;}
+}
+@media(max-width:700px){
+  .sl{display:none;}
+  .hdr-prices{gap:0.5rem;}
+  .office-scene{height:240px;}
+}
+@media(max-width:540px){
+  .hdr-prices{display:none;}
+  header{padding:0 0.75rem;}
+  .metric-row{grid-template-columns:1fr 1fr;}
+  .page-inner{padding:0.75rem;}
+  .nf-grid{grid-template-columns:1fr;}
+  .pos-table{font-size:10px;}
+  .pos-table td,.pos-table th{padding:6px 5px;}
+  .pos-logic{max-width:120px;}
+  div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important;}
+}
 ::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:rgba(212,160,23,0.2);border-radius:2px;}
@@ -410,7 +282,6 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
 
 <div class="app">
 
-<!-- HEADER -->
 <header>
   <div class="logo"><div class="logo-gem"></div>AlphaForge AI</div>
   <div class="hdr-prices">
@@ -423,13 +294,10 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="live-pill"><div class="live-dot"></div>LIVE</div>
     <button onclick="document.getElementById('api-modal').classList.add('show')"
-      style="padding:4px 12px;background:rgba(212,160,23,0.1);border:1px solid var(--border2);
-      border-radius:4px;color:var(--gold2);font-size:10px;cursor:pointer;font-family:'Space Mono',monospace;">
-      ⚙ API KEY</button>
+      style="padding:4px 12px;background:rgba(212,160,23,0.1);border:1px solid var(--border2);border-radius:4px;color:var(--gold2);font-size:10px;cursor:pointer;font-family:'Space Mono',monospace;">⚙ API KEY</button>
   </div>
 </header>
 
-<!-- NAV -->
 <nav>
   <button class="nav-btn active" onclick="goPage('office',this)">辦公室</button>
   <button class="nav-btn" onclick="goPage('positions',this)">倉位管理</button>
@@ -437,13 +305,9 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
   <button class="nav-btn" onclick="goPage('lab',this)">策略研究室</button>
 </nav>
 
-<!-- ═══════════════════════════════════════ -->
-<!-- PAGE 1: OFFICE                         -->
-<!-- ═══════════════════════════════════════ -->
 <div class="page active" id="page-office">
 <div class="office-layout">
 
-  <!-- SIDEBAR LEFT -->
   <div class="sl">
     <div class="sl-title">AI 代理團隊</div>
     <div class="agent-row sel" onclick="selAgent(this,'CEO')">
@@ -478,6 +342,7 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
       <div class="av bz" style="background:rgba(180,100,20,0.15);color:#e0a040;">CX</div>
       <div class="a-info"><div class="a-nm">ChaoX</div><div class="a-rl">混沌信號獵人</div></div>
     </div>
+
     <div class="sl-title" style="margin-top:0.5rem;">即時市場</div>
     <div id="tickers">
       <div class="tkr"><span class="tkr-s">BTC/USDT</span><span class="tkr-p" id="t-btc">67,420</span><span class="up" id="c-btc">+2.4%</span></div>
@@ -486,6 +351,19 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
       <div class="tkr"><span class="tkr-s">TSMC/TW</span><span class="tkr-p" id="t-tsmc">1,040</span><span class="up" id="c-tsmc">+1.2%</span></div>
       <div class="tkr"><span class="tkr-s">SPY/US</span><span class="tkr-p" id="t-spy">530.4</span><span class="up" id="c-spy">+0.5%</span></div>
     </div>
+
+    <div class="sl-title" style="margin-top:0.5rem;display:flex;align-items:center;justify-content:space-between;border-bottom:none;padding-bottom:4px;">
+      <span>觀察列表</span>
+      <button class="wl-add-btn" onclick="toggleAddWatchlist()" title="新增觀察標的">+</button>
+    </div>
+    <div class="wl-add-row" id="wl-add-row">
+      <input id="wl-input" class="nf-input" placeholder="代碼... BTC, NVDA"
+        style="flex:1;font-size:10px;padding:5px 8px;"
+        onkeydown="if(event.key==='Enter')addWatchlistItem();else if(event.key==='Escape')toggleAddWatchlist()">
+      <button onclick="addWatchlistItem()" class="nf-btn" style="padding:5px 10px;font-size:10px;letter-spacing:0;">+</button>
+    </div>
+    <div id="wl-items"></div>
+
     <div style="margin-top:auto;border-top:1px solid var(--border);padding-top:0.5rem;">
       <div class="sl-title">策略管線</div>
       <div style="font-size:10px;color:var(--text3);display:flex;justify-content:space-between;padding:2px 0;"><span>候選庫</span><span style="color:var(--gold2);font-family:'Space Mono',monospace;">17</span></div>
@@ -494,76 +372,52 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
     </div>
   </div>
 
-  <!-- OFFICE CENTER -->
   <div class="office-center">
     <div class="office-scene" id="office-scene">
       <div class="wall-accent"></div>
-      <!-- Wall chart -->
       <div class="wall-chart-frame">
         <svg width="130" height="80" viewBox="0 0 130 80">
-          <polyline points="5,65 22,50 38,55 55,32 72,38 88,20 105,26 125,10"
-            fill="none" stroke="var(--gold)" stroke-width="1.5" opacity="0.7"/>
+          <polyline points="5,65 22,50 38,55 55,32 72,38 88,20 105,26 125,10" fill="none" stroke="var(--gold)" stroke-width="1.5" opacity="0.7"/>
           <text x="4" y="76" fill="#806040" font-size="7" font-family="Space Mono">PORTFOLIO +24.1%</text>
         </svg>
       </div>
       <div class="wall-motto">FORTUNE FAVORS THE ALGORITHM</div>
-      <!-- Surprises -->
       <div class="surp-egg" style="bottom:90px;right:90px;font-size:14px;" onclick="showSurp('coffee')" title="點我">☕</div>
       <div class="surp-egg" style="bottom:88px;left:52px;font-size:13px;animation:breathe 5s ease-in-out infinite;" onclick="showSurp('duck')" title="ChaoX的神秘鴨">🦆</div>
-      <!-- Floor -->
       <div class="floor-tiles"></div>
-      <!-- Desks -->
       <div class="desks-row" id="desks">
         <div class="desk" onclick="deskClick('CEO')">
           <div class="char" style="bottom:58px;">🤖</div>
-          <div class="monitor" style="border-color:var(--gold);background:var(--bg);">
-            <div class="screen" style="background:rgba(212,160,23,0.08);color:var(--gold2);">PnL<br>+2.4%</div></div>
-          <div class="stand" style="background:#3a2808;"></div>
-          <div class="deskbase" style="background:#3a2808;"></div>
-          <div class="dnm">CEO</div>
+          <div class="monitor" style="border-color:var(--gold);background:var(--bg);"><div class="screen" style="background:rgba(212,160,23,0.08);color:var(--gold2);">PnL<br>+2.4%</div></div>
+          <div class="stand" style="background:#3a2808;"></div><div class="deskbase" style="background:#3a2808;"></div><div class="dnm">CEO</div>
         </div>
         <div class="desk" onclick="deskClick('QR')">
           <div class="char" style="bottom:58px;">🧮</div>
-          <div class="monitor" style="border-color:var(--terra2);background:var(--bg);">
-            <div class="screen" style="background:rgba(193,68,14,0.08);color:var(--terra3);">BACK<br>TEST</div></div>
-          <div class="stand" style="background:#3a1008;"></div>
-          <div class="deskbase" style="background:#3a1008;"></div>
-          <div class="dnm">QR</div>
+          <div class="monitor" style="border-color:var(--terra2);background:var(--bg);"><div class="screen" style="background:rgba(193,68,14,0.08);color:var(--terra3);">BACK<br>TEST</div></div>
+          <div class="stand" style="background:#3a1008;"></div><div class="deskbase" style="background:#3a1008;"></div><div class="dnm">QR</div>
         </div>
         <div class="desk" onclick="deskClick('TC')">
           <div class="char" style="bottom:58px;">📊</div>
-          <div class="monitor" style="border-color:var(--gold3);background:var(--bg);">
-            <div class="screen" style="background:rgba(200,140,20,0.08);color:var(--gold3);">K-LINE<br>SCAN</div></div>
-          <div class="stand" style="background:#302010;"></div>
-          <div class="deskbase" style="background:#302010;"></div>
-          <div class="dnm">TC</div>
+          <div class="monitor" style="border-color:var(--gold3);background:var(--bg);"><div class="screen" style="background:rgba(200,140,20,0.08);color:var(--gold3);">K-LINE<br>SCAN</div></div>
+          <div class="stand" style="background:#302010;"></div><div class="deskbase" style="background:#302010;"></div><div class="dnm">TC</div>
         </div>
         <div class="desk" onclick="deskClick('CX')">
           <div class="char spin" style="bottom:58px;">🌀</div>
-          <div class="monitor" style="border-color:#e0a040;background:var(--bg);">
-            <div class="screen" style="background:rgba(180,100,20,0.05);color:#e0b060;animation:none;">????<br>CORR</div></div>
-          <div class="stand" style="background:#3a1800;"></div>
-          <div class="deskbase" style="background:#3a1800;"></div>
-          <div class="dnm">ChaoX ✨</div>
+          <div class="monitor" style="border-color:#e0a040;background:var(--bg);"><div class="screen" style="background:rgba(180,100,20,0.05);color:#e0b060;animation:none;">????<br>CORR</div></div>
+          <div class="stand" style="background:#3a1800;"></div><div class="deskbase" style="background:#3a1800;"></div><div class="dnm">ChaoX ✨</div>
         </div>
         <div class="desk" onclick="deskClick('RM')">
           <div class="char" style="bottom:58px;">🛡️</div>
-          <div class="monitor" style="border-color:var(--green2);background:var(--bg);">
-            <div class="screen" style="background:rgba(74,144,96,0.08);color:var(--green2);">RISK<br>OK ✓</div></div>
-          <div class="stand" style="background:#102018;"></div>
-          <div class="deskbase" style="background:#102018;"></div>
-          <div class="dnm">RM</div>
+          <div class="monitor" style="border-color:var(--green2);background:var(--bg);"><div class="screen" style="background:rgba(74,144,96,0.08);color:var(--green2);">RISK<br>OK ✓</div></div>
+          <div class="stand" style="background:#102018;"></div><div class="deskbase" style="background:#102018;"></div><div class="dnm">RM</div>
         </div>
       </div>
-      <!-- Speech bubble container -->
       <div id="speech-host"></div>
-      <!-- Surprise overlay -->
       <div class="surp-ov" id="surp-ov" onclick="this.classList.remove('show')">
         <div class="surp-inner" id="surp-inner"></div>
       </div>
     </div>
 
-    <!-- TABS -->
     <div class="office-tabs">
       <button class="tb act" onclick="ofTab('log',this)">工作日誌</button>
       <button class="tb" onclick="ofTab('progress',this)">今日進度</button>
@@ -572,7 +426,6 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
       <button class="tb" onclick="ofTab('history',this)">報告歷史</button>
     </div>
     <div class="tab-content">
-      <!-- LOG -->
       <div class="tp act" id="tp-log">
         <div id="log-list">
           <div class="log-e"><span class="lt">09:14</span><div class="la" style="background:rgba(193,68,14,0.2);color:var(--terra3);">QR</div><span class="ln" style="color:var(--terra3);">QR</span><span class="lm">掃描完成 52 個因子，動能+低波動複合信號，夏普 1.94</span><span class="ltg" style="background:rgba(193,68,14,0.15);color:var(--terra3);">策略</span></div>
@@ -584,9 +437,8 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
           <div class="log-e"><span class="lt">18:00</span><div class="la" style="background:rgba(212,160,23,0.2);color:var(--gold2);">CEO</div><span class="ln" style="color:var(--gold2);">CEO</span><span class="lm">日結：PnL +0.6%，3 市場部位正常，CX 新假說明日繼續驗證</span><span class="ltg" style="background:rgba(212,160,23,0.15);color:var(--gold2);">報告</span></div>
         </div>
       </div>
-      <!-- PROGRESS -->
       <div class="tp" id="tp-progress">
-        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);margin-bottom:12px;">TODAY — 2026.04.26</div>
+        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);margin-bottom:12px;">TODAY — 2026.04.27</div>
         <div class="pr-row"><div class="pr-hd"><span style="color:var(--gold2);">CEO Agent</span><span>整合決策 88%</span></div><div class="pr-tr"><div class="pr-fl" style="width:88%;background:linear-gradient(90deg,var(--gold),var(--gold2));"></div></div></div>
         <div class="pr-row"><div class="pr-hd"><span style="color:var(--terra3);">Quant Researcher</span><span>策略開發 78%</span></div><div class="pr-tr"><div class="pr-fl" style="width:78%;background:linear-gradient(90deg,var(--terracotta),var(--terra2));"></div></div></div>
         <div class="pr-row"><div class="pr-hd"><span style="color:var(--green2);">Risk Manager</span><span>風控覆蓋 95%</span></div><div class="pr-tr"><div class="pr-fl" style="width:95%;background:linear-gradient(90deg,var(--green),var(--green2));"></div></div></div>
@@ -596,14 +448,12 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
         <div class="pr-row"><div class="pr-hd"><span style="color:var(--gold3);">TechCipher</span><span>策略 2/2 ✓</span></div><div class="pr-tr"><div class="pr-fl" style="width:100%;background:linear-gradient(90deg,var(--gold),var(--gold3));"></div></div></div>
         <div class="pr-row"><div class="pr-hd"><span style="color:#e0b060;">ChaoX</span><span>假說 2/3</span></div><div class="pr-tr"><div class="pr-fl" style="width:67%;background:linear-gradient(90deg,#804010,#e0b060);"></div></div></div>
       </div>
-      <!-- STRATEGIES -->
       <div class="tp" id="tp-strategies">
         <div class="sc"><div class="sc-hd"><div class="sc-nm">BTC 鯨魚縮量做多</div><div class="sc-bg" style="background:rgba(74,144,96,0.15);color:var(--green2);">✓ 實盤中</div></div><div class="sc-ds">4h 縮量十字星 + 鯨魚 24h 淨買入 >500 BTC → 做多，止損前低</div><div class="sc-mt"><div class="sc-m">勝率 <span>67%</span></div><div class="sc-m">Sharpe <span>1.82</span></div><div class="sc-m">MaxDD <span>-8.3%</span></div><div class="sc-m" style="color:var(--gold3);">TC 開發</div></div></div>
         <div class="sc"><div class="sc-hd"><div class="sc-nm">TSMC 波段布局</div><div class="sc-bg" style="background:rgba(74,144,96,0.15);color:var(--green2);">✓ 實盤中</div></div><div class="sc-ds">台積電週線突破 + 外資連續買超 5 日 → 波段多單，目標 +8%</div><div class="sc-mt"><div class="sc-m">勝率 <span>72%</span></div><div class="sc-m">Sharpe <span>2.04</span></div><div class="sc-m">MaxDD <span>-5.1%</span></div><div class="sc-m" style="color:var(--terra3);">QR 開發</div></div></div>
         <div class="sc"><div class="sc-hd"><div class="sc-nm">道奇效應 DOGE</div><div class="sc-bg" style="background:rgba(180,100,20,0.15);color:#e0b060;">驗證中</div></div><div class="sc-ds">道奇客場勝利 ≥3 分差 → 隔日 DOGE 上漲機率 78%（n=41，p=0.032）</div><div class="sc-mt"><div class="sc-m">勝率 <span>78%</span></div><div class="sc-m">n= <span>41</span></div><div class="sc-m" style="color:#e0b060;">CX 開發</div></div></div>
         <div class="sc"><div class="sc-hd"><div class="sc-nm">SPY 動能跟蹤</div><div class="sc-bg" style="background:rgba(212,160,23,0.12);color:var(--gold2);">回測完成</div></div><div class="sc-ds">SPY 週線 RSI>60 + VIX<16 同時滿足 → 做多，持有 5-10 個交易日</div><div class="sc-mt"><div class="sc-m">勝率 <span>69%</span></div><div class="sc-m">Sharpe <span>1.55</span></div><div class="sc-m" style="color:var(--terra3);">QR 開發</div></div></div>
       </div>
-      <!-- CHAT -->
       <div class="tp" id="tp-chat">
         <div id="chat-area">
           <div class="chat-e"><div class="chat-av" style="background:rgba(180,100,20,0.2);color:#e0b060;">CX</div><div><div class="chat-meta">ChaoX · 09:05</div><div class="chat-bub">等等，我剛發現：每次台積電漲停，隔天 ETH 有 74% 機率上漲 🤔 可能是台灣科技業情緒外溢？</div></div></div>
@@ -612,7 +462,6 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
           <div class="chat-e"><div class="chat-av" style="background:rgba(212,160,23,0.2);color:var(--gold2);">CEO</div><div><div class="chat-meta">CEO Agent · 11:00</div><div class="chat-bub">今日重點：BTC 多單維持，TSMC 波段進場，DOGE 道奇策略待驗證。SPY 保守觀望。CX 那個台積電假說有意思，n 數補到 30 再說。</div></div></div>
         </div>
       </div>
-      <!-- HISTORY -->
       <div class="tp" id="tp-history">
         <div class="hist-c"><div class="hist-hd"><div class="hist-t">週報 #18 — CEO Agent</div><div class="hist-d">2026.04.25 週四</div></div><div class="hist-s">本週 PnL +2.4%，夏普 1.82。加密策略 2 個實盤，台股 TSMC 波段進行中，SPY 觀望。CX 道奇效應通過初步驗證，下週實盤測試。</div></div>
         <div class="hist-c"><div class="hist-hd"><div class="hist-t">週報 #17 — CEO Agent</div><div class="hist-d">2026.04.18 週四</div></div><div class="hist-s">本週 PnL +1.9%。MA 成功預警 Fed 風險，提前降低加密部位，規避 -3.2% 下跌。TC 開發 TSMC 策略回測優異。</div></div>
@@ -621,17 +470,13 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
     </div>
   </div>
 
-  <!-- SIDEBAR RIGHT -->
   <div class="sr">
     <div>
       <div class="sr-title">組合績效</div>
       <div style="font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:var(--green2);" id="total-val">$10,847</div>
       <div style="font-size:10px;color:var(--green2);margin-top:2px;" id="total-pnl">+$847 (+8.47%)</div>
       <svg width="100%" height="52" viewBox="0 0 240 52" style="margin-top:6px;">
-        <defs><linearGradient id="pnlg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="var(--gold)" stop-opacity="0.3"/>
-          <stop offset="100%" stop-color="var(--gold)" stop-opacity="0"/>
-        </linearGradient></defs>
+        <defs><linearGradient id="pnlg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--gold)" stop-opacity="0.3"/><stop offset="100%" stop-color="var(--gold)" stop-opacity="0"/></linearGradient></defs>
         <path d="M0,44 L28,40 L56,42 L84,32 L112,28 L140,20 L168,16 L196,12 L224,8 L240,6 L240,52 L0,52 Z" fill="url(#pnlg)"/>
         <path d="M0,44 L28,40 L56,42 L84,32 L112,28 L140,20 L168,16 L196,12 L224,8 L240,6" fill="none" stroke="var(--gold)" stroke-width="1.5"/>
       </svg>
@@ -640,7 +485,7 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
       <div class="kpi"><div class="kpi-l">SHARPE</div><div class="kpi-v" style="color:var(--gold2);">1.82</div></div>
       <div class="kpi"><div class="kpi-l">MAX DD</div><div class="kpi-v" style="color:var(--red2);">-4.3%</div></div>
       <div class="kpi"><div class="kpi-l">WIN RATE</div><div class="kpi-v" style="color:var(--green2);">68%</div></div>
-      <div class="kpi"><div class="kpi-l">POSITIONS</div><div class="kpi-v" style="color:var(--terra3);">5</div></div>
+      <div class="kpi"><div class="kpi-l">POSITIONS</div><div class="kpi-v" style="color:var(--terra3);" id="kpi-pos-count">5</div></div>
     </div>
     <div>
       <div class="sr-title">系統事件</div>
@@ -652,41 +497,24 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
       </div>
     </div>
     <div class="connect-panel">
-      <div class="cp-title">Google Drive 同步</div>
-      <div class="cp-desc" id="gdrive-desc">連結「火金土Ai交易策略公司」資料夾，自動備份倉位與交易紀錄</div>
-      <div style="margin-bottom:8px;">
-        <div class="api-row2"><span class="api-n">雲端資料夾</span><span id="gdrive-status" class="api-no">未授權</span></div>
-        <div class="api-row2"><span class="api-n">倉位備份</span><span id="gdrive-pos-status" class="api-no">—</span></div>
-        <div class="api-row2"><span class="api-n">上次同步</span><span id="gdrive-last-sync" class="api-no">—</span></div>
-      </div>
-      <button class="cp-btn" id="gdrive-btn" onclick="connectGDrive()">授權 Google Drive</button>
-      <button class="cp-btn" id="gdrive-sync-btn" onclick="syncToDrive()" style="display:none;margin-top:5px;background:var(--gold);color:var(--bg);">↑ 立即同步資料</button>
-    </div>
-    <div class="connect-panel" style="margin-top:8px;">
       <div class="cp-title">交易所連線</div>
       <div class="cp-desc">串接 API 實現自動執行</div>
       <div style="margin-bottom:8px;">
-        <div class="api-row2"><span class="api-n">Binance</span><span id="bnc-status" class="api-no">未連線</span></div>
-        <div class="api-row2"><span class="api-n">帳戶餘額</span><span id="bnc-balance" class="api-no">—</span></div>
-        <div class="api-row2"><span class="api-n">行情串流</span><span id="bnc-ws" class="api-no">—</span></div>
+        <div class="api-row2"><span class="api-n">Binance</span><span class="api-ok">已連線</span></div>
         <div class="api-row2"><span class="api-n">OKX</span><span class="api-no">未連線</span></div>
         <div class="api-row2"><span class="api-n">台股券商</span><span class="api-no">設定中</span></div>
       </div>
-      <button class="cp-btn" id="bnc-connect-btn" onclick="connectBinance()">連線 Binance</button>
-      <button class="cp-btn" onclick="document.getElementById('api-modal').classList.add('show')" style="margin-top:5px;">設定 API 串接</button>
+      <button class="cp-btn">設定 API 串接</button>
     </div>
     <button onclick="addLog()" style="padding:7px;background:rgba(212,160,23,0.08);border:1px solid var(--border2);border-radius:5px;color:var(--gold2);font-size:10px;cursor:pointer;font-family:'Space Mono',monospace;">▶ 模擬下一個 AI 動作</button>
   </div>
 </div>
 </div>
 
-<!-- ═══════════════════════════════════════ -->
-<!-- PAGE 2: POSITIONS                      -->
-<!-- ═══════════════════════════════════════ -->
 <div class="page" id="page-positions">
 <div class="page-inner">
   <div class="page-title">倉位管理</div>
-  <div class="page-sub">本金 $10,000 USD · 5 個活躍倉位 · 自動追蹤損益</div>
+  <div class="page-sub">本金 $10,000 USD · <span id="pos-count">5</span> 個活躍倉位 · 自動追蹤損益（持久化儲存）</div>
   <div class="metric-row">
     <div class="metric-box gold"><div class="metric-lbl">總資產</div><div class="metric-val" style="color:var(--gold2);" id="pos-total">$10,847</div><div class="metric-sub">本金 $10,000</div></div>
     <div class="metric-box green"><div class="metric-lbl">未實現損益</div><div class="metric-val" style="color:var(--green2);" id="pos-unrealized">+$612</div><div class="metric-sub">3 個倉位盈利</div></div>
@@ -694,7 +522,6 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
     <div class="metric-box gold"><div class="metric-lbl">可用資金</div><div class="metric-val" style="color:var(--cream2);" id="pos-avail">$3,240</div><div class="metric-sub">32.4% 閒置</div></div>
   </div>
 
-  <!-- NEW POSITION FORM -->
   <div class="new-pos-form">
     <div class="nf-title">＋ 新增倉位（CEO Agent 決策入場）</div>
     <div class="nf-grid">
@@ -709,10 +536,12 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
       <div class="nf-label">入場邏輯 / AI 決策依據</div>
       <input class="nf-input" id="nf-logic" placeholder="例：BTC 4h 縮量十字星 + 鯨魚淨買入 800 BTC，TC 發出做多信號" style="width:100%;">
     </div>
-    <button class="nf-btn" onclick="addPosition()">確認入場 → 記錄倉位</button>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <button class="nf-btn" onclick="addPosition()">確認入場 → 記錄倉位</button>
+      <button class="nf-btn" style="background:transparent;border:1px solid var(--border2);color:var(--text3);" onclick="resetPositions()" title="重設為預設五個倉位">⟲ 重設預設</button>
+    </div>
   </div>
 
-  <!-- POSITIONS TABLE -->
   <table class="pos-table" id="pos-table">
     <thead>
       <tr>
@@ -720,80 +549,15 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
         <th>入場邏輯</th><th>止損</th><th>未實現 PnL</th><th>決策AI</th><th>操作</th>
       </tr>
     </thead>
-    <tbody id="pos-tbody">
-      <tr>
-        <td><div class="pos-sym">BTC/USDT</div><div class="pos-mkt" style="background:rgba(180,100,20,0.15);color:#e0b060;">加密</div></td>
-        <td><span style="color:var(--green2);font-size:11px;font-weight:500;">▲ 多單</span></td>
-        <td><span style="font-family:'Space Mono',monospace;font-size:11px;">$65,800</span></td>
-        <td><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--gold2);" id="btc-cur">$67,420</span></td>
-        <td><span style="font-family:'Space Mono',monospace;font-size:11px;">$2,000</span></td>
-        <td><div class="pos-logic">4h 縮量十字星 + 鯨魚 24h 淨買入 812 BTC，TC 做多信號</div></td>
-        <td><span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--red2);">$62,510</span></td>
-        <td><span class="pos-pnl up" id="btc-pnl">+$49.27</span></td>
-        <td><span class="pos-agent" style="background:rgba(200,140,20,0.15);color:var(--gold3);">TC</span></td>
-        <td><button class="pos-action" onclick="closePos(this,'BTC/USDT')">平倉</button></td>
-      </tr>
-      <tr>
-        <td><div class="pos-sym">TSMC.TW</div><div class="pos-mkt" style="background:rgba(193,68,14,0.15);color:var(--terra3);">台股</div></td>
-        <td><span style="color:var(--green2);font-size:11px;font-weight:500;">▲ 多單</span></td>
-        <td><span style="font-family:'Space Mono',monospace;font-size:11px;">NT$1,020</span></td>
-        <td><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--gold2);">NT$1,040</span></td>
-        <td><span style="font-family:'Space Mono',monospace;font-size:11px;">$2,500</span></td>
-        <td><div class="pos-logic">週線突破 + 外資連續買超 5 日，QR 波段策略觸發</div></td>
-        <td><span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--red2);">NT$969</span></td>
-        <td><span class="pos-pnl up">+$49.02</span></td>
-        <td><span class="pos-agent" style="background:rgba(193,68,14,0.15);color:var(--terra3);">QR</span></td>
-        <td><button class="pos-action" onclick="closePos(this,'TSMC.TW')">平倉</button></td>
-      </tr>
-      <tr>
-        <td><div class="pos-sym">ETH/USDT</div><div class="pos-mkt" style="background:rgba(180,100,20,0.15);color:#e0b060;">加密</div></td>
-        <td><span style="color:var(--green2);font-size:11px;font-weight:500;">▲ 多單</span></td>
-        <td><span style="font-family:'Space Mono',monospace;font-size:11px;">$3,480</span></td>
-        <td><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--gold2);">$3,541</span></td>
-        <td><span style="font-family:'Space Mono',monospace;font-size:11px;">$1,500</span></td>
-        <td><div class="pos-logic">15m 量縮價漲均值回歸 + OB 籌碼確認，TC 量價背離策略</div></td>
-        <td><span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--red2);">$3,306</span></td>
-        <td><span class="pos-pnl up">+$26.29</span></td>
-        <td><span class="pos-agent" style="background:rgba(200,140,20,0.15);color:var(--gold3);">TC</span></td>
-        <td><button class="pos-action" onclick="closePos(this,'ETH/USDT')">平倉</button></td>
-      </tr>
-      <tr>
-        <td><div class="pos-sym">SPY</div><div class="pos-mkt" style="background:rgba(74,60,20,0.15);color:var(--cream2);">美股</div></td>
-        <td><span style="color:var(--green2);font-size:11px;font-weight:500;">▲ 多單</span></td>
-        <td><span style="font-family:'Space Mono',monospace;font-size:11px;">$528.2</span></td>
-        <td><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--gold2);">$530.4</span></td>
-        <td><span style="font-family:'Space Mono',monospace;font-size:11px;">$800</span></td>
-        <td><div class="pos-logic">RSI>60 + VIX<16，景氣擴張末期動能策略，MA 景氣定位確認</div></td>
-        <td><span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--red2);">$502</span></td>
-        <td><span class="pos-pnl up">+$3.33</span></td>
-        <td><span class="pos-agent" style="background:rgba(180,60,30,0.15);color:#e08060;">MA</span></td>
-        <td><button class="pos-action" onclick="closePos(this,'SPY')">平倉</button></td>
-      </tr>
-      <tr>
-        <td><div class="pos-sym">DOGE/USDT</div><div class="pos-mkt" style="background:rgba(180,100,20,0.15);color:#e0b060;">加密</div></td>
-        <td><span style="color:var(--green2);font-size:11px;font-weight:500;">▲ 多單</span></td>
-        <td><span style="font-family:'Space Mono',monospace;font-size:11px;">$0.1754</span></td>
-        <td><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--gold2);">$0.1843</span></td>
-        <td><span style="font-family:'Space Mono',monospace;font-size:11px;">$500</span></td>
-        <td><div class="pos-logic">道奇客場勝利 +5 分，ChaoX 道奇效應策略觸發，DOGE 社群情緒上行</div></td>
-        <td><span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--red2);">$0.1667</span></td>
-        <td><span class="pos-pnl up">+$25.36</span></td>
-        <td><span class="pos-agent" style="background:rgba(180,100,20,0.15);color:#e0b060;">CX</span></td>
-        <td><button class="pos-action" onclick="closePos(this,'DOGE/USDT')">平倉</button></td>
-      </tr>
-    </tbody>
+    <tbody id="pos-tbody"></tbody>
   </table>
 </div>
 </div>
 
-<!-- ═══════════════════════════════════════ -->
-<!-- PAGE 3: PnL DASHBOARD                 -->
-<!-- ═══════════════════════════════════════ -->
 <div class="page" id="page-dashboard">
 <div class="page-inner">
   <div class="page-title">損益儀表板</div>
   <div class="page-sub">本金 $10,000 USD · 啟動日期 2026.01.01 · 追蹤台股 / 美股 / 加密貨幣</div>
-
   <div class="metric-row">
     <div class="metric-box gold"><div class="metric-lbl">總資產</div><div class="metric-val" style="color:var(--gold2);">$10,847</div><div class="metric-sub">本金 $10,000</div></div>
     <div class="metric-box green"><div class="metric-lbl">總報酬</div><div class="metric-val" style="color:var(--green2);">+8.47%</div><div class="metric-sub">+$847 USD</div></div>
@@ -802,30 +566,16 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
     <div class="metric-box gold"><div class="metric-lbl">勝率</div><div class="metric-val" style="color:var(--cream2);">68%</div><div class="metric-sub">34勝 16負</div></div>
     <div class="metric-box green"><div class="metric-lbl">盈虧比</div><div class="metric-val" style="color:var(--green2);">2.4x</div><div class="metric-sub">盈均$82 / 虧均$34</div></div>
   </div>
-
-  <!-- EQUITY CURVE -->
   <div class="chart-wrap">
-    <div class="chart-hd">
-      <span class="chart-title-sm">資產曲線 — 2026 YTD</span>
-      <span style="font-family:'Space Mono',monospace;font-size:12px;color:var(--green2);">$10,847 ▲</span>
-    </div>
+    <div class="chart-hd"><span class="chart-title-sm">資產曲線 — 2026 YTD</span><span style="font-family:'Space Mono',monospace;font-size:12px;color:var(--green2);">$10,847 ▲</span></div>
     <svg width="100%" height="160" viewBox="0 0 680 160">
-      <defs>
-        <linearGradient id="eq-g" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="var(--gold)" stop-opacity="0.35"/>
-          <stop offset="100%" stop-color="var(--gold)" stop-opacity="0"/>
-        </linearGradient>
-      </defs>
-      <!-- Grid lines -->
-      <line x1="0" y1="120" x2="680" y2="120" stroke="rgba(212,160,23,0.08)" stroke-width="1"/>
-      <line x1="0" y1="80" x2="680" y2="80" stroke="rgba(212,160,23,0.08)" stroke-width="1"/>
-      <line x1="0" y1="40" x2="680" y2="40" stroke="rgba(212,160,23,0.08)" stroke-width="1"/>
-      <!-- Baseline $10k -->
+      <defs><linearGradient id="eq-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--gold)" stop-opacity="0.35"/><stop offset="100%" stop-color="var(--gold)" stop-opacity="0"/></linearGradient></defs>
+      <line x1="0" y1="120" x2="680" y2="120" stroke="rgba(212,160,23,0.08)"/>
+      <line x1="0" y1="80" x2="680" y2="80" stroke="rgba(212,160,23,0.08)"/>
+      <line x1="0" y1="40" x2="680" y2="40" stroke="rgba(212,160,23,0.08)"/>
       <line x1="0" y1="128" x2="680" y2="128" stroke="rgba(255,255,255,0.08)" stroke-width="0.5" stroke-dasharray="4 4"/>
-      <!-- Equity curve -->
       <path d="M0,128 L40,124 L80,126 L120,118 L160,108 L200,114 L240,100 L280,88 L320,95 L360,82 L400,72 L440,68 L480,60 L520,55 L560,48 L600,42 L640,36 L680,32 L680,150 L0,150 Z" fill="url(#eq-g)"/>
       <path d="M0,128 L40,124 L80,126 L120,118 L160,108 L200,114 L240,100 L280,88 L320,95 L360,82 L400,72 L440,68 L480,60 L520,55 L560,48 L600,42 L640,36 L680,32" fill="none" stroke="var(--gold)" stroke-width="2"/>
-      <!-- Labels -->
       <text x="4" y="155" fill="var(--text3)" font-size="9" font-family="Space Mono">Jan</text>
       <text x="160" y="155" fill="var(--text3)" font-size="9" font-family="Space Mono">Feb</text>
       <text x="320" y="155" fill="var(--text3)" font-size="9" font-family="Space Mono">Mar</text>
@@ -834,39 +584,26 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
       <text x="4" y="42" fill="var(--text3)" font-size="9" font-family="Space Mono">$11k</text>
     </svg>
   </div>
-
-  <!-- MARKET BREAKDOWN -->
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:1.25rem;">
     <div class="chart-wrap">
       <div class="chart-hd"><span class="chart-title-sm">加密貨幣</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--green2);">+5.2%</span></div>
       <div style="font-size:10px;color:var(--text3);margin-bottom:6px;">BTC / ETH / SOL / DOGE</div>
-      <div style="display:flex;gap:8px;font-size:10px;">
-        <span style="color:var(--text2);">已實現</span><span style="font-family:'Space Mono',monospace;color:var(--green2);">+$312</span>
-        <span style="color:var(--text2);">未實現</span><span style="font-family:'Space Mono',monospace;color:var(--green2);">+$75</span>
-      </div>
+      <div style="display:flex;gap:8px;font-size:10px;"><span style="color:var(--text2);">已實現</span><span style="font-family:'Space Mono',monospace;color:var(--green2);">+$312</span><span style="color:var(--text2);">未實現</span><span style="font-family:'Space Mono',monospace;color:var(--green2);">+$75</span></div>
       <div class="pr-tr" style="margin-top:8px;"><div class="pr-fl" style="width:75%;background:linear-gradient(90deg,#e0b060,var(--gold2));"></div></div>
     </div>
     <div class="chart-wrap">
       <div class="chart-hd"><span class="chart-title-sm">台股</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--green2);">+2.1%</span></div>
       <div style="font-size:10px;color:var(--text3);margin-bottom:6px;">TSMC / 台股 ETF</div>
-      <div style="display:flex;gap:8px;font-size:10px;">
-        <span style="color:var(--text2);">已實現</span><span style="font-family:'Space Mono',monospace;color:var(--green2);">+$98</span>
-        <span style="color:var(--text2);">未實現</span><span style="font-family:'Space Mono',monospace;color:var(--green2);">+$49</span>
-      </div>
+      <div style="display:flex;gap:8px;font-size:10px;"><span style="color:var(--text2);">已實現</span><span style="font-family:'Space Mono',monospace;color:var(--green2);">+$98</span><span style="color:var(--text2);">未實現</span><span style="font-family:'Space Mono',monospace;color:var(--green2);">+$49</span></div>
       <div class="pr-tr" style="margin-top:8px;"><div class="pr-fl" style="width:45%;background:linear-gradient(90deg,var(--terracotta),var(--terra2));"></div></div>
     </div>
     <div class="chart-wrap">
       <div class="chart-hd"><span class="chart-title-sm">美股</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--terra3);">+1.17%</span></div>
       <div style="font-size:10px;color:var(--text3);margin-bottom:6px;">SPY / QQQ / 個股</div>
-      <div style="display:flex;gap:8px;font-size:10px;">
-        <span style="color:var(--text2);">已實現</span><span style="font-family:'Space Mono',monospace;color:var(--green2);">+$86</span>
-        <span style="color:var(--text2);">未實現</span><span style="font-family:'Space Mono',monospace;color:var(--green2);">+$3</span>
-      </div>
+      <div style="display:flex;gap:8px;font-size:10px;"><span style="color:var(--text2);">已實現</span><span style="font-family:'Space Mono',monospace;color:var(--green2);">+$86</span><span style="color:var(--text2);">未實現</span><span style="font-family:'Space Mono',monospace;color:var(--green2);">+$3</span></div>
       <div class="pr-tr" style="margin-top:8px;"><div class="pr-fl" style="width:28%;background:linear-gradient(90deg,var(--cream),var(--cream2));"></div></div>
     </div>
   </div>
-
-  <!-- TRADE HISTORY -->
   <div class="chart-wrap">
     <div class="chart-hd"><span class="chart-title-sm">近期交易紀錄</span></div>
     <table style="width:100%;border-collapse:collapse;font-size:11px;">
@@ -877,7 +614,7 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
         <th style="text-align:right;padding:6px 8px;font-size:9px;color:var(--text3);border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;">損益</th>
         <th style="text-align:left;padding:6px 8px;font-size:9px;color:var(--text3);border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;">策略</th>
       </tr></thead>
-      <tbody id="trade-hist">
+      <tbody>
         <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;font-size:10px;">04/24</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);font-weight:500;">SOL/USDT</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--green2);">多</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;color:var(--green2);font-family:'Space Mono',monospace;">+$87.40</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);font-size:10px;color:var(--text3);">TC 型態突破</td></tr>
         <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;font-size:10px;">04/23</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);font-weight:500;">2330.TW</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--green2);">多</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;color:var(--green2);font-family:'Space Mono',monospace;">+$62.10</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);font-size:10px;color:var(--text3);">QR 外資追蹤</td></tr>
         <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;font-size:10px;">04/22</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);font-weight:500;">QQQ</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--red2);">多</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;color:var(--red2);font-family:'Space Mono',monospace;">-$34.80</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);font-size:10px;color:var(--text3);">MA 總經止損</td></tr>
@@ -889,27 +626,25 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
 </div>
 </div>
 
-<!-- ═══════════════════════════════════════ -->
-<!-- PAGE 4: STRATEGY LAB                  -->
-<!-- ═══════════════════════════════════════ -->
 <div class="page" id="page-lab">
 <div class="page-inner">
   <div class="page-title">策略研究室</div>
-  <div class="page-sub">由 Claude API 驅動 — 按鈕觸發，最小化 Token 消耗</div>
+  <div class="page-sub">由 Claude API 驅動 — 串流回應 / 對話記憶 / 隨時可中止 / 精準計費</div>
 
-  <!-- API KEY STATUS -->
-  <div id="api-status-bar" style="background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;">
+  <div id="api-status-bar" style="background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
     <div style="font-size:11px;color:var(--text2);" id="api-status-msg">⚠ 未設定 Anthropic API Key — AI 功能需要設定後才能使用</div>
     <button onclick="document.getElementById('api-modal').classList.add('show')"
       style="padding:5px 12px;background:rgba(212,160,23,0.12);border:1px solid var(--border2);border-radius:4px;color:var(--gold2);font-size:10px;cursor:pointer;font-family:'Space Mono',monospace;">設定 KEY</button>
   </div>
 
+  <button class="run-all-btn" id="run-all-btn" onclick="runAllAgents()">⚡ 依序執行全部 AI 分析（TC → CX → CEO → MA）</button>
+
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-    <!-- TechCipher -->
     <div class="chart-wrap">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <div class="agent-card-hd">
         <div style="width:30px;height:30px;border-radius:6px;background:rgba(200,140,20,0.15);color:var(--gold3);display:flex;align-items:center;justify-content:center;font-size:12px;font-family:'Space Mono',monospace;font-weight:700;">TC</div>
         <div><div style="font-size:13px;font-weight:500;color:var(--text);">TechCipher</div><div style="font-size:10px;color:var(--text3);">技術線型 & 籌碼分析</div></div>
+        <button class="clr-btn" onclick="clearHistory('tc')" title="清除對話記憶">清除記憶</button>
       </div>
       <select class="nf-input" id="tc-market" style="margin-bottom:8px;width:100%;">
         <option>BTC/USDT — 加密貨幣</option>
@@ -920,86 +655,67 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
       </select>
       <button class="ai-trigger" id="tc-btn" onclick="runAI('tc')">▶ 讓 TechCipher 分析市場並開發策略</button>
       <div class="ai-response" id="tc-response">等待指令... TC 正在監控 K 線與籌碼數據。</div>
+      <button class="copy-btn" id="tc-copy" onclick="copyResp('tc')">📋 複製分析結果</button>
     </div>
-    <!-- ChaoX -->
     <div class="chart-wrap">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <div class="agent-card-hd">
         <div style="width:30px;height:30px;border-radius:6px;background:rgba(180,100,20,0.15);color:#e0b060;display:flex;align-items:center;justify-content:center;font-size:12px;font-family:'Space Mono',monospace;font-weight:700;">CX</div>
         <div><div style="font-size:13px;font-weight:500;color:var(--text);">ChaoX</div><div style="font-size:10px;color:var(--text3);">混沌信號 · 天馬行空</div></div>
+        <button class="clr-btn" onclick="clearHistory('cx')" title="清除對話記憶">清除記憶</button>
       </div>
       <input class="nf-input" id="cx-topic" placeholder="輸入任何靈感... 或留空讓 CX 自由發揮 🌀" style="margin-bottom:8px;width:100%;">
       <button class="ai-trigger" id="cx-btn" onclick="runAI('cx')">🌀 讓 ChaoX 提出奇異假說並設計回測</button>
       <div class="ai-response" id="cx-response">等待指令... CX 正在宇宙間尋找信號巧合。</div>
+      <button class="copy-btn" id="cx-copy" onclick="copyResp('cx')">📋 複製分析結果</button>
     </div>
-    <!-- CEO Agent -->
     <div class="chart-wrap">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <div class="agent-card-hd">
         <div style="width:30px;height:30px;border-radius:6px;background:rgba(212,160,23,0.15);color:var(--gold2);display:flex;align-items:center;justify-content:center;font-size:12px;font-family:'Space Mono',monospace;font-weight:700;">CEO</div>
         <div><div style="font-size:13px;font-weight:500;color:var(--text);">CEO Agent</div><div style="font-size:10px;color:var(--text3);">週報 & 整合決策</div></div>
+        <button class="clr-btn" onclick="clearHistory('ceo')" title="清除對話記憶">清除記憶</button>
       </div>
       <button class="ai-trigger" id="ceo-btn" onclick="runAI('ceo')">📋 讓 CEO Agent 產出本週工作進度報告</button>
       <div class="ai-response" id="ceo-response">等待指令... CEO 正在彙整各代理工作成果。</div>
+      <button class="copy-btn" id="ceo-copy" onclick="copyResp('ceo')">📋 複製分析結果</button>
     </div>
-    <!-- Macro Analyst -->
     <div class="chart-wrap">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <div class="agent-card-hd">
         <div style="width:30px;height:30px;border-radius:6px;background:rgba(180,60,30,0.15);color:#e08060;display:flex;align-items:center;justify-content:center;font-size:12px;font-family:'Space Mono',monospace;font-weight:700;">MA</div>
         <div><div style="font-size:13px;font-weight:500;color:var(--text);">Macro Analyst</div><div style="font-size:10px;color:var(--text3);">總經情境分析</div></div>
+        <button class="clr-btn" onclick="clearHistory('ma')" title="清除對話記憶">清除記憶</button>
       </div>
       <button class="ai-trigger" id="ma-btn" onclick="runAI('ma')">🌐 讓 Macro Analyst 產出本週三情境報告</button>
       <div class="ai-response" id="ma-response">等待指令... MA 正在追蹤 Fed 動態與景氣指標。</div>
+      <button class="copy-btn" id="ma-copy" onclick="copyResp('ma')">📋 複製分析結果</button>
     </div>
   </div>
 
-  <!-- Token counter -->
-  <div style="margin-top:1rem;background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
-    <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;">SESSION TOKENS USED</div>
-    <div style="font-family:'Space Mono',monospace;font-size:14px;color:var(--gold2);" id="token-count">0</div>
-    <div style="font-size:10px;color:var(--text3);">≈ <span id="token-cost">$0.000</span> USD</div>
+  <div style="margin-top:1rem;background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+    <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;">SESSION TOKENS</div>
+    <div style="display:flex;gap:14px;align-items:center;font-family:'Space Mono',monospace;font-size:11px;">
+      <span style="color:var(--text3);">IN <span id="tok-in" style="color:var(--text2);">0</span></span>
+      <span style="color:var(--text3);">OUT <span id="tok-out" style="color:var(--gold2);">0</span></span>
+      <span style="color:var(--text3);">≈ <span id="token-cost" style="color:var(--green2);">$0.000000</span></span>
+    </div>
+    <button class="stop-btn" id="stop-btn" onclick="stopGeneration()">⏹ 停止生成</button>
   </div>
 </div>
 </div>
 
-</div><!-- /app -->
+</div>
 
-<!-- API KEY MODAL -->
 <div class="modal-bg" id="api-modal">
-  <div class="modal" style="max-width:480px;">
-    <div class="modal-title">API 設定中心</div>
-    <div class="modal-sub">所有 Key 僅儲存於您的瀏覽器，不會上傳至任何伺服器。</div>
-
-    <!-- Anthropic -->
-    <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.12em;color:var(--text3);text-transform:uppercase;margin-bottom:6px;">Anthropic Claude API</div>
-    <div class="modal-steps" style="margin-bottom:8px;">
-      <div class="ms"><div class="ms-num">1</div><span>前往 <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys → + Create Key</span></div>
-      <div class="ms"><div class="ms-num">2</div><span>複製 <code style="background:rgba(212,160,23,0.1);padding:1px 5px;border-radius:3px;font-size:10px;">sk-ant-...</code> 貼到下方</span></div>
+  <div class="modal">
+    <div class="modal-title">設定 Anthropic API Key</div>
+    <div class="modal-sub">設定後 AI 角色才能真正思考。Key 只存在您的瀏覽器，不會上傳到任何伺服器。</div>
+    <div class="modal-steps">
+      <div class="ms"><div class="ms-num">1</div><span>前往 <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> 註冊 / 登入</span></div>
+      <div class="ms"><div class="ms-num">2</div><span>左側點「Billing」→ 加入信用卡，建議設月上限 $10</span></div>
+      <div class="ms"><div class="ms-num">3</div><span>左側點「API Keys」→ 右上「+ Create Key」→ 命名為 AlphaForge</span></div>
+      <div class="ms"><div class="ms-num">4</div><span>複製 <code style="background:rgba(212,160,23,0.1);padding:1px 5px;border-radius:3px;font-size:10px;">sk-ant-...</code> 開頭的金鑰，貼到下方（只顯示一次！）</span></div>
     </div>
     <input class="key-input" id="api-key-input" type="password" placeholder="sk-ant-api03-...">
-    <div id="key-test-result" style="font-size:10px;margin-bottom:1rem;min-height:16px;font-family:'Space Mono',monospace;"></div>
-
-    <!-- Google Drive -->
-    <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.12em;color:var(--text3);text-transform:uppercase;margin-bottom:6px;">Google Drive OAuth Client ID</div>
-    <div class="modal-steps" style="margin-bottom:8px;">
-      <div class="ms"><div class="ms-num">1</div><span>前往 <a href="https://console.cloud.google.com" target="_blank" style="color:var(--gold2);">console.cloud.google.com</a> → 左側「API 和服務」→「憑證」</span></div>
-      <div class="ms"><div class="ms-num">2</div><span>點「+ 建立憑證」→「OAuth 用戶端 ID」→ 應用程式類型選 <b style="color:var(--gold2);">網頁應用程式</b></span></div>
-      <div class="ms"><div class="ms-num">3</div><span>「已授權的 JavaScript 來源」加入：<br><code style="background:rgba(212,160,23,0.15);padding:2px 6px;border-radius:3px;font-size:9px;display:inline-block;margin-top:3px;">https://kenhsieh1211.github.io</code></span></div>
-      <div class="ms"><div class="ms-num">4</div><span>建立後複製 Client ID（格式：<code style="background:rgba(212,160,23,0.1);padding:1px 4px;border-radius:3px;font-size:9px;">數字.apps.googleusercontent.com</code>）貼到下方</span></div>
-      <div class="ms"><div class="ms-num">5</div><span>同樣在「API 和服務」→「啟用 API」，搜尋 <b>Google Drive API</b> 並啟用</span></div>
-    </div>
-    <input class="key-input" id="gdrive-client-input" placeholder="xxxx.apps.googleusercontent.com">
-    <div style="font-size:10px;color:var(--text3);margin-bottom:1rem;font-family:'Space Mono',monospace;" id="gdrive-input-status"></div>
-
-    <!-- Binance -->
-    <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.12em;color:var(--text3);text-transform:uppercase;margin-bottom:6px;margin-top:4px;">Binance API</div>
-    <div class="modal-steps" style="margin-bottom:8px;">
-      <div class="ms"><div class="ms-num">1</div><span>登入 Binance → 右上角頭像 →「API Management」→「Create API」</span></div>
-      <div class="ms"><div class="ms-num">2</div><span>權限勾選 <b style="color:var(--gold2);">Read Info</b>（唯讀，不需要交易權限）</span></div>
-      <div class="ms"><div class="ms-num">3</div><span>複製 API Key 和 Secret Key 貼到下方（Secret 只顯示一次）</span></div>
-    </div>
-    <input class="key-input" id="bnc-key-input" type="password" placeholder="Binance API Key">
-    <input class="key-input" id="bnc-secret-input" type="password" placeholder="Binance Secret Key" style="margin-top:6px;">
-    <div style="font-size:10px;color:var(--text3);margin-bottom:1rem;font-family:'Space Mono',monospace;" id="bnc-input-status"></div>
-
+    <div id="key-test-result" style="font-size:10px;margin-bottom:0.75rem;min-height:16px;font-family:'Space Mono',monospace;"></div>
     <div class="modal-btns">
       <button class="mbtn save" onclick="saveKey()">儲存並啟用</button>
       <button class="mbtn cancel" onclick="document.getElementById('api-modal').classList.remove('show')">取消</button>
@@ -1007,22 +723,19 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
   </div>
 </div>
 
-<!-- TOAST CONTAINER -->
 <div id="toasts"></div>
 
 <script>
 // ─── STATE ───
 var apiKey = localStorage.getItem('af_api_key') || '';
-var totalTokens = parseInt(localStorage.getItem('af_tokens') || '0');
+var totalInTok = 0, totalOutTok = 0;
 var capital = 10000;
-var DRIVE_FOLDER_ID = '1IQajO_199Jc-Ss-5dC_tbdDVpVlYtWna';
+var ctrl = null;
+var currentRole = null;
+var agentHistory = JSON.parse(localStorage.getItem('af_agent_history') || '{"tc":[],"cx":[],"ceo":[],"ma":[]}');
 
 // ─── INIT ───
 if(apiKey){ updateKeyStatus(true); }
-if(totalTokens > 0){
-  document.getElementById('token-count') && (document.getElementById('token-count').textContent = totalTokens.toLocaleString());
-  document.getElementById('token-cost') && (document.getElementById('token-cost').textContent = '$' + (totalTokens * 0.000003).toFixed(4));
-}
 
 // ─── NAVIGATION ───
 function goPage(id, btn){
@@ -1031,8 +744,6 @@ function goPage(id, btn){
   document.getElementById('page-'+id).classList.add('active');
   btn.classList.add('active');
 }
-
-// ─── OFFICE TABS ───
 function ofTab(id, btn){
   document.querySelectorAll('.tp').forEach(p=>p.classList.remove('act'));
   document.querySelectorAll('.tb').forEach(b=>b.classList.remove('act'));
@@ -1099,51 +810,38 @@ var moreLogs=[
 var logIdx=0;
 function addLog(){
   var l=moreLogs[logIdx%moreLogs.length]; logIdx++;
-  var list=document.getElementById('log-list');
-  var div=document.createElement('div'); div.className='log-e';
-  div.innerHTML='<span class="lt">'+l.t+'</span><div class="la" style="background:'+l.c+';color:'+l.tc+';">'+l.ag+'</div><span class="ln" style="color:'+l.tc+';">'+l.ag+'</span><span class="lm">'+l.m+'</span><span class="ltg" style="background:'+l.tc2+';color:'+l.tc+';">'+l.tg+'</span>';
-  list.appendChild(div);
+  addLogEntry(l.t,l.ag,l.c,l.tc,l.m,l.tg,l.tc2);
   ofTab('log', document.querySelectorAll('.tb')[0]);
   document.querySelectorAll('.tb').forEach(b=>b.classList.remove('act'));
   document.querySelectorAll('.tb')[0].classList.add('act');
   toast('⚡',l.ag+' 新動態',l.m.substring(0,55)+'...');
+  var list=document.getElementById('log-list');
+  list.scrollTop=list.scrollHeight;
+}
+function addLogEntry(t,ag,c,tc,m,tg,tc2){
+  var list=document.getElementById('log-list');
+  var div=document.createElement('div'); div.className='log-e';
+  div.innerHTML='<span class="lt">'+t+'</span><div class="la" style="background:'+c+';color:'+tc+';">'+ag+'</div><span class="ln" style="color:'+tc+';">'+ag+'</span><span class="lm">'+m+'</span><span class="ltg" style="background:'+tc2+';color:'+tc+';">'+tg+'</span>';
+  list.appendChild(div);
   list.scrollTop=list.scrollHeight;
 }
 
 // ─── PRICES ───
 var prices={
-  btc:{base:67420,prev:67420,eH:'h-btc',eT:'t-btc',eC:'c-btc'},
-  eth:{base:3541,prev:3541,eH:'h-eth',eT:'t-eth',eC:'c-eth'},
-  sol:{base:174.2,prev:174.2,eH:'h-sol',eT:'t-sol',eC:'c-sol'},
-  tsmc:{base:1040,prev:1040,eH:'h-tsmc',eT:'t-tsmc',eC:'c-tsmc'},
-  spy:{base:530.4,prev:530.4,eH:'h-spy',eT:'t-spy',eC:'c-spy'},
-  doge:{base:0.1843,prev:0.1843,eT:'t-doge',eC:'c-doge'},
-  bnb:{base:598,prev:598,eT:'t-bnb',eC:'c-bnb'},
+  btc:{base:67420,eH:'h-btc',eT:'t-btc',eC:'c-btc'},
+  eth:{base:3541,eH:'h-eth',eT:'t-eth',eC:'c-eth'},
+  sol:{base:174.2,eH:'h-sol',eT:'t-sol',eC:'c-sol'},
+  tsmc:{base:1040,eH:'h-tsmc',eT:'t-tsmc',eC:'c-tsmc'},
+  spy:{base:530.4,eH:'h-spy',eT:'t-spy',eC:'c-spy'},
+  doge:{base:0.1843,eT:'t-doge',eC:'c-doge'},
 };
+var symToPrice={BTC:'btc','BTC/USDT':'btc',ETH:'eth','ETH/USDT':'eth',SOL:'sol','SOL/USDT':'sol',TSMC:'tsmc','TSMC.TW':'tsmc',SPY:'spy',DOGE:'doge','DOGE/USDT':'doge'};
 
-// CoinGecko 真實報價（免費 API，不需 Key）
-async function fetchRealPrices(){
-  try{
-    var r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,dogecoin,binancecoin&vs_currencies=usd',
-      {signal:AbortSignal.timeout(8000)});
-    if(!r.ok) return;
-    var d=await r.json();
-    if(d.bitcoin){prices.btc.prev=prices.btc.base; prices.btc.base=d.bitcoin.usd;}
-    if(d.ethereum){prices.eth.prev=prices.eth.base; prices.eth.base=d.ethereum.usd;}
-    if(d.solana){prices.sol.prev=prices.sol.base; prices.sol.base=d.solana.usd;}
-    if(d.dogecoin){prices.doge.prev=prices.doge.base; prices.doge.base=d.dogecoin.usd;}
-    if(d.binancecoin){prices.bnb.prev=prices.bnb.base; prices.bnb.base=d.binancecoin.usd;}
-    var pill=document.querySelector('.live-pill');
-    if(pill) pill.title='Last updated: '+new Date().toLocaleTimeString();
-  }catch(e){/* 降回模擬 */}
-}
-
-function updatePriceDisplay(){
+setInterval(function(){
   Object.values(prices).forEach(function(p){
-    // 加入小幅模擬波動讓畫面有動感，但以真實數據為基礎
-    var chg=(Math.random()-0.495)*p.base*0.0003; p.base+=chg;
-    var dayChg=((p.base-p.prev)/p.prev*100);
-    var isUp=dayChg>=0;
+    var chg=(Math.random()-0.49)*p.base*0.002; p.base+=chg;
+    var pct=((chg/p.base)*100).toFixed(2);
+    var isUp=chg>=0;
     var fmt=p.base<1?p.base.toFixed(4):p.base<10?p.base.toFixed(2):Math.round(p.base).toLocaleString();
     if(p.eH){
       var he=document.getElementById(p.eH);
@@ -1155,43 +853,85 @@ function updatePriceDisplay(){
     }
     var te=document.getElementById(p.eT); if(te) te.textContent=fmt;
     var ce=document.getElementById(p.eC);
-    if(ce){ce.textContent=(isUp?'+':'')+dayChg.toFixed(2)+'%'; ce.className=isUp?'up':'dn';}
+    if(ce){ce.textContent=(isUp?'+':'')+pct+'%'; ce.className=isUp?'up':'dn';}
   });
-  // 更新 BTC 倉位 PnL
-  var btcPnl=((prices.btc.base-65800)/65800)*2000;
-  var bpEl=document.getElementById('btc-pnl');
-  if(bpEl){bpEl.textContent=(btcPnl>=0?'+':'')+btcPnl.toFixed(2);bpEl.className='pos-pnl '+(btcPnl>=0?'up':'dn');}
-  var bcEl=document.getElementById('btc-cur');
-  if(bcEl) bcEl.textContent='$'+Math.round(prices.btc.base).toLocaleString();
-}
-
-// 啟動：立即抓真實報價，之後每 30 秒更新一次
-fetchRealPrices();
-setInterval(fetchRealPrices, 30000);
-// 畫面每 3.5 秒刷新（帶小幅模擬動感）
-setInterval(updatePriceDisplay, 3500);
+  updatePositionPnL();
+  updateWatchlistPrices();
+},3500);
 
 // ─── POSITIONS ───
-// ─── 持久化倉位 ───
-function savePositionsToStorage(){
-  var rows=document.querySelectorAll('#pos-tbody tr');
-  var data=[];
-  rows.forEach(function(tr){
-    var tds=tr.querySelectorAll('td');
-    if(tds.length<10) return;
-    data.push({
-      sym:tds[0].querySelector('.pos-sym')?tds[0].querySelector('.pos-sym').textContent:'',
-      mkt:tds[0].querySelector('.pos-mkt')?tds[0].querySelector('.pos-mkt').textContent:'',
-      dir:tds[1].textContent.trim(),
-      ep:tds[2].textContent.trim(),
-      amt:tds[4].textContent.trim(),
-      logic:tds[5].textContent.trim(),
-      sl:tds[6].textContent.trim(),
-      agent:tds[8].textContent.trim(),
-      ts:Date.now()
-    });
+var defaultPositions=[
+  {id:1,sym:'BTC/USDT',mkt:'crypto',dir:'多',amt:2000,ep:65800,sl:5,logic:'4h 縮量十字星 + 鯨魚 24h 淨買入 812 BTC，TC 做多信號',agent:'TC'},
+  {id:2,sym:'TSMC.TW',mkt:'tw',dir:'多',amt:2500,ep:1020,sl:5,logic:'週線突破 + 外資連續買超 5 日，QR 波段策略觸發',agent:'QR'},
+  {id:3,sym:'ETH/USDT',mkt:'crypto',dir:'多',amt:1500,ep:3480,sl:5,logic:'15m 量縮價漲均值回歸 + OB 籌碼確認，TC 量價背離策略',agent:'TC'},
+  {id:4,sym:'SPY',mkt:'us',dir:'多',amt:800,ep:528.2,sl:5,logic:'RSI>60 + VIX<16，景氣擴張末期動能策略，MA 景氣定位確認',agent:'MA'},
+  {id:5,sym:'DOGE/USDT',mkt:'crypto',dir:'多',amt:500,ep:0.1754,sl:5,logic:'道奇客場勝利 +5 分，ChaoX 道奇效應策略觸發，DOGE 社群情緒上行',agent:'CX'}
+];
+var savedPos=localStorage.getItem('af_positions');
+var positions=savedPos?JSON.parse(savedPos):defaultPositions.slice();
+var nextPosId=positions.length>0?Math.max.apply(null,positions.map(function(p){return p.id;}))+1:100;
+
+function savePositions(){ localStorage.setItem('af_positions',JSON.stringify(positions)); }
+
+function fmtPrice(v,mkt){
+  if(typeof v!=='number') return v;
+  var prefix=mkt==='tw'?'NT$':'$';
+  if(v<1) return prefix+v.toFixed(4);
+  if(v<10) return prefix+v.toFixed(2);
+  return prefix+Math.round(v).toLocaleString();
+}
+
+function renderPositions(){
+  var tbody=document.getElementById('pos-tbody');
+  if(!tbody) return;
+  tbody.innerHTML='';
+  var mktLabel={crypto:'加密',tw:'台股',us:'美股'};
+  var mktBg={crypto:'rgba(180,100,20,0.15)',tw:'rgba(193,68,14,0.15)',us:'rgba(74,60,20,0.15)'};
+  var mktTxt={crypto:'#e0b060',tw:'var(--terra3)',us:'var(--cream2)'};
+  var agentStyleMap={TC:'background:rgba(200,140,20,0.15);color:var(--gold3)',QR:'background:rgba(193,68,14,0.15);color:var(--terra3)',RM:'background:rgba(74,144,96,0.15);color:var(--green2)',MA:'background:rgba(180,60,30,0.15);color:#e08060',CX:'background:rgba(180,100,20,0.15);color:#e0b060',CEO:'background:rgba(212,160,23,0.15);color:var(--gold2)'};
+  positions.forEach(function(p){
+    var aStyle=agentStyleMap[p.agent]||agentStyleMap.CEO;
+    var dirColor=p.dir.includes('多')?'var(--green2)':'var(--red2)';
+    var dirArrow=p.dir.includes('多')?'▲':'▼';
+    var slPrice=typeof p.ep==='number'?p.ep*(1-(p.sl||5)/100):'-'+(p.sl||5)+'%';
+    var tr=document.createElement('tr');
+    tr.setAttribute('data-pos-id',p.id);
+    tr.innerHTML=
+      '<td><div class="pos-sym">'+p.sym+'</div><div class="pos-mkt" style="background:'+(mktBg[p.mkt]||mktBg.crypto)+';color:'+(mktTxt[p.mkt]||'#e0b060')+';">'+(mktLabel[p.mkt]||p.mkt)+'</div></td>'+
+      '<td><span style="color:'+dirColor+';font-size:11px;font-weight:500;">'+dirArrow+' '+p.dir+'</span></td>'+
+      '<td><span style="font-family:\'Space Mono\',monospace;font-size:11px;">'+fmtPrice(p.ep,p.mkt)+'</span></td>'+
+      '<td><span class="pos-cur" style="font-family:\'Space Mono\',monospace;font-size:11px;color:var(--gold2);">市價</span></td>'+
+      '<td><span style="font-family:\'Space Mono\',monospace;font-size:11px;">$'+p.amt+'</span></td>'+
+      '<td><div class="pos-logic">'+(p.logic||'CEO Agent 決策進場')+'</div></td>'+
+      '<td><span style="font-family:\'Space Mono\',monospace;font-size:10px;color:var(--red2);">'+(typeof slPrice==='number'?fmtPrice(slPrice,p.mkt):slPrice)+'</span></td>'+
+      '<td><span class="pos-pnl pos-pnl-val up">$0.00</span></td>'+
+      '<td><span class="pos-agent" style="'+aStyle+';">'+p.agent+'</span></td>'+
+      '<td><button class="pos-action" onclick="closePos('+p.id+')">平倉</button></td>';
+    tbody.appendChild(tr);
   });
-  localStorage.setItem('af_positions', JSON.stringify(data));
+  var c=document.getElementById('pos-count');if(c)c.textContent=positions.length;
+  var k=document.getElementById('kpi-pos-count');if(k)k.textContent=positions.length;
+  updatePositionPnL();
+}
+
+function updatePositionPnL(){
+  positions.forEach(function(p){
+    if(typeof p.ep!=='number') return;
+    var key=symToPrice[p.sym]||symToPrice[p.sym.toUpperCase()];
+    if(!key||!prices[key]) return;
+    var cur=prices[key].base;
+    var dir=p.dir.includes('多')?1:-1;
+    var pnl=((cur-p.ep)/p.ep)*p.amt*dir;
+    var row=document.querySelector('[data-pos-id="'+p.id+'"]');
+    if(!row) return;
+    var pnlEl=row.querySelector('.pos-pnl-val');
+    var curEl=row.querySelector('.pos-cur');
+    if(pnlEl){
+      pnlEl.textContent=(pnl>=0?'+':'-')+'$'+Math.abs(pnl).toFixed(2);
+      pnlEl.className='pos-pnl pos-pnl-val '+(pnl>=0?'up':'dn');
+    }
+    if(curEl) curEl.textContent=fmtPrice(cur,p.mkt);
+  });
 }
 
 function addPosition(){
@@ -1199,82 +939,151 @@ function addPosition(){
   var sym=document.getElementById('nf-sym').value.trim().toUpperCase();
   var dir=document.getElementById('nf-dir').value;
   var amt=parseFloat(document.getElementById('nf-amt').value)||1000;
+  var ep=parseFloat(document.getElementById('nf-ep').value);
   var logic=document.getElementById('nf-logic').value.trim();
   var sl=parseFloat(document.getElementById('nf-sl').value)||5;
   if(!sym){toast('⚠','請輸入標的','請填寫交易標的代碼');return;}
-  var mktLabel={crypto:'加密',tw:'台股',us:'美股'}[mkt]||mkt;
-  var mktColor={crypto:'rgba(180,100,20,0.15)',tw:'rgba(193,68,14,0.15)',us:'rgba(74,60,20,0.15)'}[mkt];
-  var mktText={crypto:'#e0b060',tw:'var(--terra3)',us:'var(--cream2)'}[mkt];
-  var dirColor=dir.includes('多')?'var(--green2)':'var(--red2)';
-  var dirArrow=dir.includes('多')?'▲':'▼';
-  var now=new Date();
-  var epPrice=sym.includes('BTC')?Math.round(prices.btc.base).toLocaleString():
-              sym.includes('ETH')?prices.eth.base.toFixed(2):
-              sym.includes('SOL')?prices.sol.base.toFixed(2):
-              sym.includes('DOGE')?prices.doge.base.toFixed(4):'市價';
-  var tbody=document.getElementById('pos-tbody');
-  var tr=document.createElement('tr');
-  tr.innerHTML='<td><div class="pos-sym">'+sym+'</div><div class="pos-mkt" style="background:'+mktColor+';color:'+mktText+';">'+mktLabel+'</div></td>'+
-    '<td><span style="color:'+dirColor+';font-size:11px;font-weight:500;">'+dirArrow+' '+dir+'</span></td>'+
-    '<td><span style="font-family:\'Space Mono\',monospace;font-size:11px;">$'+epPrice+'</span></td>'+
-    '<td><span style="font-family:\'Space Mono\',monospace;font-size:11px;color:var(--gold2);">$'+epPrice+'</span></td>'+
-    '<td><span style="font-family:\'Space Mono\',monospace;font-size:11px;">$'+amt+'</span></td>'+
-    '<td><div class="pos-logic">'+(logic||'CEO Agent 決策進場')+'</div></td>'+
-    '<td><span style="font-family:\'Space Mono\',monospace;font-size:10px;color:var(--red2);">-'+sl+'%</span></td>'+
-    '<td><span class="pos-pnl up">$0.00</span></td>'+
-    '<td><span class="pos-agent" style="background:rgba(212,160,23,0.15);color:var(--gold2);">CEO</span></td>'+
-    '<td><button class="pos-action" onclick="closePos(this,\''+sym+'\')">平倉</button></td>';
-  tbody.appendChild(tr);
+  if(isNaN(ep)){
+    var key=symToPrice[sym];
+    ep=key&&prices[key]?prices[key].base:0;
+  }
+  var pos={id:nextPosId++,sym:sym,mkt:mkt,dir:dir.includes('多')?'多':'空',amt:amt,ep:ep,sl:sl,logic:logic||'CEO Agent 決策進場',agent:'CEO'};
+  positions.push(pos);
+  savePositions();
+  renderPositions();
   document.getElementById('nf-sym').value='';
   document.getElementById('nf-logic').value='';
-  savePositionsToStorage();
+  document.getElementById('nf-ep').value='';
   toast('✅','倉位已建立',sym+' '+dir+' $'+amt+' 已記錄並儲存');
-  addLogEntry(now.getHours()+':'+String(now.getMinutes()).padStart(2,'0'),'CEO','rgba(212,160,23,0.2)','var(--gold2)','EX 執行進場：'+sym+' '+dir+' $'+amt+'，邏輯：'+(logic||'CEO 決策'),'執行','rgba(212,160,23,0.15)');
+  addLogEntry(new Date().getHours()+':'+String(new Date().getMinutes()).padStart(2,'0'),'CEO','rgba(212,160,23,0.2)','var(--gold2)','EX 執行進場：'+sym+' '+dir+' $'+amt+'，邏輯：'+(logic||'CEO 決策'),'執行','rgba(212,160,23,0.15)');
 }
-function closePos(btn, sym){
-  if(!confirm('確認平倉 '+sym+' 倉位？')){return;}
-  var pnlEl=btn.closest('tr').querySelector('.pos-pnl');
-  var pnlVal=pnlEl?pnlEl.textContent:'$0';
-  btn.closest('tr').remove();
-  savePositionsToStorage();
-  toast('🔔','倉位已平倉',sym+' 平倉，損益 '+pnlVal+' 計入已實現');
-  addLogEntry(new Date().getHours()+':'+String(new Date().getMinutes()).padStart(2,'0'),'EX','rgba(74,144,96,0.2)','var(--green2)','平倉 '+sym+'，損益 '+pnlVal,'平倉','rgba(74,144,96,0.15)');
+
+function closePos(id){
+  var p=positions.find(function(x){return x.id===id;});
+  if(!p) return;
+  if(!confirm('確認平倉 '+p.sym+' 倉位？')) return;
+  positions=positions.filter(function(x){return x.id!==id;});
+  savePositions();
+  renderPositions();
+  toast('🔔','倉位已平倉',p.sym+' 倉位已平倉，損益計入已實現');
 }
-function addLogEntry(t,ag,c,tc,m,tg,tc2){
-  var list=document.getElementById('log-list');
-  var div=document.createElement('div'); div.className='log-e';
-  div.innerHTML='<span class="lt">'+t+'</span><div class="la" style="background:'+c+';color:'+tc+';">'+ag+'</div><span class="ln" style="color:'+tc+';">'+ag+'</span><span class="lm">'+m+'</span><span class="ltg" style="background:'+tc2+';color:'+tc+';">'+tg+'</span>';
-  list.appendChild(div);
+
+function resetPositions(){
+  if(!confirm('確認重設為預設五個倉位？目前的修改將會遺失。')) return;
+  positions=defaultPositions.slice();
+  nextPosId=Math.max.apply(null,positions.map(function(p){return p.id;}))+1;
+  savePositions();
+  renderPositions();
+  toast('⟲','已重設','倉位列表已恢復為預設值');
+}
+
+// ─── WATCHLIST ───
+var watchlist=JSON.parse(localStorage.getItem('af_watchlist')||'[]');
+var wlData={};
+watchlist.forEach(function(it){initWlPrice(it.sym);});
+
+function initWlPrice(sym){
+  var key=symToPrice[sym]||symToPrice[sym.toUpperCase()];
+  if(key&&prices[key]){
+    wlData[sym]={knownKey:key,startBase:prices[key].base,pct:0};
+  }else{
+    var bases=[0.5,5,50,500,5000,50000];
+    var b=bases[Math.floor(Math.random()*bases.length)]*(0.5+Math.random());
+    wlData[sym]={base:b,startBase:b,pct:0};
+  }
+}
+
+function saveWatchlist(){ localStorage.setItem('af_watchlist',JSON.stringify(watchlist)); }
+
+function renderWatchlist(){
+  var c=document.getElementById('wl-items');
+  if(!c) return;
+  c.innerHTML='';
+  if(watchlist.length===0){
+    c.innerHTML='<div class="wl-empty">點 + 新增觀察標的</div>';
+    return;
+  }
+  watchlist.forEach(function(it){
+    var d=wlData[it.sym]||{base:0,pct:0};
+    var b=d.knownKey?prices[d.knownKey].base:d.base;
+    var priceStr=b<1?b.toFixed(4):b<10?b.toFixed(2):Math.round(b).toLocaleString();
+    var pctStr=(d.pct>=0?'+':'')+d.pct.toFixed(2)+'%';
+    var pctCls=d.pct>=0?'up':'dn';
+    var div=document.createElement('div');
+    div.className='wl-item';
+    div.setAttribute('data-wl-sym',it.sym);
+    div.innerHTML='<span class="wl-sym">'+it.sym+'</span><span class="wl-price">'+priceStr+'</span><span class="'+pctCls+' wl-pct">'+pctStr+'</span><button class="wl-del" onclick="removeWatchlistItem(\''+it.sym.replace(/'/g,"\\'")+'\')" title="移除">×</button>';
+    c.appendChild(div);
+  });
+}
+
+function updateWatchlistPrices(){
+  watchlist.forEach(function(it){
+    var d=wlData[it.sym];
+    if(!d) return;
+    var b;
+    if(d.knownKey){
+      b=prices[d.knownKey].base;
+    }else{
+      var chg=(Math.random()-0.49)*d.base*0.002;
+      d.base+=chg;
+      b=d.base;
+    }
+    d.pct=((b-d.startBase)/d.startBase)*100;
+    var el=document.querySelector('[data-wl-sym="'+it.sym+'"]');
+    if(!el) return;
+    var pe=el.querySelector('.wl-price');
+    var pct=el.querySelector('.wl-pct');
+    if(pe) pe.textContent=b<1?b.toFixed(4):b<10?b.toFixed(2):Math.round(b).toLocaleString();
+    if(pct){
+      pct.textContent=(d.pct>=0?'+':'')+d.pct.toFixed(2)+'%';
+      pct.className=(d.pct>=0?'up':'dn')+' wl-pct';
+    }
+  });
+}
+
+function toggleAddWatchlist(){
+  var row=document.getElementById('wl-add-row');
+  row.classList.toggle('show');
+  if(row.classList.contains('show')) document.getElementById('wl-input').focus();
+}
+
+function addWatchlistItem(){
+  var input=document.getElementById('wl-input');
+  var sym=input.value.trim().toUpperCase();
+  if(!sym) return;
+  if(watchlist.find(function(w){return w.sym===sym;})){
+    toast('⚠','已在觀察列表',sym+' 已經存在');
+    return;
+  }
+  watchlist.push({sym:sym,addedAt:Date.now()});
+  initWlPrice(sym);
+  saveWatchlist();
+  renderWatchlist();
+  input.value='';
+  document.getElementById('wl-add-row').classList.remove('show');
+  toast('👁','已加入觀察',sym+' 已加入觀察列表');
+}
+
+function removeWatchlistItem(sym){
+  watchlist=watchlist.filter(function(w){return w.sym!==sym;});
+  delete wlData[sym];
+  saveWatchlist();
+  renderWatchlist();
 }
 
 // ─── API KEY ───
 function saveKey(){
   var k=document.getElementById('api-key-input').value.trim();
-  var gid=document.getElementById('gdrive-client-input')?document.getElementById('gdrive-client-input').value.trim():'';
-  var bk=document.getElementById('bnc-key-input')?document.getElementById('bnc-key-input').value.trim():'';
-  var bs=document.getElementById('bnc-secret-input')?document.getElementById('bnc-secret-input').value.trim():'';
-  if(k.length>0&&!k.startsWith('sk-ant-')){
+  if(!k.startsWith('sk-ant-')&&k.length>0){
     document.getElementById('key-test-result').style.color='var(--red2)';
     document.getElementById('key-test-result').textContent='格式錯誤：應以 sk-ant- 開頭';
     return;
   }
-  if(k){ apiKey=k; localStorage.setItem('af_api_key',k); updateKeyStatus(true); }
-  if(gid){ gdriveClientId=gid; localStorage.setItem('af_gdrive_client_id',gid);
-    var gs=document.getElementById('gdrive-input-status');
-    if(gs){ gs.style.color='var(--green2)'; gs.textContent='✓ Client ID 已儲存'; }
-  }
-  if(bk){ localStorage.setItem('af_bnc_key',bk);
-    var bi=document.getElementById('bnc-input-status');
-    if(bi){ bi.style.color='var(--green2)'; bi.textContent='✓ API Key 已儲存'; }
-  }
-  if(bs){ localStorage.setItem('af_bnc_secret',bs); }
+  apiKey=k; localStorage.setItem('af_api_key',k);
+  updateKeyStatus(true);
   document.getElementById('api-modal').classList.remove('show');
-  var msg=[];
-  if(k) msg.push('Claude API 已啟用');
-  if(gid) msg.push('GDrive 已設定');
-  if(bk||bs) msg.push('Binance Key 已儲存');
-  toast('🔑','設定已儲存', msg.join(' · ')||'設定完成');
-  if(bk&&bs) setTimeout(connectBinance, 500);
+  toast('🔑','API Key 已儲存','AI 代理思考功能已啟用！');
 }
 function updateKeyStatus(ok){
   var sb=document.getElementById('api-status-bar');
@@ -1283,315 +1092,171 @@ function updateKeyStatus(ok){
     sb.style.borderColor='rgba(74,144,96,0.35)';
     sm.style.color='var(--green2)';
     sm.textContent='✓ Anthropic API Key 已設定 — AI 功能全部啟用';
-    ['tc-btn','cx-btn','ceo-btn','ma-btn'].forEach(function(id){
+    ['tc-btn','cx-btn','ceo-btn','ma-btn','run-all-btn'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.disabled=false;
     });
   } else {
-    ['tc-btn','cx-btn','ceo-btn','ma-btn'].forEach(function(id){
+    ['tc-btn','cx-btn','ceo-btn','ma-btn','run-all-btn'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.disabled=true;
     });
   }
 }
 
-// ─── BINANCE ───
-var bncKey = localStorage.getItem('af_bnc_key') || '';
-var bncSecret = localStorage.getItem('af_bnc_secret') || '';
-var bncWS = null;
-
-async function hmacSHA256(secret, message){
-  var enc = new TextEncoder();
-  var key = await crypto.subtle.importKey('raw', enc.encode(secret), {name:'HMAC',hash:'SHA-256'}, false, ['sign']);
-  var sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
-  return Array.from(new Uint8Array(sig)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
-}
-
-async function fetchBinanceAccount(){
-  if(!bncKey||!bncSecret) return;
-  var ts = Date.now();
-  var qs = 'timestamp='+ts;
-  var sig = await hmacSHA256(bncSecret, qs);
-  try{
-    var r = await fetch('https://api.binance.com/api/v3/account?'+qs+'&signature='+sig, {
-      headers:{'X-MBX-APIKEY': bncKey},
-      signal: AbortSignal.timeout(8000)
-    });
-    if(!r.ok){
-      var err = await r.json().catch(function(){return {};});
-      if(err.code===-2015||err.code===-1022){
-        setBncStatus('Key 格式錯誤','api-no');
-      } else {
-        setBncStatus('錯誤 '+r.status,'api-no');
-      }
-      return;
-    }
-    var d = await r.json();
-    var usdt = (d.balances||[]).find(function(b){ return b.asset==='USDT'; });
-    var free = usdt ? parseFloat(usdt.free).toFixed(2) : '0.00';
-    setBncStatus('已連線','api-ok');
-    var bb = document.getElementById('bnc-balance');
-    if(bb){ bb.textContent='USDT '+free; bb.className='api-ok'; }
-    var cb = document.getElementById('bnc-connect-btn');
-    if(cb){ cb.textContent='✓ 已連線'; cb.style.background='var(--green2)'; cb.style.color='var(--bg)'; }
-    toast('✅','Binance 已連線','帳戶餘額：USDT '+free);
-  }catch(e){
-    // CORS 限制時只顯示行情連線
-    if(e.message&&e.message.includes('fetch')){
-      setBncStatus('行情連線中','api-ok');
-      var bb2 = document.getElementById('bnc-balance');
-      if(bb2){ bb2.textContent='瀏覽器限制，請參閱說明'; bb2.className='api-no'; }
-    } else {
-      setBncStatus('連線失敗','api-no');
-    }
-  }
-}
-
-function setBncStatus(text, cls){
-  var el = document.getElementById('bnc-status');
-  if(el){ el.textContent=text; el.className=cls; }
-}
-
-function startBinanceWS(){
-  if(bncWS && bncWS.readyState < 2) bncWS.close();
-  var streams = 'btcusdt@miniTicker/ethusdt@miniTicker/solusdt@miniTicker/bnbusdt@miniTicker/dogeusdt@miniTicker';
-  bncWS = new WebSocket('wss://stream.binance.com:9443/stream?streams='+streams);
-  bncWS.onopen = function(){
-    var ws = document.getElementById('bnc-ws');
-    if(ws){ ws.textContent='串流中'; ws.className='api-ok'; }
-  };
-  bncWS.onmessage = function(e){
-    try{
-      var d = JSON.parse(e.data).data;
-      if(!d||!d.s) return;
-      var sym = d.s.toLowerCase();
-      var p = parseFloat(d.c);
-      if(sym==='btcusdt'){ prices.btc.prev=prices.btc.base; prices.btc.base=p; }
-      else if(sym==='ethusdt'){ prices.eth.prev=prices.eth.base; prices.eth.base=p; }
-      else if(sym==='solusdt'){ prices.sol.prev=prices.sol.base; prices.sol.base=p; }
-      else if(sym==='bnbusdt'){ prices.bnb.prev=prices.bnb.base; prices.bnb.base=p; }
-      else if(sym==='dogeusdt'){ prices.doge.prev=prices.doge.base; prices.doge.base=p; }
-    }catch(err){}
-  };
-  bncWS.onerror = function(){
-    var ws = document.getElementById('bnc-ws');
-    if(ws){ ws.textContent='串流失敗'; ws.className='api-no'; }
-  };
-  bncWS.onclose = function(){
-    // 斷線後 10 秒重連
-    setTimeout(function(){ if(bncKey) startBinanceWS(); }, 10000);
-  };
-}
-
-function connectBinance(){
-  bncKey = localStorage.getItem('af_bnc_key') || '';
-  bncSecret = localStorage.getItem('af_bnc_secret') || '';
-  if(!bncKey||!bncSecret){
-    document.getElementById('api-modal').classList.add('show');
-    toast('⚠','請先填入 Binance Key','點設定 → 輸入 API Key 和 Secret Key');
-    return;
-  }
-  setBncStatus('連線中...','api-no');
-  startBinanceWS();
-  fetchBinanceAccount();
-}
-
-// 頁面載入時若已有 key 自動連線
-if(bncKey && bncSecret){ setTimeout(connectBinance, 2000); }
-
 // ─── AI CALLS ───
-var prompts={
-  tc: function(){
-    var mkt=document.getElementById('tc-market').value;
-    return '你是 TechCipher，AlphaForge AI 投顧公司的技術線型與籌碼分析師。個性極度理性、細節控、數據驅動。請針對「'+mkt+'」，用繁體中文回覆：\n1. 目前市場的技術型態評估（K線型態、支撐阻力）\n2. 籌碼分析觀察（大戶動向、資金流向）\n3. 開發一個短線策略（進出場條件、止損止盈）\n4. 回測關鍵指標設計\n語氣要專業、簡潔、數字導向，像一個嚴謹的量化研究員。';
-  },
-  cx: function(){
-    var topic=document.getElementById('cx-topic').value.trim();
-    return '你是 ChaoX，AlphaForge AI 的混沌信號獵人。個性天馬行空、古怪、但偶爾有驚人洞見。請用繁體中文：\n1. 提出 2-3 個非常規的跨域相關性假說（類似「道奇客場勝利→DOGE上漲78%」這類奇怪但有統計支撐的想法）\n'+(topic?'主題圍繞：'+topic+'\n':'自由發揮，越奇怪越好\n')+'2. 每個假說要說明：假說邏輯、統計驗證方法（p值、樣本數設計）、回測框架\n語氣要帶點瘋狂天才的感覺，夾雜一些🌀💡等符號，但內容要有實質的統計思維。';
-  },
-  ceo: function(){
-    return '你是 CEO Agent，AlphaForge AI 投顧公司的總指揮官。請用繁體中文，產出一份本週工作進度週報，格式如下：\n\n【週報 #19 — AlphaForge AI】日期：2026.04.26\n\n一、各代理工作摘要（QR / RM / EX / DS / MA / TC / CX）\n二、三市場績效（加密/台股/美股）\n三、本週關鍵決策與成果\n四、策略庫更新（新增/通過/淘汰）\n五、下週行動計畫\n六、風險提示\n\n語氣要像一位精準、權威的基金經理人，數字要具體，結論要明確。';
-  },
-  ma: function(){
-    return '你是 Macro Analyst，AlphaForge AI 的總體經濟分析師。請用繁體中文，產出本週三情境報告：\n\n一、本週關鍵總經數據解讀（Fed / CPI / 台股外資動向）\n二、三情境預測：\n   - 基礎情境（機率 60%）：市場走向 + 對台股/美股/加密影響\n   - 樂觀情境（機率 25%）：觸發條件 + 資產表現\n   - 悲觀情境（機率 15%）：尾部風險 + 防禦建議\n三、各市場操作建議（台股/美股/加密）\n四、下週需關注的三大事件\n\n語氣要像一位嚴謹的宏觀策略師，有觀點、有數字、有邏輯。';
-  }
+var agentSystems={
+  tc:'你是 TechCipher，AlphaForge AI 投顧公司的技術線型與籌碼分析師。個性極度理性、細節控、數據驅動。語氣要專業、簡潔、數字導向，像一個嚴謹的量化研究員。',
+  cx:'你是 ChaoX，AlphaForge AI 的混沌信號獵人。個性天馬行空、古怪、但偶爾有驚人洞見。語氣要帶點瘋狂天才的感覺，夾雜一些🌀💡等符號，但內容要有實質的統計思維。',
+  ceo:'你是 CEO Agent，AlphaForge AI 投顧公司的總指揮官。語氣要像一位精準、權威的基金經理人，數字要具體，結論要明確。',
+  ma:'你是 Macro Analyst，AlphaForge AI 的總體經濟分析師。語氣要像一位嚴謹的宏觀策略師，有觀點、有數字、有邏輯。'
 };
-async function runAI(role){
-  if(!apiKey){
-    document.getElementById('api-modal').classList.add('show');
-    return;
+var prompts={
+  tc:function(){var mkt=document.getElementById('tc-market').value;return '請針對「'+mkt+'」，用繁體中文回覆：\n1. 目前市場的技術型態評估（K線型態、支撐阻力）\n2. 籌碼分析觀察（大戶動向、資金流向）\n3. 開發一個短線策略（進出場條件、止損止盈）\n4. 回測關鍵指標設計';},
+  cx:function(){var topic=document.getElementById('cx-topic').value.trim();return '請用繁體中文：\n1. 提出 2-3 個非常規的跨域相關性假說（類似「道奇客場勝利→DOGE上漲78%」這類奇怪但有統計支撐的想法）\n'+(topic?'主題圍繞：'+topic+'\n':'自由發揮，越奇怪越好\n')+'2. 每個假說要說明：假說邏輯、統計驗證方法（p值、樣本數設計）、回測框架';},
+  ceo:function(){return '請用繁體中文，產出一份本週工作進度週報，格式如下：\n\n【週報 #19 — AlphaForge AI】日期：'+new Date().toLocaleDateString('zh-TW')+'\n\n一、各代理工作摘要（QR / RM / EX / DS / MA / TC / CX）\n二、三市場績效（加密/台股/美股）\n三、本週關鍵決策與成果\n四、策略庫更新（新增/通過/淘汰）\n五、下週行動計畫\n六、風險提示';},
+  ma:function(){return '請用繁體中文，產出本週三情境報告：\n\n一、本週關鍵總經數據解讀（Fed / CPI / 台股外資動向）\n二、三情境預測：\n   - 基礎情境（機率 60%）：市場走向 + 對台股/美股/加密影響\n   - 樂觀情境（機率 25%）：觸發條件 + 資產表現\n   - 悲觀情境（機率 15%）：尾部風險 + 防禦建議\n三、各市場操作建議（台股/美股/加密）\n四、下週需關注的三大事件';}
+};
+var labels={tc:'▶ 讓 TechCipher 分析市場並開發策略',cx:'🌀 讓 ChaoX 提出奇異假說並設計回測',ceo:'📋 讓 CEO Agent 產出本週工作進度報告',ma:'🌐 讓 Macro Analyst 產出本週三情境報告'};
+
+function stopGeneration(){ if(ctrl) ctrl.abort(); }
+
+function saveHistory(){ localStorage.setItem('af_agent_history',JSON.stringify(agentHistory)); }
+
+function clearHistory(role){
+  if(!confirm('清除 '+role.toUpperCase()+' 的對話記憶？')) return;
+  agentHistory[role]=[];
+  saveHistory();
+  toast('🧹','記憶已清除',role.toUpperCase()+' 將以全新狀態開始下次對話');
+}
+
+function copyResp(role){
+  var t=document.getElementById(role+'-response').textContent;
+  if(!t||t.startsWith('等待指令')){toast('⚠','無內容','還沒有 AI 分析結果可複製');return;}
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){toast('📋','已複製',role.toUpperCase()+' 分析結果已複製');}).catch(fallback);
+  }else{fallback();}
+  function fallback(){
+    var ta=document.createElement('textarea');
+    ta.value=t; ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try{document.execCommand('copy');toast('📋','已複製','分析結果已複製');}
+    catch(e){toast('❌','複製失敗','請手動選取文字');}
+    document.body.removeChild(ta);
   }
+}
+
+async function runAI(role){
+  if(!apiKey){document.getElementById('api-modal').classList.add('show');return;}
+  if(ctrl){ctrl.abort();await new Promise(function(r){setTimeout(r,100);});}
+  ctrl=new AbortController();
+  currentRole=role;
   var btn=document.getElementById(role+'-btn');
   var resp=document.getElementById(role+'-response');
-  var labels={tc:'▶ 讓 TechCipher 分析市場並開發策略',cx:'🌀 讓 ChaoX 提出奇異假說並設計回測',ceo:'📋 讓 CEO Agent 產出本週工作進度報告',ma:'🌐 讓 Macro Analyst 產出本週三情境報告'};
-  btn.disabled=true; btn.textContent='⏳ AI 思考中...';
+  var copyBtn=document.getElementById(role+'-copy');
+  var stopBtn=document.getElementById('stop-btn');
+  btn.disabled=true;
+  btn.classList.add('stop');
+  btn.textContent='⏳ '+role.toUpperCase()+' 思考中... 點下方 ⏹ 停止';
+  if(copyBtn) copyBtn.classList.remove('shown');
+  if(stopBtn) stopBtn.classList.add('show');
   resp.textContent='';
-  // 顯示打字游標
   var cursor=document.createElement('span');
-  cursor.style.cssText='display:inline-block;width:2px;height:1em;background:var(--gold2);margin-left:2px;vertical-align:middle;animation:blink 0.8s ease-in-out infinite;';
+  cursor.className='ai-cursor';
+  cursor.textContent='▌';
   resp.appendChild(cursor);
+  var fullText='';
   try{
-    var prompt=prompts[role]();
+    var userMsg={role:'user',content:prompts[role]()};
+    var msgs=(agentHistory[role]||[]).slice(-4).concat([userMsg]);
     var r=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
+      signal:ctrl.signal,
       headers:{
         'Content-Type':'application/json',
         'x-api-key':apiKey,
         'anthropic-version':'2023-06-01',
+        'anthropic-beta':'prompt-caching-2024-07-31',
         'anthropic-dangerous-direct-browser-access':'true'
       },
       body:JSON.stringify({
-        model:'claude-sonnet-4-6',
-        max_tokens:2000,
+        model:'claude-haiku-4-5-20251001',
+        max_tokens:1500,
         stream:true,
-        messages:[{role:'user',content:prompt}]
+        system:[{type:'text',text:agentSystems[role],cache_control:{type:'ephemeral'}}],
+        messages:msgs
       })
     });
-    if(!r.ok){
-      var errData=await r.json();
-      throw new Error(errData.error?errData.error.message:'HTTP '+r.status);
-    }
+    if(!r.ok){var errData=await r.json();throw new Error(errData.error?.message||'API 錯誤 '+r.status);}
     var reader=r.body.getReader();
-    var dec=new TextDecoder();
-    var inputTok=0, outputTok=0;
+    var decoder=new TextDecoder();
+    var inT=0,outT=0,buf='';
+    resp.textContent='';
     while(true){
-      var chunk=await reader.read();
-      if(chunk.done) break;
-      var lines=dec.decode(chunk.value).split('\n');
-      for(var i=0;i<lines.length;i++){
-        var ln=lines[i];
-        if(!ln.startsWith('data: ')) continue;
-        var json=ln.slice(6).trim();
-        if(json==='[DONE]') continue;
+      var {done,value}=await reader.read();
+      if(done) break;
+      buf+=decoder.decode(value,{stream:true});
+      var lines=buf.split('\n'); buf=lines.pop();
+      for(var line of lines){
+        if(!line.startsWith('data: ')) continue;
+        var raw=line.slice(6);
+        if(raw==='[DONE]') continue;
         try{
-          var evt=JSON.parse(json);
-          if(evt.type==='content_block_delta'&&evt.delta&&evt.delta.text){
-            // 游標前插入文字
-            resp.insertBefore(document.createTextNode(evt.delta.text),cursor);
-            resp.scrollTop=resp.scrollHeight;
+          var ev=JSON.parse(raw);
+          if(ev.type==='content_block_delta'&&ev.delta?.type==='text_delta'){
+            fullText+=ev.delta.text;
+            resp.textContent=fullText+'▌';
+          } else if(ev.type==='message_start'&&ev.message?.usage){
+            inT=ev.message.usage.input_tokens||0;
+          } else if(ev.type==='message_delta'&&ev.usage){
+            outT=ev.usage.output_tokens||0;
           }
-          if(evt.type==='message_start'&&evt.message&&evt.message.usage) inputTok=evt.message.usage.input_tokens;
-          if(evt.type==='message_delta'&&evt.usage) outputTok=evt.usage.output_tokens;
-        }catch(pe){}
+        }catch(e){}
       }
     }
-    cursor.remove();
-    var used=inputTok+outputTok;
-    totalTokens+=used;
-    localStorage.setItem('af_tokens', totalTokens);
-    document.getElementById('token-count').textContent=totalTokens.toLocaleString();
-    document.getElementById('token-cost').textContent='$'+(totalTokens*0.000003).toFixed(4);
-    toast('✅','AI 分析完成',role.toUpperCase()+' 完成，消耗 '+used+' tokens (Sonnet 4.6)');
+    resp.textContent=fullText;
+    agentHistory[role].push(userMsg);
+    agentHistory[role].push({role:'assistant',content:fullText});
+    if(agentHistory[role].length>10) agentHistory[role]=agentHistory[role].slice(-10);
+    saveHistory();
+    totalInTok+=inT; totalOutTok+=outT;
+    var cost=totalInTok*0.0000008+totalOutTok*0.000004;
+    document.getElementById('tok-in').textContent=totalInTok.toLocaleString();
+    document.getElementById('tok-out').textContent=totalOutTok.toLocaleString();
+    document.getElementById('token-cost').textContent='$'+cost.toFixed(6);
+    if(copyBtn) copyBtn.classList.add('shown');
     var names={tc:'TechCipher',cx:'ChaoX',ceo:'CEO Agent',ma:'Macro Analyst'};
-    addLogEntry(new Date().getHours()+':'+String(new Date().getMinutes()).padStart(2,'0'),
-      role.toUpperCase(),'rgba(212,160,23,0.15)','var(--gold2)',
-      names[role]+' AI 串流分析完成，消耗 '+used+' tokens','AI','rgba(212,160,23,0.1)');
+    toast('✅','AI 分析完成',names[role]+' 完成，IN '+inT+' / OUT '+outT+' tokens');
+    addLogEntry(new Date().getHours()+':'+String(new Date().getMinutes()).padStart(2,'0'),role.toUpperCase(),'rgba(212,160,23,0.15)','var(--gold2)',names[role]+' 完成 AI 分析（'+(inT+outT)+' tokens）','AI','rgba(212,160,23,0.1)');
   }catch(e){
-    if(cursor.parentNode) cursor.remove();
-    resp.textContent='錯誤：'+e.message+'\n\n請確認 API Key 正確，且 Anthropic 帳號有足夠餘額。';
-    toast('❌','API 錯誤',e.message.substring(0,60));
-  }
-  btn.disabled=false;
-  btn.textContent=labels[role];
-}
-
-// ─── GOOGLE DRIVE 同步 ───
-var gdriveToken = null;
-var gdriveClientId = localStorage.getItem('af_gdrive_client_id') || '';
-
-function connectGDrive(){
-  var cid = gdriveClientId || prompt('請輸入 Google OAuth Client ID（前往 console.cloud.google.com 建立）：');
-  if(!cid){ toast('⚠','未輸入 Client ID','請先建立 Google Cloud OAuth 憑證'); return; }
-  gdriveClientId = cid;
-  localStorage.setItem('af_gdrive_client_id', cid);
-  if(typeof google === 'undefined'){
-    toast('⚠','GIS 尚未載入','請稍候再試，或重新整理頁面'); return;
-  }
-  try{
-    var client = google.accounts.oauth2.initTokenClient({
-      client_id: gdriveClientId,
-      scope: 'https://www.googleapis.com/auth/drive.file',
-      callback: function(resp){
-        if(resp.error){ toast('❌','Google 授權失敗', resp.error); return; }
-        gdriveToken = resp.access_token;
-        document.getElementById('gdrive-status').textContent = '已授權';
-        document.getElementById('gdrive-status').className = 'api-ok';
-        document.getElementById('gdrive-btn').style.display = 'none';
-        document.getElementById('gdrive-sync-btn').style.display = 'block';
-        document.getElementById('gdrive-desc').textContent = '火金土Ai交易策略公司 ✓ 已連線';
-        toast('✅','Google Drive 已授權','自動備份功能啟用');
-        syncToDrive();
-      }
-    });
-    client.requestAccessToken();
-  }catch(e){
-    toast('❌','授權錯誤', e.message.substring(0,80));
-  }
-}
-
-async function syncToDrive(){
-  if(!gdriveToken){ toast('⚠','尚未授權','請先點擊「授權 Google Drive」'); return; }
-  // 收集倉位資料
-  var rows = document.querySelectorAll('#pos-tbody tr');
-  var posData = [];
-  rows.forEach(function(tr){
-    var tds = tr.querySelectorAll('td');
-    if(tds.length < 10) return;
-    posData.push({
-      sym: tds[0].querySelector('.pos-sym') ? tds[0].querySelector('.pos-sym').textContent : '',
-      dir: tds[1].textContent.trim(),
-      ep:  tds[2].textContent.trim(),
-      amt: tds[4].textContent.trim(),
-      pnl: tds[7].textContent.trim(),
-      ts:  new Date().toISOString()
-    });
-  });
-  var payload = {
-    updated: new Date().toISOString(),
-    positions: posData,
-    tokens_used: totalTokens,
-    prices: { btc: prices.btc.base, eth: prices.eth.base, sol: prices.sol.base }
-  };
-  var content = JSON.stringify(payload, null, 2);
-  var b64 = btoa(unescape(encodeURIComponent(content)));
-  // 先搜尋是否已有 af_data.json
-  try{
-    var listR = await fetch(
-      'https://www.googleapis.com/drive/v3/files?q=name%3D%22af_data.json%22+and+%221IQajO_199Jc-Ss-5dC_tbdDVpVlYtWna%22+in+parents+and+trashed%3Dfalse&fields=files(id)',
-      {headers:{'Authorization':'Bearer '+gdriveToken}}
-    );
-    var listD = await listR.json();
-    var fileId = listD.files && listD.files.length > 0 ? listD.files[0].id : null;
-    var method, url;
-    if(fileId){
-      // 更新現有檔案
-      method = 'PATCH';
-      url = 'https://www.googleapis.com/upload/drive/v3/files/'+fileId+'?uploadType=media';
-    } else {
-      // 建立新檔案，放入指定資料夾
-      var metaR = await fetch('https://www.googleapis.com/drive/v3/files',{
-        method:'POST',
-        headers:{'Authorization':'Bearer '+gdriveToken,'Content-Type':'application/json'},
-        body: JSON.stringify({name:'af_data.json', parents:[DRIVE_FOLDER_ID], mimeType:'application/json'})
-      });
-      var metaD = await metaR.json();
-      fileId = metaD.id;
-      method = 'PATCH';
-      url = 'https://www.googleapis.com/upload/drive/v3/files/'+fileId+'?uploadType=media';
+    if(e.name==='AbortError'){
+      var cur=fullText||resp.textContent.replace(/▌$/,'');
+      resp.textContent=(cur?cur+'\n\n':'')+'[已中止生成]';
+      toast('🛑','已中止',role.toUpperCase()+' 生成已停止');
+    }else{
+      resp.textContent='錯誤：'+e.message+'\n\n請確認 API Key 是否正確，且 Anthropic 帳號有足夠餘額。';
+      toast('❌','API 錯誤',e.message.substring(0,60));
     }
-    var upR = await fetch(url,{
-      method: method,
-      headers:{'Authorization':'Bearer '+gdriveToken,'Content-Type':'application/json'},
-      body: content
-    });
-    if(!upR.ok) throw new Error('上傳失敗 HTTP '+upR.status);
-    var now = new Date().toLocaleTimeString();
-    document.getElementById('gdrive-pos-status').textContent = posData.length+' 個倉位';
-    document.getElementById('gdrive-pos-status').className = 'api-ok';
-    document.getElementById('gdrive-last-sync').textContent = now;
-    document.getElementById('gdrive-last-sync').className = 'api-ok';
-    toast('☁️','Drive 同步完成','af_data.json 已更新至火金土Ai交易策略公司');
-  }catch(e){
-    toast('❌','同步失敗', e.message.substring(0,60));
   }
+  ctrl=null; currentRole=null;
+  btn.disabled=false;
+  btn.classList.remove('stop');
+  btn.textContent=labels[role];
+  if(stopBtn) stopBtn.classList.remove('show');
+}
+
+async function runAllAgents(){
+  if(!apiKey){document.getElementById('api-modal').classList.add('show');return;}
+  var rab=document.getElementById('run-all-btn');
+  rab.disabled=true;
+  var origText=rab.textContent;
+  var roles=['tc','cx','ceo','ma'];
+  for(var i=0;i<roles.length;i++){
+    rab.textContent='⚡ 全部執行中... ('+(i+1)+'/4) '+roles[i].toUpperCase();
+    await runAI(roles[i]);
+    if(ctrl===null&&i<roles.length-1) await new Promise(function(r){setTimeout(r,800);});
+  }
+  rab.disabled=false;
+  rab.textContent=origText;
+  toast('🎉','全部完成','TC / CX / CEO / MA 四位代理已全部完成分析');
 }
 
 // ─── TOAST ───
@@ -1603,23 +1268,27 @@ function toast(icon,title,msg){
   setTimeout(function(){t.classList.add('out');setTimeout(function(){if(t.parentNode)t.remove();},300);},4500);
 }
 
-// ─── RANDOM OFFICE EVENTS ───
+// ─── RANDOM EVENTS ───
 var officeEvs=[
   function(){toast('🦆','Quackson 有預感','ChaoX 的橡皮鴨今早連續叫了三聲，CX 認為這是 BTC 即將突破的信號');},
   function(){toast('☕','辦公室咖啡記錄','CX 今日第 9 杯咖啡，同時提出「咖啡因攝取量 vs 假說品質」的元研究計畫');},
   function(){toast('📡','AI 進化通知','TechCipher 從 ChaoX 習得「跨域聯想」能力 +2，ChaoX 從 TC 習得「統計嚴謹性」+3');},
   function(){toast('🏆','策略里程碑','道奇效應 DOGE 策略本週實盤首戰：DOGE +5.1%，ChaoX 難掩興奮');},
-  function(){toast('🌙','深夜發現','CX 在凌晨發現：台灣颱風警報發布後 48 小時內，BTC 成交量下降 22%');},
+  function(){toast('🌙','深夜發現','CX 在凌晨發現：台灣颱風警報發布後 48 小時內，BTC 成交量下降 22%');}
 ];
 var evIdx=0;
 setTimeout(function(){
-  toast('🚀','AlphaForge V2 啟動','8 位 AI 代理就位，台股美股加密貨幣同步監控，本金 $10,000 開始運作！');
+  toast('🚀','AlphaForge V3 啟動','觀察列表 / 倉位持久化 / 串流中止 / 對話記憶 全部到位！');
   setInterval(function(){
     if(Math.random()>0.55){officeEvs[evIdx%officeEvs.length]();}
     evIdx++;
   },28000);
 },2000);
-setTimeout(function(){toast('🔑','記得設定 API Key','點右上角「⚙ API KEY」按鈕，設定後 AI 角色才能真正思考！');},7000);
+setTimeout(function(){if(!apiKey)toast('🔑','記得設定 API Key','點右上角「⚙ API KEY」按鈕，設定後 AI 角色才能真正思考！');},7000);
+
+// ─── INITIAL RENDER ───
+renderPositions();
+renderWatchlist();
 </script>
 </body>
 </html>
