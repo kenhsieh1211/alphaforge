@@ -107,6 +107,7 @@ html,body{background:var(--bg);font-family:'Noto Serif TC',serif;color:var(--tx)
   <div class="hdr-t">命 運 羅 盤</div>
   <div class="hdr-s">KEN HSIEH · 1985.12.11 卯時 · 甲木身強格</div>
   <div class="hdr-bz">乙丑 · 戊子 · <span class="ds">甲申</span> · 丁卯　／ 喜火土金 · 忌水木 · 旬空午未</div>
+  <div id="dayunBar" style="font-size:10px;color:var(--g3);margin-top:6px;letter-spacing:2px;font-family:'DM Mono',monospace;"></div>
   <button class="cog" id="cogBtn" aria-label="設定">⚙</button>
 </div>
 
@@ -146,6 +147,11 @@ html,body{background:var(--bg);font-family:'Noto Serif TC',serif;color:var(--tx)
   <div class="det-adv" id="detAdv"></div>
   <div class="det-note" id="detNote"></div>
   <div class="calc-box" id="calcBox"></div>
+  <div style="margin-top:12px;display:flex;align-items:center;gap:8px;">
+    <button id="aiBtn" style="flex:1;background:linear-gradient(135deg,#7A4A08,#D4960A);border:none;color:#130F0A;padding:9px;border-radius:7px;font-family:'Noto Serif TC',serif;font-size:12px;font-weight:600;cursor:pointer;letter-spacing:2px;">🔮 AI 白話解盤</button>
+    <button id="aiClearBtn" title="清除快取" style="background:var(--sf);border:1px solid var(--bd);color:var(--txm);padding:9px 12px;border-radius:7px;font-size:11px;cursor:pointer;">↻</button>
+  </div>
+  <div id="aiBox" style="display:none;background:rgba(0,0,0,0.4);border:1px solid var(--bd2);border-radius:8px;padding:12px 14px;margin-top:10px;font-size:13px;line-height:1.9;color:var(--tx);white-space:pre-wrap;"></div>
 </div>
 
 <div class="sec">今日流時</div>
@@ -172,6 +178,10 @@ html,body{background:var(--bg);font-family:'Noto Serif TC',serif;color:var(--tx)
         <option value="0">否</option>
       </select>
     </div>
+    <div class="fld">
+      <label>Anthropic API Key（AI 解盤用，sk-ant-… 僅存本機）</label>
+      <input type="password" id="cfgApiKey" placeholder="sk-ant-...">
+    </div>
     <div class="modal-btns">
       <button id="cfgCancel">取消</button>
       <button class="pri" id="cfgSave">儲存</button>
@@ -188,7 +198,7 @@ const DE=['水','土','木','木','土','火','火','土','金','金','土','水
 const SH=['子時','丑時','寅時','卯時','辰時','巳時','午時','未時','申時','酉時','戌時','亥時'];
 
 // ───── 設定 ─────
-const DEFAULT_CFG={lng:121.5, refLng:120, solar:1};
+const DEFAULT_CFG={lng:121.5, refLng:120, solar:1, apiKey:''};
 function loadCfg(){try{return Object.assign({},DEFAULT_CFG,JSON.parse(localStorage.getItem('compass.cfg')||'{}'));}catch(e){return{...DEFAULT_CFG};}}
 function saveCfg(c){try{localStorage.setItem('compass.cfg',JSON.stringify(c));}catch(e){}}
 let CFG=loadCfg();
@@ -283,6 +293,28 @@ const NATAL={
 const NATAL_DZ=[NATAL.yrDz,NATAL.moDz,NATAL.dyDz,NATAL.hrDz];
 const NATAL_TG=[NATAL.yrTg,NATAL.moTg,NATAL.hrTg]; // 不含日主自身
 
+// ───── 大運（10 年盤）─────
+const DAYUN=[
+  {start:1987, gz:'丁亥'},
+  {start:1997, gz:'丙戌'},
+  {start:2007, gz:'乙酉'},
+  {start:2017, gz:'甲申'},
+  {start:2027, gz:'癸未'},
+  {start:2037, gz:'壬午'},
+  {start:2047, gz:'辛巳'},
+  {start:2057, gz:'庚辰'}
+];
+function gzToObj(gz){
+  const tg=gz[0],dz=gz[1],ti=TG.indexOf(tg),zi=DZ.indexOf(dz);
+  return{tg,dz,te:TE[ti],ze:DE[zi],ti,zi};
+}
+function currentDayun(d){
+  const{bzYear}=bzYearMonth(d); // 立春換歲
+  let cur=null;
+  for(const u of DAYUN){if(bzYear>=u.start)cur=u;else break;}
+  return cur?{...gzToObj(cur.gz),start:cur.start,end:cur.start+9,raw:cur.gz}:null;
+}
+
 // ───── 十神（相對甲木日主）─────
 // 甲(0) 比肩、乙(1) 劫財、丙(2) 食神、丁(3) 傷官、戊(4) 偏財、己(5) 正財、庚(6) 七殺、辛(7) 正官、壬(8) 偏印、癸(9) 正印
 const TEN_GOD_TG=['比肩','劫財','食神','傷官','偏財','正財','七殺','正官','偏印','正印'];
@@ -300,7 +332,8 @@ function pillarScore(te,ze){
   const raw=elSc(te)+elSc(ze);
   return Math.max(30,Math.min(100,Math.round(30+(raw-8)/(56-8)*70)));
 }
-const W={yr:0.10, mo:0.30, dy:0.35, hr:0.25};
+// 大運佔 10%（背景基調），其餘等比縮減
+const W={da:0.10, yr:0.08, mo:0.27, dy:0.32, hr:0.23};
 
 // 沖刑：對完整原局四地支
 const CLASH_PAIRS=[['子','午'],['丑','未'],['寅','申'],['卯','酉'],['辰','戌'],['巳','亥']];
@@ -388,20 +421,23 @@ function getVoidInfo(dyDz){
   return{note:'',pen:0};
 }
 
-function calcAll(yr,mo,dy,hr){
+function calcAll(yr,mo,dy,hr,da){
   const yrS=pillarScore(yr.te,yr.ze),moS=pillarScore(mo.te,mo.ze),dyS=pillarScore(dy.te,dy.ze),hrS=pillarScore(hr.te,hr.ze);
-  const weighted=yrS*W.yr+moS*W.mo+dyS*W.dy+hrS*W.hr;
+  const daS=da?pillarScore(da.te,da.ze):60;
+  const weighted=daS*W.da+yrS*W.yr+moS*W.mo+dyS*W.dy+hrS*W.hr;
   const pilDZ=[yr.dz,mo.dz,dy.dz,hr.dz];
+  if(da)pilDZ.push(da.dz); // 大運地支也參與合會局/沖刑判斷
   const clash=getClashInfo(pilDZ);
   const he=getHeInfo(pilDZ);
   const ju=getJuInfo(pilDZ);
   const vd=getVoidInfo(dy.dz);
   const total=Math.max(20,Math.min(100,Math.round(weighted-clash.capped+he.capped+ju.delta-vd.pen)));
   const process=
-    `流年 ${yr.tg}${yr.dz}（${tenGodOfTg(yr.tg)}/${tenGodOfDz(yr.dz)}）× 10% = ${(yrS*0.10).toFixed(1)}\n`+
-    `流月 ${mo.tg}${mo.dz}（${tenGodOfTg(mo.tg)}/${tenGodOfDz(mo.dz)}）× 30% = ${(moS*0.30).toFixed(1)}\n`+
-    `流日 ${dy.tg}${dy.dz}（${tenGodOfTg(dy.tg)}/${tenGodOfDz(dy.dz)}）× 35% = ${(dyS*0.35).toFixed(1)}\n`+
-    `流時 ${hr.tg}${hr.dz}（${tenGodOfTg(hr.tg)}/${tenGodOfDz(hr.dz)}）× 25% = ${(hrS*0.25).toFixed(1)}\n`+
+    (da?`大運 ${da.tg}${da.dz}（${tenGodOfTg(da.tg)}/${tenGodOfDz(da.dz)}）× 10% = ${(daS*0.10).toFixed(1)}\n`:'')+
+    `流年 ${yr.tg}${yr.dz}（${tenGodOfTg(yr.tg)}/${tenGodOfDz(yr.dz)}）× 8% = ${(yrS*0.08).toFixed(1)}\n`+
+    `流月 ${mo.tg}${mo.dz}（${tenGodOfTg(mo.tg)}/${tenGodOfDz(mo.dz)}）× 27% = ${(moS*0.27).toFixed(1)}\n`+
+    `流日 ${dy.tg}${dy.dz}（${tenGodOfTg(dy.tg)}/${tenGodOfDz(dy.dz)}）× 32% = ${(dyS*0.32).toFixed(1)}\n`+
+    `流時 ${hr.tg}${hr.dz}（${tenGodOfTg(hr.tg)}/${tenGodOfDz(hr.dz)}）× 23% = ${(hrS*0.23).toFixed(1)}\n`+
     `加權合計 = ${weighted.toFixed(1)}\n`+
     (clash.notes.length?`沖刑：${clash.notes.join('、')}（上限-16）= -${clash.capped}\n`:'')+
     (he.notes.length?`六合：${he.notes.join('、')}（上限+9）= +${he.capped}\n`:'')+
@@ -412,18 +448,18 @@ function calcAll(yr,mo,dy,hr){
   if(clash.notes.length)warns.push(clash.notes.join('、'));
   if(vd.note)warns.push(`旬空 ${dy.dz}`);
   const clashWarning=warns.length?'⚠ '+warns.join('；')+'。建議降低槓桿。':'';
-  return{yrS,moS,dyS,hrS,total,process,clashWarning,ju,vd};
+  return{daS,yrS,moS,dyS,hrS,total,process,clashWarning,ju,vd};
 }
 
 // 全日綜合：12 時辰平均（取代寫死丙午）
 function dayAvgScore(date){
-  const yr=yrGZ(date),mo=moGZ(date),dy=dyGZ(date);
+  const yr=yrGZ(date),mo=moGZ(date),dy=dyGZ(date),da=currentDayun(date);
   const ziStart=[0,2,4,6,8,0,2,4,6,8][dy.ti];
   let sum=0;
   for(let i=0;i<12;i++){
     const ti=(ziStart+i)%10;
     const hr={tg:TG[ti],dz:DZ[i],te:TE[ti],ze:DE[i],ti,si:i};
-    sum+=calcAll(yr,mo,dy,hr).total;
+    sum+=calcAll(yr,mo,dy,hr,da).total;
   }
   return Math.round(sum/12);
 }
@@ -452,8 +488,8 @@ function persistView(){try{localStorage.setItem('compass.view',JSON.stringify({y
 
 function renderNow(){
   const real=new Date(),now=toSolar(real);
-  const yr=yrGZ(now),mo=moGZ(now),dy=dyGZ(getEffectiveDay(now)),hr=hrGZ(now);
-  const sc=calcAll(yr,mo,dy,hr);
+  const yr=yrGZ(now),mo=moGZ(now),dy=dyGZ(getEffectiveDay(now)),hr=hrGZ(now),da=currentDayun(now);
+  const sc=calcAll(yr,mo,dy,hr,da);
   const pils=[{l:'流年',g:yr,s:sc.yrS},{l:'流月',g:mo,s:sc.moS},{l:'流日',g:dy,s:sc.dyS},{l:'流時',g:hr,s:sc.hrS}];
   const col=scCol(sc.total),grad=scGrad(sc.total);
   const frag=document.createDocumentFragment();
@@ -527,12 +563,12 @@ function selDay(y,m,d){
   const cells=document.querySelectorAll('#calGrid .cd:not(.empty)');
   if(cells[d-1])cells[d-1].classList.add('sel');
 
-  const date=selDate,yr=yrGZ(date),mo=moGZ(date),dy=dyGZ(date);
+  const date=selDate,yr=yrGZ(date),mo=moGZ(date),dy=dyGZ(date),da=currentDayun(date);
   const dyAvg=dayAvgScore(date);
   const ziStart=[0,2,4,6,8,0,2,4,6,8][dy.ti];
   const ti=(ziStart+6)%10;
   const sample={tg:TG[ti],dz:'午',te:TE[ti],ze:'火',ti,si:6};
-  const sc=calcAll(yr,mo,dy,sample);
+  const sc=calcAll(yr,mo,dy,sample,da);
   const col=scCol(dyAvg);
 
   const det=document.getElementById('det');
@@ -561,13 +597,13 @@ function selDay(y,m,d){
 function renderHours(){
   const real=new Date(),now=toSolar(real);
   const dy=dyGZ(getEffectiveDay(now)),h=now.getHours(),curSh=h===23?0:Math.floor((h+1)/2);
-  const yr=yrGZ(now),mo=moGZ(now);
+  const yr=yrGZ(now),mo=moGZ(now),da=currentDayun(now);
   const ziStart=[0,2,4,6,8,0,2,4,6,8][dy.ti];
   const frag=document.createDocumentFragment();
   for(let i=0;i<12;i++){
     const ti=(ziStart+i)%10;
     const hr={tg:TG[ti],dz:DZ[i],te:TE[ti],ze:DE[i],ti,si:i};
-    const s=calcAll(yr,mo,dy,hr).total,col=scCol(s),grad=scGrad(s);
+    const s=calcAll(yr,mo,dy,hr,da).total,col=scCol(s),grad=scGrad(s);
     const el=document.createElement('div');
     el.className=`hc${i===curSh?' now':''}`;
     el.innerHTML=`<div class="hc-lbl">${SH[i]}</div>
@@ -612,13 +648,15 @@ document.getElementById('cogBtn').onclick=()=>{
   document.getElementById('cfgLng').value=CFG.lng;
   document.getElementById('cfgRefLng').value=CFG.refLng;
   document.getElementById('cfgSolar').value=String(CFG.solar);
+  document.getElementById('cfgApiKey').value=CFG.apiKey||'';
   modal.classList.add('on');
 };
 document.getElementById('cfgCancel').onclick=()=>modal.classList.remove('on');
 document.getElementById('cfgSave').onclick=()=>{
   CFG={lng:parseFloat(document.getElementById('cfgLng').value)||121.5,
        refLng:parseFloat(document.getElementById('cfgRefLng').value)||120,
-       solar:parseInt(document.getElementById('cfgSolar').value,10)?1:0};
+       solar:parseInt(document.getElementById('cfgSolar').value,10)?1:0,
+       apiKey:document.getElementById('cfgApiKey').value.trim()};
   saveCfg(CFG);modal.classList.remove('on');
   renderNow();renderCal();renderHours();
 };
@@ -634,6 +672,112 @@ function scheduleNextTick(){
   setTimeout(()=>{renderNow();renderHours();scheduleNextTick();},ms);
 }
 
+// ───── AI 解盤（Claude Haiku 4.5 + prompt cache + localStorage 結果快取）─────
+const SYSTEM_PROMPT=`你是熟悉子平八字的命理顧問，專為命主「Ken Hsieh（謝明宏）」服務。
+
+【命主八字】
+年柱 乙丑（劫財/正財·正印·正官藏）
+月柱 戊子（偏財/正印藏）
+日柱 甲申（日主甲木 / 七殺·偏印·偏財藏）★ 旬空午未
+時柱 丁卯（傷官/劫財藏）
+
+【格局】甲木日主、子月生、水寒木旺、身強格。
+
+【喜忌】
+喜：火（食神/傷官，調候開局）、土（財星，承接落地）、金（官殺，紀律修木）。
+忌：水（印過旺）、木（比劫奪財）。
+
+【關鍵結構】
+- 子卯刑：情緒內耗、人際敏感、心思重戲外不顯。
+- 申子半合水：聰明會研究，但易過度推演。
+- 子丑合：早年家庭資源觀念牽動。
+- 旬空午未：流日逢午未「看似有機會但落不了地」。
+
+【大運序列】1987丁亥→1997丙戌→2007乙酉→2017甲申→2027癸未→2037壬午→2047辛巳→2057庚辰。
+
+【關注場景】德州撲克、Blackjack、虛擬幣交易、賭場旅遊、投資合作。財有可為，但忌情緒化、忌槓桿失控。
+
+【輸出規則】
+- 嚴格 80 字以內、繁體中文、白話、不講術語。
+- 直接告訴他「今天適合做什麼／避開什麼」，給可執行建議（要不要下注、規模、時段）。
+- 若分數高但有旬空/沖刑/木水局，要明白警告「不是真機會」。
+- 若是巳午未火月或寅午戌火局，鼓勵主動出擊。
+- 不要客套開場白，直接給建議。`;
+
+async function aiAnalyze(date,ctx){
+  const dkey=`${date.getFullYear()}-${pad2(date.getMonth()+1)}-${pad2(date.getDate())}`;
+  const cacheKey=`compass.ai.${dkey}`;
+  const cached=localStorage.getItem(cacheKey);
+  if(cached)return{text:cached,cached:true};
+  if(!CFG.apiKey)throw new Error('請先到 ⚙ 設定 填入 Anthropic API Key');
+  const userMsg=
+`日期：${dkey}
+大運：${ctx.da?ctx.da.tg+ctx.da.dz+`（${ctx.da.start}-${ctx.da.end}）`:'—'}
+流年：${ctx.yr.tg}${ctx.yr.dz}　流月：${ctx.mo.tg}${ctx.mo.dz}　流日：${ctx.dy.tg}${ctx.dy.dz}${NATAL.void.includes(ctx.dy.dz)?'（旬空）':''}
+全日均分：${ctx.dyAvg}
+警告：${ctx.warn||'無'}
+特殊局：${ctx.juNotes||'無'}
+
+請給今日 80 字以內白話建議。`;
+  const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'content-type':'application/json',
+      'x-api-key':CFG.apiKey,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body:JSON.stringify({
+      model:'claude-haiku-4-5-20251001',
+      max_tokens:300,
+      system:[{type:'text',text:SYSTEM_PROMPT,cache_control:{type:'ephemeral'}}],
+      messages:[{role:'user',content:userMsg}]
+    })
+  });
+  if(!resp.ok){const t=await resp.text();throw new Error(`API ${resp.status}：${t.slice(0,200)}`);}
+  const json=await resp.json();
+  const text=(json.content?.[0]?.text||'解析失敗').trim();
+  try{localStorage.setItem(cacheKey,text);}catch(e){}
+  return{text,cached:false};
+}
+
+document.getElementById('aiBtn').onclick=async()=>{
+  const date=selDate,yr=yrGZ(date),mo=moGZ(date),dy=dyGZ(date),da=currentDayun(date);
+  const dyAvg=dayAvgScore(date);
+  const ziStart=[0,2,4,6,8,0,2,4,6,8][dy.ti];
+  const ti=(ziStart+6)%10;
+  const sample={tg:TG[ti],dz:'午',te:TE[ti],ze:'火',ti,si:6};
+  const sc=calcAll(yr,mo,dy,sample,da);
+  const box=document.getElementById('aiBox'),btn=document.getElementById('aiBtn');
+  box.style.display='';box.textContent='⏳ 解盤中…';
+  btn.disabled=true;btn.style.opacity='0.5';
+  try{
+    const r=await aiAnalyze(date,{
+      da,yr,mo,dy,dyAvg,
+      warn:sc.clashWarning||'無',
+      juNotes:sc.ju.notes.join('、')||'無'
+    });
+    box.textContent=r.text+(r.cached?'\n\n（已快取，按 ↻ 重新解析）':'');
+  }catch(e){box.textContent='⚠ '+e.message;}
+  btn.disabled=false;btn.style.opacity='';
+};
+document.getElementById('aiClearBtn').onclick=()=>{
+  const date=selDate;
+  const dkey=`${date.getFullYear()}-${pad2(date.getMonth()+1)}-${pad2(date.getDate())}`;
+  localStorage.removeItem(`compass.ai.${dkey}`);
+  document.getElementById('aiBox').style.display='none';
+};
+
+// 大運顯示
+function renderDayun(){
+  const da=currentDayun(new Date());
+  const bar=document.getElementById('dayunBar');
+  if(!da){bar.textContent='';return;}
+  const tg=tenGodOfTg(da.tg),dz=tenGodOfDz(da.dz);
+  bar.innerHTML=`大運 ${da.start}–${da.end} <span style="color:${elCol(da.te)};font-weight:700">${da.tg}${da.dz}</span>　${tg}/${dz}`;
+}
+
+renderDayun();
 renderNow();renderCal();
 selDay(selDate.getFullYear(),selDate.getMonth(),selDate.getDate());
 renderHours();
