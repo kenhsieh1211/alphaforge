@@ -662,8 +662,19 @@ function calcAll(yr,mo,dy,hr,da){
   else if(isVoid)warns.push('◐ 旬空火月');
   const clashWarning=warns.join('　');
 
+  // 各柱單分（顯示用）：以該柱五行 te+ze 對 Ken 喜忌的契合度 0-100
+  const pillarMini=p=>{
+    if(!p)return 0;
+    const a=['火','土','金'].includes(p.te)?1:0;
+    const b=['火','土','金'].includes(p.ze)?1:0;
+    const fire=(p.te==='火'?1:0)+(p.ze==='火'?1:0);
+    return Math.min(100,Math.round((a+b)*35+fire*15+30));
+  };
+  const yrS=pillarMini(yr),moS=pillarMini(mo),dyS=pillarMini(dy),hrS=pillarMini(hr),daS=pillarMini(da);
+
   return{
-    // v1.0 三分量
+    yrS,moS,dyS,hrS,daS,
+    // v1.1 三分量
     atk,clo,risk,final,label,insights,advice,
     // 相容舊欄位
     total:final,process,clashWarning,ju,vd,
