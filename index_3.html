@@ -24,6 +24,8 @@ html,body{background:var(--bg);font-family:'Noto Serif TC',serif;color:var(--tx)
 .hdr::after{content:'';display:block;height:1px;background:linear-gradient(90deg,transparent,var(--g3),transparent);margin-top:14px;}
 .hdr-t{font-size:18px;font-weight:900;letter-spacing:5px;color:var(--g4);}
 .hdr-s{font-size:9px;letter-spacing:3px;color:var(--txm);margin-top:4px;font-family:'DM Mono',monospace;}
+.hdr-bz{font-size:11px;letter-spacing:2px;color:var(--g4);margin-top:6px;font-weight:600;}
+.hdr-bz .ds{color:var(--r3);}
 .cog{position:absolute;top:14px;right:0;background:none;border:none;color:var(--txm);font-size:18px;cursor:pointer;padding:6px;}
 .sec{font-size:9px;letter-spacing:3px;color:var(--g3);margin-bottom:10px;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:8px;}
 .sec::before{content:'';display:block;width:3px;height:12px;background:linear-gradient(180deg,var(--r3),var(--g3));}
@@ -32,7 +34,8 @@ html,body{background:var(--bg);font-family:'Noto Serif TC',serif;color:var(--tx)
 .pc{background:linear-gradient(145deg,var(--sf3),var(--sf));border:1px solid var(--bd);border-radius:10px;padding:12px 8px;text-align:center;position:relative;overflow:hidden;}
 .pc::before{content:'';position:absolute;top:0;left:10%;right:10%;height:2px;background:var(--ac,var(--g3));border-radius:0 0 2px 2px;}
 .pc-lbl{font-size:8px;color:var(--txm);letter-spacing:3px;margin-bottom:5px;font-family:'DM Mono',monospace;}
-.pc-gz{font-size:30px;font-weight:900;line-height:1;margin-bottom:3px;}
+.pc-gz{font-size:28px;font-weight:900;line-height:1;margin-bottom:3px;}
+.pc-sg{font-size:9px;font-weight:600;letter-spacing:1px;margin-bottom:3px;color:var(--g4);}
 .pc-el{font-size:9px;margin-bottom:8px;color:var(--txm);}
 .pc-sc{font-size:32px;font-weight:900;line-height:1;}
 .pc-sl{font-size:8px;color:var(--txd);letter-spacing:1px;margin-top:2px;}
@@ -60,6 +63,9 @@ html,body{background:var(--bg);font-family:'Noto Serif TC',serif;color:var(--tx)
 .cd-gz{font-size:9px;font-weight:700;}
 .cd-bar{height:3px;border-radius:2px;margin-top:3px;}
 .cd-sc{font-size:8px;margin-top:2px;font-family:'DM Mono',monospace;}
+.cd-tag{position:absolute;top:1px;right:2px;font-size:7px;color:var(--g4);font-family:'DM Mono',monospace;}
+.cd-void{position:absolute;top:1px;left:3px;font-size:9px;color:var(--r3);}
+.cd{position:relative;}
 .det{background:linear-gradient(135deg,var(--sf3),var(--sf));border:1px solid var(--bd2);border-radius:12px;padding:14px 16px;margin-bottom:16px;animation:fadeIn .3s ease;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
 .det-dt{font-size:11px;color:var(--g3);margin-bottom:10px;font-family:'DM Mono',monospace;}
@@ -99,7 +105,8 @@ html,body{background:var(--bg);font-family:'Noto Serif TC',serif;color:var(--tx)
 <div class="app">
 <div class="hdr">
   <div class="hdr-t">命 運 羅 盤</div>
-  <div class="hdr-s">KEN HSIEH · 甲木日主 · 身強格 · 喜火土金</div>
+  <div class="hdr-s">KEN HSIEH · 1985.12.11 卯時 · 甲木身強格</div>
+  <div class="hdr-bz">乙丑 · 戊子 · <span class="ds">甲申</span> · 丁卯　／ 喜火土金 · 忌水木 · 旬空午未</div>
   <button class="cog" id="cogBtn" aria-label="設定">⚙</button>
 </div>
 
@@ -144,7 +151,7 @@ html,body{background:var(--bg);font-family:'Noto Serif TC',serif;color:var(--tx)
 <div class="sec">今日流時</div>
 <div class="hr-grid" id="hrGrid"></div>
 
-<div class="foot">節氣換月 · 真太陽時 · 子時跨日</div>
+<div class="foot">節氣換月 · 真太陽時 · 十神 · 三合會局 · 旬空</div>
 </div>
 
 <div class="modal" id="setModal" role="dialog" aria-label="設定">
@@ -264,7 +271,29 @@ function hrGZ(d){
   return{tg:TG[ti],dz:DZ[si],te:TE[ti],ze:DE[si],ti,si};
 }
 
-// ───── 評分 ─────
+// ───── Ken 完整原局 ─────
+// 乙丑 戊子 甲申 丁卯（甲木日主、身強、旬空午未）
+const NATAL={
+  yrTg:'乙',yrDz:'丑',
+  moTg:'戊',moDz:'子',
+  dyTg:'甲',dyDz:'申', // 日主甲木
+  hrTg:'丁',hrDz:'卯',
+  void:['午','未'] // 甲申旬旬空
+};
+const NATAL_DZ=[NATAL.yrDz,NATAL.moDz,NATAL.dyDz,NATAL.hrDz];
+const NATAL_TG=[NATAL.yrTg,NATAL.moTg,NATAL.hrTg]; // 不含日主自身
+
+// ───── 十神（相對甲木日主）─────
+// 甲(0) 比肩、乙(1) 劫財、丙(2) 食神、丁(3) 傷官、戊(4) 偏財、己(5) 正財、庚(6) 七殺、辛(7) 正官、壬(8) 偏印、癸(9) 正印
+const TEN_GOD_TG=['比肩','劫財','食神','傷官','偏財','正財','七殺','正官','偏印','正印'];
+const TEN_GOD_SHORT=['比','劫','食','傷','偏財','正財','殺','官','梟','印'];
+function tenGodOfTg(tg){const i=TG.indexOf(tg);return i<0?'':TEN_GOD_TG[i];}
+function tenGodShort(tg){const i=TG.indexOf(tg);return i<0?'':TEN_GOD_SHORT[i];}
+// 地支主氣藏干 → 對應十神
+const DZ_MAIN_TG=['癸','己','甲','乙','戊','丙','丁','己','庚','辛','戊','壬'];
+function tenGodOfDz(dz){const idx=DZ.indexOf(dz);return idx<0?'':TEN_GOD_TG[TG.indexOf(DZ_MAIN_TG[idx])];}
+
+// ───── 評分基礎 ─────
 const ELS={'火':28,'土':23,'金':18,'木':6,'水':4};
 function elSc(e){return ELS[e]??12;}
 function pillarScore(te,ze){
@@ -272,45 +301,118 @@ function pillarScore(te,ze){
   return Math.max(30,Math.min(100,Math.round(30+(raw-8)/(56-8)*70)));
 }
 const W={yr:0.10, mo:0.30, dy:0.35, hr:0.25};
-const NAT_DZ=['申','子','卯'];
-const CLASH_PAIRS=[['子','午'],['丑','未'],['寅','申'],['卯','酉'],['辰','戌'],['巳','亥']];
 
+// 沖刑：對完整原局四地支
+const CLASH_PAIRS=[['子','午'],['丑','未'],['寅','申'],['卯','酉'],['辰','戌'],['巳','亥']];
+const XING_LIST=[
+  ['寅','巳'],['巳','申'],['寅','申'], // 三刑
+  ['丑','戌'],['戌','未'],['丑','未'], // 三刑
+  ['子','卯'] // 子卯相刑（對你最敏感，原局有子卯）
+];
 function getClashInfo(pilDZ){
   const notes=[];let totalPen=0;
-  for(const p of pilDZ)for(const n of NAT_DZ){
+  for(const p of pilDZ)for(const n of NATAL_DZ){
     for(const[a,b]of CLASH_PAIRS){
-      if((p===a&&n===b)||(p===b&&n===a)){notes.push(`${p}沖原局${n}（-8）`);totalPen+=8;}
+      if((p===a&&n===b)||(p===b&&n===a)){notes.push(`${p}沖原局${n}（-7）`);totalPen+=7;}
     }
-    if((p==='子'&&n==='卯')||(p==='卯'&&n==='子')){notes.push(`${p}刑原局${n}（-5）`);totalPen+=5;}
+    for(const[a,b]of XING_LIST){
+      if((p===a&&n===b)||(p===b&&n===a)){
+        const pen=(a==='子'&&b==='卯')||(a==='卯'&&b==='子')?6:4;
+        notes.push(`${p}刑原局${n}（-${pen}）`);totalPen+=pen;
+      }
+    }
   }
-  return{notes,raw:totalPen,capped:Math.min(totalPen,12)};
+  return{notes,raw:totalPen,capped:Math.min(totalPen,16)};
 }
+
+// 六合（對原局）
 const HE_PAIRS=[['子','丑'],['寅','亥'],['卯','戌'],['辰','酉'],['巳','申'],['午','未']];
 function getHeInfo(pilDZ){
   const notes=[];let bon=0;
-  for(let i=0;i<pilDZ.length;i++)for(let j=i+1;j<pilDZ.length;j++)for(const[a,b]of HE_PAIRS){
-    if((pilDZ[i]===a&&pilDZ[j]===b)||(pilDZ[i]===b&&pilDZ[j]===a)){notes.push(`${pilDZ[i]}${pilDZ[j]}六合（+4）`);bon+=4;}
+  for(const p of pilDZ)for(const n of NATAL_DZ){
+    for(const[a,b]of HE_PAIRS){
+      if((p===a&&n===b)||(p===b&&n===a)){notes.push(`${p}合原局${n}（+3）`);bon+=3;}
+    }
   }
-  return{notes,raw:bon,capped:Math.min(bon,8)};
+  return{notes,raw:bon,capped:Math.min(bon,9)};
+}
+
+// ───── 三合局 / 三會 / 半合（針對流年月日時 4 柱 + 原局 4 柱共 8 字）─────
+// 三合：申子辰水、寅午戌火、巳酉丑金、亥卯未木
+// 三會：寅卯辰木、巳午未火、申酉戌金、亥子丑水
+// 半合：取三合首+中、中+末、首+末
+const SAN_HE=[
+  {set:['申','子','辰'],el:'水',score:-10},
+  {set:['寅','午','戌'],el:'火',score:+14}, // 喜神局，最大加分
+  {set:['巳','酉','丑'],el:'金',score:+8},
+  {set:['亥','卯','未'],el:'木',score:-9}
+];
+const SAN_HUI=[
+  {set:['寅','卯','辰'],el:'木',score:-8},
+  {set:['巳','午','未'],el:'火',score:+12},
+  {set:['申','酉','戌'],el:'金',score:+7},
+  {set:['亥','子','丑'],el:'水',score:-9}
+];
+function countMatch(allDZ,set){
+  // 至少 set 中元素出現於 allDZ
+  let cnt=0;for(const s of set)if(allDZ.includes(s))cnt++;
+  return cnt;
+}
+function getJuInfo(pilDZ){
+  const notes=[];let delta=0;
+  const all=pilDZ.concat(NATAL_DZ);
+  for(const j of SAN_HE){
+    const c=countMatch(all,j.set);
+    if(c>=3){notes.push(`★ 三合${j.el}局 ${j.set.join('')} (${j.score>0?'+':''}${j.score})`);delta+=j.score;}
+    else if(c===2){
+      // 半合需含「子/午/卯/酉」四正之一
+      const hasCardinal=j.set.filter(s=>all.includes(s)).some(s=>['子','午','卯','酉'].includes(s));
+      if(hasCardinal){
+        const hf=Math.round(j.score/2);
+        notes.push(`半合${j.el} (${hf>0?'+':''}${hf})`);delta+=hf;
+      }
+    }
+  }
+  for(const j of SAN_HUI){
+    const c=countMatch(all,j.set);
+    if(c>=3){notes.push(`☆ 三會${j.el}方 ${j.set.join('')} (${j.score>0?'+':''}${j.score})`);delta+=j.score;}
+  }
+  return{notes,delta:Math.max(-20,Math.min(20,delta))};
+}
+
+// ───── 旬空（甲申旬：午未）─────
+function getVoidInfo(dyDz){
+  if(NATAL.void.includes(dyDz)){
+    return{note:`⚠ 流日 ${dyDz} 落旬空（${NATAL.void.join('、')}），看似有機會但難以落地`,pen:10};
+  }
+  return{note:'',pen:0};
 }
 
 function calcAll(yr,mo,dy,hr){
   const yrS=pillarScore(yr.te,yr.ze),moS=pillarScore(mo.te,mo.ze),dyS=pillarScore(dy.te,dy.ze),hrS=pillarScore(hr.te,hr.ze);
   const weighted=yrS*W.yr+moS*W.mo+dyS*W.dy+hrS*W.hr;
   const pilDZ=[yr.dz,mo.dz,dy.dz,hr.dz];
-  const clash=getClashInfo(pilDZ),he=getHeInfo(pilDZ);
-  const total=Math.max(28,Math.min(100,Math.round(weighted-clash.capped+he.capped)));
+  const clash=getClashInfo(pilDZ);
+  const he=getHeInfo(pilDZ);
+  const ju=getJuInfo(pilDZ);
+  const vd=getVoidInfo(dy.dz);
+  const total=Math.max(20,Math.min(100,Math.round(weighted-clash.capped+he.capped+ju.delta-vd.pen)));
   const process=
-    `流年 ${yr.tg}${yr.dz}（${yr.te}·${yr.ze}）× 10% = ${(yrS*0.10).toFixed(1)}\n`+
-    `流月 ${mo.tg}${mo.dz}（${mo.te}·${mo.ze}）× 30% = ${(moS*0.30).toFixed(1)}\n`+
-    `流日 ${dy.tg}${dy.dz}（${dy.te}·${dy.ze}）× 35% = ${(dyS*0.35).toFixed(1)}\n`+
-    `流時 ${hr.tg}${hr.dz}（${hr.te}·${hr.ze}）× 25% = ${(hrS*0.25).toFixed(1)}\n`+
+    `流年 ${yr.tg}${yr.dz}（${tenGodOfTg(yr.tg)}/${tenGodOfDz(yr.dz)}）× 10% = ${(yrS*0.10).toFixed(1)}\n`+
+    `流月 ${mo.tg}${mo.dz}（${tenGodOfTg(mo.tg)}/${tenGodOfDz(mo.dz)}）× 30% = ${(moS*0.30).toFixed(1)}\n`+
+    `流日 ${dy.tg}${dy.dz}（${tenGodOfTg(dy.tg)}/${tenGodOfDz(dy.dz)}）× 35% = ${(dyS*0.35).toFixed(1)}\n`+
+    `流時 ${hr.tg}${hr.dz}（${tenGodOfTg(hr.tg)}/${tenGodOfDz(hr.dz)}）× 25% = ${(hrS*0.25).toFixed(1)}\n`+
     `加權合計 = ${weighted.toFixed(1)}\n`+
-    (clash.notes.length?`沖刑：${clash.notes.join('、')}（上限-12）= -${clash.capped}\n`:'')+
-    (he.notes.length?`六合：${he.notes.join('、')}（上限+8）= +${he.capped}\n`:'')+
+    (clash.notes.length?`沖刑：${clash.notes.join('、')}（上限-16）= -${clash.capped}\n`:'')+
+    (he.notes.length?`六合：${he.notes.join('、')}（上限+9）= +${he.capped}\n`:'')+
+    (ju.notes.length?`合會局：${ju.notes.join('、')} = ${ju.delta>=0?'+':''}${ju.delta}\n`:'')+
+    (vd.note?`旬空：${vd.note} = -${vd.pen}\n`:'')+
     `最終 = ${total}`;
-  const clashWarning=clash.notes.length?'⚠ '+clash.notes.join('、')+'。原局根基受擾，建議降低槓桿。':'';
-  return{yrS,moS,dyS,hrS,total,process,clashWarning};
+  const warns=[];
+  if(clash.notes.length)warns.push(clash.notes.join('、'));
+  if(vd.note)warns.push(`旬空 ${dy.dz}`);
+  const clashWarning=warns.length?'⚠ '+warns.join('；')+'。建議降低槓桿。':'';
+  return{yrS,moS,dyS,hrS,total,process,clashWarning,ju,vd};
 }
 
 // 全日綜合：12 時辰平均（取代寫死丙午）
@@ -360,6 +462,7 @@ function renderNow(){
     el.className='pc';el.style.setProperty('--ac',pc);
     el.innerHTML=`<div class="pc-lbl">${p.l}</div>
       <div class="pc-gz" style="color:${elCol(p.g.te)}">${p.g.tg}${p.g.dz}</div>
+      <div class="pc-sg">${tenGodShort(p.g.tg)}·${tenGodShort(DZ_MAIN_TG[DZ.indexOf(p.g.dz)])}</div>
       <div class="pc-el"><span style="color:${elCol(p.g.te)}">${p.g.te}</span> · <span style="color:${elCol(p.g.ze)}">${p.g.ze}</span></div>
       <div class="pc-sc" style="color:${pc}">${p.s}</div>
       <div class="pc-sl">分</div>`;
@@ -384,18 +487,31 @@ function renderCal(){
   document.getElementById('calHdr').innerHTML=['日','一','二','三','四','五','六'].map(h=>`<div class="ch">${h}</div>`).join('');
   const frag=document.createDocumentFragment();
   for(let i=0;i<fd;i++){const e=document.createElement('div');e.className='cd empty';frag.appendChild(e);}
+  // 預先算出本月所有節氣對應日 → 節氣標籤
+  const TERM_NAME=['小寒','立春','驚蟄','清明','立夏','芒種','小暑','立秋','白露','寒露','立冬','大雪'];
+  const termOnDay={};
+  for(let i=0;i<12;i++){
+    if(TERM_M[i]===m+1){
+      const td=termDay(y,TERM_K[i]);
+      termOnDay[td]=TERM_NAME[i];
+    }
+  }
   for(let d=1;d<=dim;d++){
     const date=new Date(y,m,d),dy=dyGZ(date);
     const sc=dayAvgScore(date),col=scCol(sc);
     const isT=date.toDateString()===today.toDateString(),isS=date.toDateString()===selDate.toDateString();
+    const isVoid=NATAL.void.includes(dy.dz);
+    const term=termOnDay[d];
     const cell=document.createElement('div');
     cell.className=`cd${isT?' today':''}${isS?' sel':''}`;
     cell.setAttribute('role','button');
-    cell.setAttribute('aria-label',`${m+1}月${d}日 ${dy.tg}${dy.dz} ${sc}分`);
+    cell.setAttribute('aria-label',`${m+1}月${d}日 ${dy.tg}${dy.dz} ${sc}分${isVoid?' 旬空':''}${term?' '+term:''}`);
     cell.innerHTML=`<div class="cd-n">${d}</div>
       <div class="cd-gz" style="color:${elCol(dy.te)}">${dy.tg}${dy.dz}</div>
       <div class="cd-bar" style="background:${col}"></div>
-      <div class="cd-sc" style="color:${col}">${sc}</div>`;
+      <div class="cd-sc" style="color:${col}">${sc}</div>
+      ${term?`<div class="cd-tag">◆</div>`:''}
+      ${isVoid?`<div class="cd-void" title="旬空">空</div>`:''}`;
     cell.addEventListener('click',()=>selDay(y,m,d));
     frag.appendChild(cell);
   }
@@ -425,10 +541,11 @@ function selDay(y,m,d){
   document.getElementById('detDt').textContent=`${date.getFullYear()} 年 ${date.getMonth()+1} 月 ${date.getDate()} 日　${dy.tg}${dy.dz} 日`;
   const dn=document.getElementById('detScN');
   dn.textContent=dyAvg;dn.style.color=col;
+  const fmt=(g)=>`${g.tg}${g.dz}　${tenGodOfTg(g.tg)}/${tenGodOfDz(g.dz)}`;
   document.getElementById('detG').innerHTML=`
-    <div><div class="di-lbl">流　年</div><div class="di-val" style="color:${elCol(yr.te)}">${yr.tg}${yr.dz}（${yr.te}·${yr.ze}）</div></div>
-    <div><div class="di-lbl">流　月</div><div class="di-val" style="color:${elCol(mo.te)}">${mo.tg}${mo.dz}（${mo.te}·${mo.ze}）</div></div>
-    <div><div class="di-lbl">流　日</div><div class="di-val" style="color:${elCol(dy.te)}">${dy.tg}${dy.dz}（${dy.te}·${dy.ze}）</div></div>
+    <div><div class="di-lbl">流　年</div><div class="di-val" style="color:${elCol(yr.te)}">${fmt(yr)}</div></div>
+    <div><div class="di-lbl">流　月</div><div class="di-val" style="color:${elCol(mo.te)}">${fmt(mo)}</div></div>
+    <div><div class="di-lbl">流　日</div><div class="di-val" style="color:${elCol(dy.te)}">${fmt(dy)}${NATAL.void.includes(dy.dz)?' ⚠空':''}</div></div>
     <div><div class="di-lbl">全日均分</div><div class="di-val" style="color:${col}">${dyAvg} 分</div></div>`;
   document.getElementById('detAdv').textContent=scTxt(dyAvg);
   document.getElementById('detNote').textContent=sc.clashWarning;
@@ -455,6 +572,7 @@ function renderHours(){
     el.className=`hc${i===curSh?' now':''}`;
     el.innerHTML=`<div class="hc-lbl">${SH[i]}</div>
       <div class="hc-gz" style="color:${elCol(hr.te)}">${hr.tg}${hr.dz}</div>
+      <div style="font-size:8px;color:var(--g4);margin-bottom:3px;font-family:'DM Mono',monospace;">${tenGodShort(hr.tg)}</div>
       <div class="hc-bar" style="background:${grad};width:${s}%;max-width:100%"></div>
       <div class="hc-sc" style="color:${col}">${s}</div>`;
     frag.appendChild(el);
