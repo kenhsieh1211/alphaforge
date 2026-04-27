@@ -427,17 +427,29 @@ function getVoidInfo(dyDz,moDz){
 }
 
 // ───── 打法標籤 ─────
-// 順序：旺衰調候(分數) → 用神到位(火土金) → 沖刑合會 → 旬空修正
+// 三段主分級：80+ 主攻 / 70-79 可打鎖利 / 60-69 小心 / <60 旁觀
+// 修正項：旬空 → 加「鎖利」；沖刑 → 降一級
 function playMode(total,dyDz,moDz,clashCount){
   const isVoid=NATAL.void.includes(dyDz);
   const isFireMo=FIRE_MO.includes(moDz);
-  if(total>=85&&!isVoid&&clashCount===0)return{tag:'主攻',col:'#E85A2A',hint:'氣場到位，主動出擊'};
-  if(total>=80&&isVoid&&isFireMo)return{tag:'可打·硬停利',col:'#F0C030',hint:'火旺承空亡，手感放大但停利硬點'};
-  if(total>=78&&clashCount===0)return{tag:'可打',col:'#D4960A',hint:'順勢推進，注意節奏'};
-  if(total>=65&&(isVoid||clashCount>0))return{tag:'收官優先',col:'#A07828',hint:'有機會但收得乾淨，不貪尾盤'};
-  if(total>=55)return{tag:'看盤',col:'#8A8060',hint:'小注試水，重點觀察'};
-  if(total>=42)return{tag:'守本',col:'#6A7A8A',hint:'保守應對，避免攤平'};
-  return{tag:'旁觀',col:'#5A4A40',hint:'場外為宜，等待時機'};
+  let base;
+  if(total>=80)      base={tag:'主攻',     col:'#E85A2A',hint:'氣場到位，主動出擊'};
+  else if(total>=70) base={tag:'可打·鎖利',col:'#F0C030',hint:'順勢推進，停利點抓硬'};
+  else if(total>=60) base={tag:'小心',     col:'#A07828',hint:'小注試水，重點觀察'};
+  else if(total>=50) base={tag:'守本',     col:'#6A7A8A',hint:'保守應對，避免攤平'};
+  else               base={tag:'旁觀',     col:'#5A4A40',hint:'場外為宜，等待時機'};
+
+  // 沖刑：降一級操作
+  if(clashCount>=2)return{tag:'旁觀·防沖',col:'#5A4A40',hint:'多重沖刑，原局受擾，今日避戰'};
+  if(clashCount===1&&total>=80)return{tag:'可打·防沖',col:'#F0C030',hint:'有沖刑修正，降一級操作'};
+  if(clashCount===1&&total>=70)return{tag:'小心·防沖',col:'#A07828',hint:'有沖刑，停利+停損都抓緊'};
+
+  // 旬空：火旺月仍可主攻但加鎖利；其他月份降一級
+  if(isVoid&&total>=80&&isFireMo)return{tag:'主攻·鎖利',col:'#E85A2A',hint:'火旺承空亡，攻可以但停利硬點'};
+  if(isVoid&&total>=80)          return{tag:'可打·鎖利',col:'#F0C030',hint:'分數高但落空亡，降一級操作'};
+  if(isVoid&&total>=70)          return{tag:'可打·鎖利',col:'#F0C030',hint:'空亡日，注意尾盤不貪'};
+  if(isVoid&&total>=60)          return{tag:'小心',      col:'#A07828',hint:'空亡 + 中性盤，看盤為主'};
+  return base;
 }
 
 function calcAll(yr,mo,dy,hr,da){
@@ -486,16 +498,16 @@ function dayAvgScore(date){
   return Math.round(sum/12);
 }
 
-function scCol(s){return s>=88?'#E85A2A':s>=75?'#D4960A':s>=60?'#A07828':s>=45?'#6A7A8A':'#5A4A40';}
-function scGrad(s){return s>=88?'linear-gradient(90deg,#8B1A0A,#E85A2A)':s>=75?'linear-gradient(90deg,#7A4A08,#F0C030)':s>=60?'linear-gradient(90deg,#5A4020,#C8A060)':s>=45?'linear-gradient(90deg,#2A3A4A,#6A8A9A)':'linear-gradient(90deg,#3A2A20,#6A4A40)';}
+// 分級：80+ 紅(主攻) / 70-79 金(可打鎖利) / 60-69 琥珀(小心) / 50-59 灰藍(守本) / <50 暗(旁觀)
+function scCol(s){return s>=80?'#E85A2A':s>=70?'#F0C030':s>=60?'#A07828':s>=50?'#6A7A8A':'#5A4A40';}
+function scGrad(s){return s>=80?'linear-gradient(90deg,#8B1A0A,#E85A2A)':s>=70?'linear-gradient(90deg,#7A4A08,#F0C030)':s>=60?'linear-gradient(90deg,#5A4020,#C8A060)':s>=50?'linear-gradient(90deg,#2A3A4A,#6A8A9A)':'linear-gradient(90deg,#3A2A20,#6A4A40)';}
 function scTxt(s){
-  if(s>=90)return'🔥 火旺大吉，主動出擊，重倉可為';
-  if(s>=80)return'火土有力，氣勢順暢，穩健進攻';
-  if(s>=70)return'運勢不錯，正常佈局，注意節奏';
-  if(s>=60)return'中性偏好，謹慎操作，小注試水';
-  if(s>=48)return'局面平淡，保守為主，看盤為宜';
-  if(s>=38)return'水木偏重，降低槓桿，守住本金';
-  return'運勢偏弱，建議旁觀，等待時機';
+  if(s>=85)return'🔥 火旺大吉，主動出擊';
+  if(s>=80)return'火土有力，可主攻';
+  if(s>=70)return'運勢不錯，可打但鎖利';
+  if(s>=60)return'中性偏好，小心試水';
+  if(s>=50)return'局面平淡，保守守本';
+  return'運勢偏弱，建議旁觀';
 }
 function elCol(e){return e==='火'?'#E85A2A':e==='土'?'#D4960A':e==='金'?'#B0A080':e==='木'?'#5A8A5A':e==='水'?'#4A7A9A':'#888';}
 
@@ -740,7 +752,7 @@ const SYSTEM_PROMPT=`你是熟悉子平八字的命理顧問，專為命主「Ke
 
 【輸出規則】
 - 嚴格 80 字以內、繁體中文、白話、不講術語。
-- 第一句先給「打法定位」：主攻 / 可打·硬停利 / 收官優先 / 看盤 / 守本 / 旁觀（六選一）。
+- 第一句先給「打法定位」（依系統判定優先，可微調）：主攻（80+）/ 可打·鎖利（70–79）/ 小心（60–69）/ 守本（50–59）/ 旁觀（<50）。沖刑或旬空可加修飾「防沖、鎖利」，或降一級。
 - 第二句說明原因（火土到位？沖刑？空亡？）。
 - 第三句給可執行建議（時段、規模或停利規則）。
 - 不要客套開場白，不要「綜合來說」「總結」。`;
