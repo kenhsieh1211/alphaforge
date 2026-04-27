@@ -777,14 +777,14 @@ function renderCal(){
   for(let d=1;d<=dim;d++){
     const date=new Date(y,m,d),dy=dyGZ(date),mo=moGZ(date);
     const sc=dayAvgScore(date),col=scCol(sc);
-    const dayMode=playMode(sc,dy.dz,mo.dz,0);
+    const dayLabel=v1Label(sc,sc,sc); // 用 final 概略對映標籤
     const isT=date.toDateString()===today.toDateString(),isS=date.toDateString()===selDate.toDateString();
     const isVoid=NATAL.void.includes(dy.dz);
     const term=termOnDay[d];
     const cell=document.createElement('div');
     cell.className=`cd${isT?' today':''}${isS?' sel':''}`;
     cell.setAttribute('role','button');
-    cell.setAttribute('aria-label',`${m+1}月${d}日 ${dy.tg}${dy.dz} ${sc}分 ${dayMode.tag}${isVoid?' 旬空':''}${term?' '+term:''}`);
+    cell.setAttribute('aria-label',`${m+1}月${d}日 ${dy.tg}${dy.dz} ${sc}分 ${dayLabel.tag}${isVoid?' 旬空':''}${term?' '+term:''}`);
     cell.innerHTML=`<div class="cd-n">${d}</div>
       <div class="cd-gz" style="color:${elCol(dy.te)}">${dy.tg}${dy.dz}</div>
       <div class="cd-bar" style="background:${col}"></div>
