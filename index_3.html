@@ -43,6 +43,8 @@ html,body{background:var(--bg);font-family:'Noto Serif TC',serif;color:var(--tx)
 .tot-top{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:10px;}
 .tot-lbl{font-size:9px;color:var(--txm);letter-spacing:3px;font-family:'DM Mono',monospace;line-height:1.6;}
 .tot-num{font-size:44px;font-weight:900;line-height:1;transition:color .4s;}
+.mode-tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;letter-spacing:2px;font-family:'Noto Serif TC',serif;}
+.mode-hint{font-size:10px;color:var(--txm);margin-top:4px;letter-spacing:1px;}
 .tot-bar-bg{height:8px;background:rgba(0,0,0,0.4);border-radius:4px;overflow:hidden;margin-bottom:10px;}
 .tot-bar-f{height:100%;border-radius:4px;transition:width .6s ease;}
 .tot-adv{font-size:11px;color:var(--txm);line-height:1.7;padding-top:8px;border-top:1px solid var(--bd);}
@@ -122,6 +124,7 @@ html,body{background:var(--bg);font-family:'Noto Serif TC',serif;color:var(--tx)
     <div class="tot-num" id="totNum">—</div>
   </div>
   <div class="tot-bar-bg"><div class="tot-bar-f" id="totBar"></div></div>
+  <div style="margin-bottom:8px;"><span class="mode-tag" id="totMode"></span><div class="mode-hint" id="totModeHint"></div></div>
   <div class="tot-adv" id="totAdv"></div>
   <div class="tot-note" id="totNote"></div>
 </div>
@@ -414,11 +417,27 @@ function getJuInfo(pilDZ){
 }
 
 // ───── 旬空（甲申旬：午未）─────
-function getVoidInfo(dyDz){
-  if(NATAL.void.includes(dyDz)){
-    return{note:`⚠ 流日 ${dyDz} 落旬空（${NATAL.void.join('、')}），看似有機會但難以落地`,pen:10};
-  }
-  return{note:'',pen:0};
+// 修正：旬空為神煞層輔助項，非一票否決。火旺月減半、寒水月加重、其他適中。
+const FIRE_MO=['巳','午','未'],COLD_MO=['亥','子','丑'];
+function getVoidInfo(dyDz,moDz){
+  if(!NATAL.void.includes(dyDz))return{note:'',pen:0,mode:'normal'};
+  if(FIRE_MO.includes(moDz))return{note:`流日 ${dyDz} 落旬空（火旺月減半）：氣足但收要硬，停利不貪`,pen:3,mode:'fire'};
+  if(COLD_MO.includes(moDz))return{note:`流日 ${dyDz} 落旬空（寒水月加重）：底盤不暖，看盤為主`,pen:7,mode:'cold'};
+  return{note:`流日 ${dyDz} 落旬空：看似有機會但落不了地，重點放在停利`,pen:5,mode:'mid'};
+}
+
+// ───── 打法標籤 ─────
+// 順序：旺衰調候(分數) → 用神到位(火土金) → 沖刑合會 → 旬空修正
+function playMode(total,dyDz,moDz,clashCount){
+  const isVoid=NATAL.void.includes(dyDz);
+  const isFireMo=FIRE_MO.includes(moDz);
+  if(total>=85&&!isVoid&&clashCount===0)return{tag:'主攻',col:'#E85A2A',hint:'氣場到位，主動出擊'};
+  if(total>=80&&isVoid&&isFireMo)return{tag:'可打·硬停利',col:'#F0C030',hint:'火旺承空亡，手感放大但停利硬點'};
+  if(total>=78&&clashCount===0)return{tag:'可打',col:'#D4960A',hint:'順勢推進，注意節奏'};
+  if(total>=65&&(isVoid||clashCount>0))return{tag:'收官優先',col:'#A07828',hint:'有機會但收得乾淨，不貪尾盤'};
+  if(total>=55)return{tag:'看盤',col:'#8A8060',hint:'小注試水，重點觀察'};
+  if(total>=42)return{tag:'守本',col:'#6A7A8A',hint:'保守應對，避免攤平'};
+  return{tag:'旁觀',col:'#5A4A40',hint:'場外為宜，等待時機'};
 }
 
 function calcAll(yr,mo,dy,hr,da){
@@ -430,8 +449,9 @@ function calcAll(yr,mo,dy,hr,da){
   const clash=getClashInfo(pilDZ);
   const he=getHeInfo(pilDZ);
   const ju=getJuInfo(pilDZ);
-  const vd=getVoidInfo(dy.dz);
+  const vd=getVoidInfo(dy.dz,mo.dz);
   const total=Math.max(20,Math.min(100,Math.round(weighted-clash.capped+he.capped+ju.delta-vd.pen)));
+  const mode=playMode(total,dy.dz,mo.dz,clash.notes.length);
   const process=
     (da?`大運 ${da.tg}${da.dz}（${tenGodOfTg(da.tg)}/${tenGodOfDz(da.dz)}）× 10% = ${(daS*0.10).toFixed(1)}\n`:'')+
     `流年 ${yr.tg}${yr.dz}（${tenGodOfTg(yr.tg)}/${tenGodOfDz(yr.dz)}）× 8% = ${(yrS*0.08).toFixed(1)}\n`+
@@ -445,10 +465,12 @@ function calcAll(yr,mo,dy,hr,da){
     (vd.note?`旬空：${vd.note} = -${vd.pen}\n`:'')+
     `最終 = ${total}`;
   const warns=[];
-  if(clash.notes.length)warns.push(clash.notes.join('、'));
-  if(vd.note)warns.push(`旬空 ${dy.dz}`);
-  const clashWarning=warns.length?'⚠ '+warns.join('；')+'。建議降低槓桿。':'';
-  return{daS,yrS,moS,dyS,hrS,total,process,clashWarning,ju,vd};
+  if(clash.notes.length)warns.push('⚠ '+clash.notes.join('、')+'，原局根基受擾，降低槓桿');
+  if(vd.note&&vd.mode==='cold')warns.push('⚠ '+vd.note);
+  else if(vd.note&&vd.mode==='fire')warns.push('◐ '+vd.note);
+  else if(vd.note)warns.push('◐ '+vd.note);
+  const clashWarning=warns.join('　');
+  return{daS,yrS,moS,dyS,hrS,total,process,clashWarning,ju,vd,mode};
 }
 
 // 全日綜合：12 時辰平均（取代寫死丙午）
@@ -509,8 +531,11 @@ function renderNow(){
   const tn=document.getElementById('totNum');
   tn.textContent=sc.total;tn.style.color=col;
   document.getElementById('totBar').style.cssText=`width:${sc.total}%;background:${grad}`;
+  const tm=document.getElementById('totMode');
+  tm.textContent=sc.mode.tag;tm.style.cssText=`background:${sc.mode.col}22;color:${sc.mode.col};border:1px solid ${sc.mode.col}66;`;
+  document.getElementById('totModeHint').textContent=sc.mode.hint;
   document.getElementById('totAdv').textContent=scTxt(sc.total);
-  document.getElementById('totNote').textContent=sc.clashWarning;
+  document.getElementById('totNote').innerHTML=sc.clashWarning;
   const tail=CFG.solar?` · 真太陽時 ${pad2(now.getHours())}:${pad2(now.getMinutes())}`:'';
   document.getElementById('nowTime').textContent=`${real.getFullYear()}/${pad2(real.getMonth()+1)}/${pad2(real.getDate())} ${pad2(real.getHours())}:${pad2(real.getMinutes())}${tail}`;
 }
@@ -533,15 +558,16 @@ function renderCal(){
     }
   }
   for(let d=1;d<=dim;d++){
-    const date=new Date(y,m,d),dy=dyGZ(date);
+    const date=new Date(y,m,d),dy=dyGZ(date),mo=moGZ(date);
     const sc=dayAvgScore(date),col=scCol(sc);
+    const dayMode=playMode(sc,dy.dz,mo.dz,0);
     const isT=date.toDateString()===today.toDateString(),isS=date.toDateString()===selDate.toDateString();
     const isVoid=NATAL.void.includes(dy.dz);
     const term=termOnDay[d];
     const cell=document.createElement('div');
     cell.className=`cd${isT?' today':''}${isS?' sel':''}`;
     cell.setAttribute('role','button');
-    cell.setAttribute('aria-label',`${m+1}月${d}日 ${dy.tg}${dy.dz} ${sc}分${isVoid?' 旬空':''}${term?' '+term:''}`);
+    cell.setAttribute('aria-label',`${m+1}月${d}日 ${dy.tg}${dy.dz} ${sc}分 ${dayMode.tag}${isVoid?' 旬空':''}${term?' '+term:''}`);
     cell.innerHTML=`<div class="cd-n">${d}</div>
       <div class="cd-gz" style="color:${elCol(dy.te)}">${dy.tg}${dy.dz}</div>
       <div class="cd-bar" style="background:${col}"></div>
@@ -583,8 +609,11 @@ function selDay(y,m,d){
     <div><div class="di-lbl">流　月</div><div class="di-val" style="color:${elCol(mo.te)}">${fmt(mo)}</div></div>
     <div><div class="di-lbl">流　日</div><div class="di-val" style="color:${elCol(dy.te)}">${fmt(dy)}${NATAL.void.includes(dy.dz)?' ⚠空':''}</div></div>
     <div><div class="di-lbl">全日均分</div><div class="di-val" style="color:${col}">${dyAvg} 分</div></div>`;
-  document.getElementById('detAdv').textContent=scTxt(dyAvg);
-  document.getElementById('detNote').textContent=sc.clashWarning;
+  // 詳情用全日均分對應的 mode（再算一次基於日柱+月柱）
+  const dayMode=playMode(dyAvg,dy.dz,mo.dz,sc.process.match(/沖原局/g)?sc.process.match(/沖原局/g).length:0);
+  document.getElementById('detAdv').innerHTML=
+    `<span class="mode-tag" style="background:${dayMode.col}22;color:${dayMode.col};border:1px solid ${dayMode.col}66;">${dayMode.tag}</span>　<span style="color:var(--txm);">${dayMode.hint}</span><br><span style="font-size:11px;">${scTxt(dyAvg)}</span>`;
+  document.getElementById('detNote').innerHTML=sc.clashWarning;
   const lines=(`【午時取樣計算】\n`+sc.process+`\n（全日均分 = 12 時辰平均 = ${dyAvg}）`).split('\n');
   document.getElementById('calcBox').innerHTML=lines.map(l=>{
     if(l.includes('沖')||l.includes('刑'))return`<div><span class="warn">${l}</span></div>`;
@@ -697,12 +726,24 @@ const SYSTEM_PROMPT=`你是熟悉子平八字的命理顧問，專為命主「Ke
 
 【關注場景】德州撲克、Blackjack、虛擬幣交易、賭場旅遊、投資合作。財有可為，但忌情緒化、忌槓桿失控。
 
+【判斷層級（重要）】依此優先順序，不要倒置：
+1. 旺衰調候（火土到位 vs 寒水濕重）
+2. 用神有沒有到位（火為第一用神，土承接，金管控）
+3. 刑沖合會有沒有引動病點（子卯刑、寅申沖、申子辰水局…）
+4. 旬空、神煞作「修正項」非「否決項」
+
+【旬空特別說明】
+- 旬空午未是固定每旬出現，不是火月才有。
+- 火旺月（巳午未）遇午未空 = 氣足收要硬，仍可打，但停利硬點，不是避雷日。
+- 寒水月（亥子丑）遇午未空 = 底盤不暖，看盤為主。
+- 連續多日空亡 = 後段越來越偏「收官」而非「主攻」。
+
 【輸出規則】
 - 嚴格 80 字以內、繁體中文、白話、不講術語。
-- 直接告訴他「今天適合做什麼／避開什麼」，給可執行建議（要不要下注、規模、時段）。
-- 若分數高但有旬空/沖刑/木水局，要明白警告「不是真機會」。
-- 若是巳午未火月或寅午戌火局，鼓勵主動出擊。
-- 不要客套開場白，直接給建議。`;
+- 第一句先給「打法定位」：主攻 / 可打·硬停利 / 收官優先 / 看盤 / 守本 / 旁觀（六選一）。
+- 第二句說明原因（火土到位？沖刑？空亡？）。
+- 第三句給可執行建議（時段、規模或停利規則）。
+- 不要客套開場白，不要「綜合來說」「總結」。`;
 
 async function aiAnalyze(date,ctx){
   const dkey=`${date.getFullYear()}-${pad2(date.getMonth()+1)}-${pad2(date.getDate())}`;
@@ -710,15 +751,17 @@ async function aiAnalyze(date,ctx){
   const cached=localStorage.getItem(cacheKey);
   if(cached)return{text:cached,cached:true};
   if(!CFG.apiKey)throw new Error('請先到 ⚙ 設定 填入 Anthropic API Key');
+  const moCtx=FIRE_MO.includes(ctx.mo.dz)?'火旺月':COLD_MO.includes(ctx.mo.dz)?'寒水月':'平和月';
   const userMsg=
 `日期：${dkey}
 大運：${ctx.da?ctx.da.tg+ctx.da.dz+`（${ctx.da.start}-${ctx.da.end}）`:'—'}
-流年：${ctx.yr.tg}${ctx.yr.dz}　流月：${ctx.mo.tg}${ctx.mo.dz}　流日：${ctx.dy.tg}${ctx.dy.dz}${NATAL.void.includes(ctx.dy.dz)?'（旬空）':''}
+流年：${ctx.yr.tg}${ctx.yr.dz}　流月：${ctx.mo.tg}${ctx.mo.dz}（${moCtx}）　流日：${ctx.dy.tg}${ctx.dy.dz}${NATAL.void.includes(ctx.dy.dz)?'（旬空）':''}
 全日均分：${ctx.dyAvg}
+系統打法判定：${ctx.modeTag}（${ctx.modeHint}）
 警告：${ctx.warn||'無'}
 特殊局：${ctx.juNotes||'無'}
 
-請給今日 80 字以內白話建議。`;
+請依層級邏輯給今日 80 字以內建議，第一句直接給打法定位。`;
   const resp=await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
     headers:{
@@ -752,9 +795,11 @@ document.getElementById('aiBtn').onclick=async()=>{
   box.style.display='';box.textContent='⏳ 解盤中…';
   btn.disabled=true;btn.style.opacity='0.5';
   try{
+    const dayMode=playMode(dyAvg,dy.dz,mo.dz,sc.process.match(/沖原局/g)?sc.process.match(/沖原局/g).length:0);
     const r=await aiAnalyze(date,{
       da,yr,mo,dy,dyAvg,
-      warn:sc.clashWarning||'無',
+      modeTag:dayMode.tag,modeHint:dayMode.hint,
+      warn:sc.clashWarning.replace(/<[^>]+>/g,'')||'無',
       juNotes:sc.ju.notes.join('、')||'無'
     });
     box.textContent=r.text+(r.cached?'\n\n（已快取，按 ↻ 重新解析）':'');
