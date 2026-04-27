@@ -426,30 +426,33 @@ function getVoidInfo(dyDz,moDz){
   return{note:`流日 ${dyDz} 落旬空：看似有機會但落不了地，重點放在停利`,pen:5,mode:'mid'};
 }
 
-// ───── 打法標籤 ─────
-// 三段主分級：80+ 主攻 / 70-79 可打鎖利 / 60-69 小心 / <60 旁觀
-// 修正項：旬空 → 加「鎖利」；沖刑 → 降一級
+// ───── 打法標籤（三檔制：80+ 主攻 / 70-80 可打鎖利 / <70 小心）─────
+// 修正項：旬空 → 加「鎖利」；沖刑 → 降一檔
 function playMode(total,dyDz,moDz,clashCount){
   const isVoid=NATAL.void.includes(dyDz);
   const isFireMo=FIRE_MO.includes(moDz);
-  let base;
-  if(total>=80)      base={tag:'主攻',     col:'#E85A2A',hint:'氣場到位，主動出擊'};
-  else if(total>=70) base={tag:'可打·鎖利',col:'#F0C030',hint:'順勢推進，停利點抓硬'};
-  else if(total>=60) base={tag:'小心',     col:'#A07828',hint:'小注試水，重點觀察'};
-  else if(total>=50) base={tag:'守本',     col:'#6A7A8A',hint:'保守應對，避免攤平'};
-  else               base={tag:'旁觀',     col:'#5A4A40',hint:'場外為宜，等待時機'};
 
-  // 沖刑：降一級操作
-  if(clashCount>=2)return{tag:'旁觀·防沖',col:'#5A4A40',hint:'多重沖刑，原局受擾，今日避戰'};
-  if(clashCount===1&&total>=80)return{tag:'可打·防沖',col:'#F0C030',hint:'有沖刑修正，降一級操作'};
-  if(clashCount===1&&total>=70)return{tag:'小心·防沖',col:'#A07828',hint:'有沖刑，停利+停損都抓緊'};
+  // ── 80+ 主攻區 ──
+  if(total>=80){
+    if(clashCount>=2)return{tag:'可打·鎖利',col:'#F0C030',hint:'分數高但有多重沖刑，降一檔鎖利'};
+    if(clashCount===1)return{tag:'主攻·防沖',col:'#E85A2A',hint:'有沖刑修正，主攻但停利抓硬'};
+    if(isVoid&&isFireMo)return{tag:'主攻·鎖利',col:'#E85A2A',hint:'火旺承空亡，攻可以但收要乾淨'};
+    if(isVoid)return{tag:'可打·鎖利',col:'#F0C030',hint:'分數高但落空亡，降一檔操作'};
+    return{tag:'主攻',col:'#E85A2A',hint:'氣場到位，主動出擊可重倉'};
+  }
 
-  // 旬空：火旺月仍可主攻但加鎖利；其他月份降一級
-  if(isVoid&&total>=80&&isFireMo)return{tag:'主攻·鎖利',col:'#E85A2A',hint:'火旺承空亡，攻可以但停利硬點'};
-  if(isVoid&&total>=80)          return{tag:'可打·鎖利',col:'#F0C030',hint:'分數高但落空亡，降一級操作'};
-  if(isVoid&&total>=70)          return{tag:'可打·鎖利',col:'#F0C030',hint:'空亡日，注意尾盤不貪'};
-  if(isVoid&&total>=60)          return{tag:'小心',      col:'#A07828',hint:'空亡 + 中性盤，看盤為主'};
-  return base;
+  // ── 70–79 可打鎖利區 ──
+  if(total>=70){
+    if(clashCount>=2)return{tag:'小心',col:'#A07828',hint:'多重沖刑壓住盤，今日不主動'};
+    if(clashCount===1)return{tag:'可打·鎖利',col:'#F0C030',hint:'有沖刑，停利+停損都抓緊'};
+    if(isVoid)return{tag:'可打·鎖利',col:'#F0C030',hint:'空亡日，順勢推進但尾盤不貪'};
+    return{tag:'可打·鎖利',col:'#F0C030',hint:'順勢推進，獲利出現先鎖一半'};
+  }
+
+  // ── <70 小心區（一律小心，不再細分守本/旁觀讓你看了難過）──
+  if(clashCount>=2)return{tag:'小心·避戰',col:'#8A6A50',hint:'分數偏弱又有多重沖刑，今日場外為宜'};
+  if(isVoid)return{tag:'小心',col:'#A07828',hint:'氣場偏弱+空亡，小注試水，重點觀察'};
+  return{tag:'小心',col:'#A07828',hint:'氣場中性偏弱，小注試水，停損抓硬'};
 }
 
 function calcAll(yr,mo,dy,hr,da){
