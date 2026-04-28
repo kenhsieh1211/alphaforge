@@ -4473,22 +4473,30 @@ function updateSimDashboard(){
 setInterval(updateSimDashboard, 5000);
 setTimeout(updateSimDashboard, 3000);
 
-// === 重啟模擬投資 + 派 CEO 研究中長期加密貨幣 ===
+// === 重啟模擬投資 + 派 CEO 研究中長期加密貨幣（徹底版）===
 async function restartSimulationWithMission(){
   var s = calcSimSnapshot();
+  var posCount = (typeof positions !== 'undefined' && positions && positions.length) || 0;
+  var taskCount = (typeof meetingTasks !== 'undefined' && meetingTasks.length) || 0;
+  var closedCount = (s.realizedPnl !== 0 || (simState.closedTrades||[]).length > 0) ? simState.closedTrades.length : 0;
   if(!confirm(
-    '🔄 重啟模擬投資\n\n' +
-    '此動作將：\n' +
-    '① 清空所有持倉（'+(typeof positions!=='undefined'?positions.length:0)+' 個）\n' +
-    '② 現金歸零重設為 $'+SIM_INITIAL_CAPITAL+'\n' +
-    '③ 已實現損益歸零（目前 $'+s.realizedPnl.toFixed(2)+'）\n' +
-    '④ 清空已平倉紀錄\n' +
-    '⑤ 派 CEO 帶領團隊研究 3-5 個中長期可持有的加密貨幣\n' +
-    '⑥ 全程使用 Binance 真實數據\n' +
-    '⑦ CEO 決策 → 推 Telegram → 你批准後進場\n\n' +
-    '確定重啟？')) return;
+    '🔄 徹底重啟模擬投資\n\n' +
+    '會清空：\n' +
+    '① 所有持倉（'+posCount+' 個）\n' +
+    '② 現金 → $'+SIM_INITIAL_CAPITAL.toLocaleString()+'\n' +
+    '③ 已實現損益 → $0（原 $'+s.realizedPnl.toFixed(2)+'）\n' +
+    '④ 已平倉紀錄（'+closedCount+' 筆）\n' +
+    '⑤ NAV 歷史（'+(simState.navHistory||[]).length+' 天）\n' +
+    '⑥ 進行中任務（'+taskCount+' 個）\n' +
+    '⑦ CEO 決策紀錄\n\n' +
+    '會保留：聊天紀錄 / 學習記憶 / API Key / Telegram 設定\n\n' +
+    '保留會：\n' +
+    '✅ 派 CEO 帶領 7 位同仁研究中長期加密貨幣\n' +
+    '✅ 全程使用 Binance 真實數據\n' +
+    '✅ 完成後推 Telegram，等你批准\n\n' +
+    '確定徹底重啟？')) return;
 
-  // 1) 重置 simState
+  // 1) 重置 simState（記憶體 + localStorage 都清）
   simState = {
     initial: SIM_INITIAL_CAPITAL,
     cash: SIM_INITIAL_CAPITAL,
@@ -4496,21 +4504,57 @@ async function restartSimulationWithMission(){
     closedTrades: [],
     navHistory: []
   };
-  saveSimState();
+  localStorage.setItem('af_sim_state', JSON.stringify(simState));
 
-  // 2) 清空持倉
-  if(typeof positions !== 'undefined'){
-    positions.length = 0;
-    if(typeof savePositions === 'function') savePositions();
-    if(typeof renderPositions === 'function') renderPositions();
-  }
+  // 2) 徹底清空持倉（記憶體 + localStorage 雙清）
+  try {
+    if(typeof positions !== 'undefined' && positions){
+      positions.splice(0, positions.length);  // splice 比 length=0 更可靠
+    } else {
+      window.positions = [];
+    }
+  } catch(e){ window.positions = []; }
+  localStorage.setItem('af_positions', '[]');
+  localStorage.removeItem('af_positions');  // 完全移除 key
+  if(typeof renderPositions === 'function') renderPositions();
 
-  // 3) 立即記錄起始 NAV
+  // 3) 清空進行中的會議任務
+  try {
+    if(typeof meetingTasks !== 'undefined'){
+      meetingTasks.splice(0, meetingTasks.length);
+    } else {
+      window.meetingTasks = [];
+    }
+  } catch(e){ window.meetingTasks = []; }
+  localStorage.setItem('af_meeting_tasks', '[]');
+  if(typeof renderMeetingTasks === 'function') renderMeetingTasks();
+
+  // 4) 清掉策略研究室的暫存決策
+  localStorage.removeItem('af_lab_last_decision');
+  if(typeof labDecisionState !== 'undefined') labDecisionState = null;
+  var labDec = document.getElementById('lab-decision');
+  if(labDec){ labDec.innerHTML = ''; labDec.style.display = 'none'; }
+
+  // 5) 清執行鎖
+  if(typeof autoExecutingTaskId !== 'undefined') autoExecutingTaskId = null;
+  if(typeof autoExecutingTaskId === 'undefined') window.autoExecutingTaskId = null;
+
+  // 6) 立即記錄起始 NAV
   takeNavSnapshot();
   updateSimDashboard();
 
-  toast('🔄','模擬已重啟','本金 $'+SIM_INITIAL_CAPITAL+' · 派 CEO 研究中長期加密貨幣...');
-  addLogEntry(timeStr(),'CEO','rgba(193,68,14,0.2)','var(--terra3)','Ken 重啟模擬投資 → 本金回到 $'+SIM_INITIAL_CAPITAL+' → 派團隊研究中長期加密貨幣','重啟','rgba(193,68,14,0.15)');
+  // 7) 清掉儀表板「近期交易紀錄」靜態表（如果存在）
+  var dashTradeRows = document.querySelectorAll('#page-dashboard table tbody tr');
+  if(dashTradeRows && dashTradeRows.length){
+    var tb = dashTradeRows[0].parentNode;
+    if(tb){
+      tb.innerHTML = '<tr><td colspan="5" style="padding:18px;text-align:center;color:var(--text3);font-style:italic;font-size:11px;">尚無交易紀錄 · 等 CEO 決策進場</td></tr>';
+    }
+  }
+
+  console.log('[Reset] 完成：positions=', positions, 'meetingTasks=', meetingTasks, 'simState=', simState);
+  toast('🔄','已徹底重啟','本金 $'+SIM_INITIAL_CAPITAL.toLocaleString()+' · 持倉/任務/決策全清空');
+  addLogEntry(timeStr(),'CEO','rgba(193,68,14,0.2)','var(--terra3)','Ken 徹底重啟模擬投資 → 本金回到 $'+SIM_INITIAL_CAPITAL.toLocaleString()+' → 派團隊研究中長期加密貨幣','重啟','rgba(193,68,14,0.15)');
 
   // 4) 建立特殊任務：派 CEO 帶領團隊
   var missionText =
