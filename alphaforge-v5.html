@@ -734,9 +734,9 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
 
     <div style="margin-top:auto;border-top:1px solid var(--border);padding-top:0.5rem;">
       <div class="sl-title">策略管線</div>
-      <div style="font-size:10px;color:var(--text3);display:flex;justify-content:space-between;padding:2px 0;"><span>候選庫</span><span style="color:var(--gold2);font-family:'Space Mono',monospace;">17</span></div>
-      <div style="font-size:10px;color:var(--text3);display:flex;justify-content:space-between;padding:2px 0;"><span>回測中</span><span style="color:var(--terra3);font-family:'Space Mono',monospace;">4</span></div>
-      <div style="font-size:10px;color:var(--text3);display:flex;justify-content:space-between;padding:2px 0;"><span>實盤中</span><span style="color:var(--green2);font-family:'Space Mono',monospace;">3</span></div>
+      <div style="font-size:10px;color:var(--text3);display:flex;justify-content:space-between;padding:2px 0;"><span>候選庫</span><span id="pipeline-candidates" style="color:var(--gold2);font-family:'Space Mono',monospace;">0</span></div>
+      <div style="font-size:10px;color:var(--text3);display:flex;justify-content:space-between;padding:2px 0;"><span>回測中</span><span id="pipeline-testing" style="color:var(--terra3);font-family:'Space Mono',monospace;">0</span></div>
+      <div style="font-size:10px;color:var(--text3);display:flex;justify-content:space-between;padding:2px 0;"><span>實盤中</span><span id="pipeline-live" style="color:var(--green2);font-family:'Space Mono',monospace;">0</span></div>
     </div>
   </div>
 
@@ -886,7 +886,7 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
         </div>
       </div>
       <div class="tp" id="tp-progress">
-        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);margin-bottom:12px;">TODAY — 2026.04.27</div>
+        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);margin-bottom:12px;" id="progress-today-label">TODAY — --</div>
         <div class="pr-row"><div class="pr-hd"><span style="color:var(--gold2);">CEO Agent</span><span>整合決策 88%</span></div><div class="pr-tr"><div class="pr-fl" style="width:88%;background:linear-gradient(90deg,var(--gold),var(--gold2));"></div></div></div>
         <div class="pr-row"><div class="pr-hd"><span style="color:var(--terra3);">Quant Researcher</span><span>策略開發 78%</span></div><div class="pr-tr"><div class="pr-fl" style="width:78%;background:linear-gradient(90deg,var(--terracotta),var(--terra2));"></div></div></div>
         <div class="pr-row"><div class="pr-hd"><span style="color:var(--green2);">Risk Manager</span><span>風控覆蓋 95%</span></div><div class="pr-tr"><div class="pr-fl" style="width:95%;background:linear-gradient(90deg,var(--green),var(--green2));"></div></div></div>
@@ -1027,10 +1027,10 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
   <div class="page-title">倉位管理</div>
   <div class="page-sub">本金 $10,000 USD · <span id="pos-count">5</span> 個活躍倉位 · 自動追蹤損益（持久化儲存）</div>
   <div class="metric-row">
-    <div class="metric-box gold"><div class="metric-lbl">總資產</div><div class="metric-val" style="color:var(--gold2);" id="pos-total">$10,847</div><div class="metric-sub">本金 $10,000</div></div>
-    <div class="metric-box green"><div class="metric-lbl">未實現損益</div><div class="metric-val" style="color:var(--green2);" id="pos-unrealized">+$612</div><div class="metric-sub">3 個倉位盈利</div></div>
-    <div class="metric-box terra"><div class="metric-lbl">已實現損益</div><div class="metric-val" style="color:var(--terra3);" id="pos-realized">+$235</div><div class="metric-sub">本週累計</div></div>
-    <div class="metric-box gold"><div class="metric-lbl">可用資金</div><div class="metric-val" style="color:var(--cream2);" id="pos-avail">$3,240</div><div class="metric-sub">32.4% 閒置</div></div>
+    <div class="metric-box gold"><div class="metric-lbl">總資產</div><div class="metric-val" style="color:var(--gold2);" id="pos-total">$10,000</div><div class="metric-sub" id="pos-total-sub">本金 $10,000</div></div>
+    <div class="metric-box green"><div class="metric-lbl">未實現損益</div><div class="metric-val" style="color:var(--green2);" id="pos-unrealized">$0</div><div class="metric-sub" id="pos-unrealized-sub">尚無倉位</div></div>
+    <div class="metric-box terra"><div class="metric-lbl">已實現損益</div><div class="metric-val" style="color:var(--terra3);" id="pos-realized">$0</div><div class="metric-sub" id="pos-realized-sub">尚無已平倉</div></div>
+    <div class="metric-box gold"><div class="metric-lbl">可用資金</div><div class="metric-val" style="color:var(--cream2);" id="pos-avail">$10,000</div><div class="metric-sub" id="pos-avail-sub">100% 閒置</div></div>
   </div>
 
   <div class="new-pos-form">
@@ -4687,31 +4687,79 @@ function updateSimDashboard(){
     totalPnl.textContent = sign+'$'+s.totalReturn.toFixed(0)+' ('+sign+s.totalReturnPct.toFixed(2)+'%)';
     totalPnl.style.color = s.totalReturn>=0?'var(--green2)':'var(--red2)';
   }
-  // 倉位頁面 metrics
+  // 倉位頁面 metrics（4 顆主數字 + 4 顆下方說明）
   var posTotal = document.getElementById('pos-total');
   if(posTotal) posTotal.textContent = '$'+s.nav.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  var posTotalSub = document.getElementById('pos-total-sub');
+  if(posTotalSub) posTotalSub.textContent = '本金 $'+simState.initial.toLocaleString();
+
   var posUn = document.getElementById('pos-unrealized');
   if(posUn){
-    posUn.textContent = (s.unrealizedPnl>=0?'+':'')+'$'+s.unrealizedPnl.toFixed(0);
+    posUn.textContent = (s.unrealizedPnl>=0?'+':'-')+'$'+Math.abs(s.unrealizedPnl).toFixed(0);
     posUn.style.color = s.unrealizedPnl>=0?'var(--green2)':'var(--red2)';
   }
+  // 計算盈利/虧損個數
+  var posUnSub = document.getElementById('pos-unrealized-sub');
+  if(posUnSub){
+    if(typeof positions === 'undefined' || positions.length === 0){
+      posUnSub.textContent = '尚無倉位';
+    } else {
+      var profitCount = 0, lossCount = 0;
+      positions.forEach(function(p){
+        var key = symToPrice[p.sym] || symToPrice[p.sym.toUpperCase()];
+        var cur = null;
+        if(key && prices[key]) cur = prices[key].base;
+        else {
+          var bSym = p.sym.replace(/\/USDT$|USDT$/i,'').toUpperCase();
+          if(binanceData[bSym]) cur = binanceData[bSym].price;
+        }
+        if(cur != null && typeof p.ep === 'number'){
+          var dir = p.dir.includes('多')?1:-1;
+          var pnl = ((cur-p.ep)/p.ep)*p.amt*dir;
+          if(pnl >= 0) profitCount++; else lossCount++;
+        }
+      });
+      posUnSub.textContent = profitCount+' 盈 / '+lossCount+' 虧（共 '+positions.length+' 倉位）';
+    }
+  }
+
   var posRe = document.getElementById('pos-realized');
   if(posRe){
-    posRe.textContent = (s.realizedPnl>=0?'+':'')+'$'+s.realizedPnl.toFixed(0);
+    posRe.textContent = (s.realizedPnl>=0?'+':'-')+'$'+Math.abs(s.realizedPnl).toFixed(0);
     posRe.style.color = s.realizedPnl>=0?'var(--green2)':'var(--red2)';
   }
+  var posReSub = document.getElementById('pos-realized-sub');
+  if(posReSub){
+    var closedCount = (simState.closedTrades||[]).length;
+    posReSub.textContent = closedCount === 0 ? '尚無已平倉' : closedCount+' 筆累計';
+  }
+
   var posAvail = document.getElementById('pos-avail');
   if(posAvail) posAvail.textContent = '$'+s.cash.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');
-  var posAvailSub = document.querySelectorAll('.metric-sub');
-  // posAvail 下方那行 32.4% 閒置
-  if(posAvail){
-    var sub = posAvail.parentNode.querySelector('.metric-sub');
-    if(sub) sub.textContent = (s.cash/simState.initial*100).toFixed(1)+'% 閒置';
-  }
+  var posAvailSub = document.getElementById('pos-avail-sub');
+  if(posAvailSub) posAvailSub.textContent = (s.cash/simState.initial*100).toFixed(1)+'% 閒置';
   // 更新組合曲線 SVG（office 右側）
   updateOfficeEquityCurve();
   // 更新完整損益儀表板（page-dashboard 上的所有指標 / 曲線 / 三市場 / 交易紀錄）
   if(typeof updateFullDashboard === 'function') updateFullDashboard();
+  // 策略管線（左側欄底）
+  if(typeof strategies !== 'undefined'){
+    var liveCount = strategies.filter(function(x){return x.status==='live';}).length;
+    var testCount = strategies.filter(function(x){return x.status==='testing'||x.status==='reviewing';}).length;
+    var candCount = strategies.filter(function(x){return x.status==='completed';}).length;
+    var pcEl = document.getElementById('pipeline-candidates');
+    var ptEl = document.getElementById('pipeline-testing');
+    var plEl = document.getElementById('pipeline-live');
+    if(pcEl) pcEl.textContent = candCount;
+    if(ptEl) ptEl.textContent = testCount;
+    if(plEl) plEl.textContent = liveCount;
+  }
+  // 今日進度日期
+  var todayLbl = document.getElementById('progress-today-label');
+  if(todayLbl){
+    var d = new Date();
+    todayLbl.textContent = 'TODAY — '+d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0');
+  }
 }
 setInterval(updateSimDashboard, 5000);
 setTimeout(updateSimDashboard, 3000);
