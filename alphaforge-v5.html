@@ -535,7 +535,8 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
 .te-assignee-list{display:flex;flex-wrap:wrap;gap:5px;padding:6px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;}
 .te-as-chk{display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:11px;cursor:pointer;font-size:10px;font-family:'Space Mono',monospace;background:rgba(212,160,23,0.04);border:1px solid var(--border);transition:all 0.15s;}
 .te-as-chk:hover{background:rgba(212,160,23,0.12);}
-.te-as-chk.sel{background:rgba(212,160,23,0.22);border-color:var(--border2);color:var(--gold2);}
+.te-as-chk.sel{background:rgba(212,160,23,0.18);border-color:var(--gold2);box-shadow:0 0 0 1px var(--gold2),0 0 8px rgba(212,160,23,0.3);}
+.te-as-chk.sel::before{content:'✓ ';color:var(--green2);font-weight:700;margin-right:1px;}
 .te-as-chk input{display:none;}
 
 /* === 時間軸 === */
@@ -4760,11 +4761,12 @@ function editTask(id){
     var sel = existingWho.indexOf(w) >= 0;
     var label = document.createElement('label');
     label.className = 'te-as-chk' + (sel?' sel':'');
-    label.innerHTML = '<input type="checkbox" '+(sel?'checked':'')+' value="'+w+'"><span style="color:'+meta.fg+';">'+w+'</span>';
+    label.innerHTML = '<input type="checkbox" '+(sel?'checked':'')+' value="'+w+'"><span style="color:'+meta.fg+';font-weight:600;">'+w+'</span>';
     label.onclick = function(e){
+      e.preventDefault();   // 防止 label-input 預設雙觸發
+      e.stopPropagation();
       var cb = label.querySelector('input');
-      // 讓點擊整個 label 切換
-      if(e.target !== cb){ cb.checked = !cb.checked; }
+      cb.checked = !cb.checked;
       label.classList.toggle('sel', cb.checked);
     };
     listEl.appendChild(label);
