@@ -176,7 +176,7 @@ html,body{background:var(--bg);font-family:'Noto Serif TC',serif;color:var(--tx)
 <div class="sec">今日流時</div>
 <div class="hr-grid" id="hrGrid"></div>
 
-<div class="foot">Ken 賭運模型 v1.1 · 同點遞減 · 火庫加成 · 半合減重</div>
+<div class="foot">Ken 賭運模型 v1.3 · 底盤×0.45 + 攻×0.20 + 收×0.25 − 險×0.45</div>
 </div>
 
 <div class="modal" id="setModal" role="dialog" aria-label="設定">
@@ -476,42 +476,59 @@ function activeContrib(p){
 }
 function avgC(pillars,fn){const v=pillars.filter(Boolean);if(!v.length)return 0;return Math.round(v.reduce((s,p)=>s+fn(p),0)/v.length);}
 
-// v1.1 攻擊值：流月主導(50%) + 火庫加成 + 提升 active 權重
+// v1.3 五柱契合度（pillarMini 對 Ken 喜忌）
+function pillarFit(p){
+  if(!p)return 0;
+  const a=['火','土','金'].includes(p.te)?40:0;
+  const b=['火','土','金'].includes(p.ze)?60:0;
+  return Math.min(100,a+b);
+}
+
+// v1.3 底盤分：依加權看五柱整體氣場
+function v1Base(yr,mo,dy,hr,da){
+  const w={da:0.10,yr:0.08,mo:0.27,dy:0.32,hr:0.23};
+  return Math.round(pillarFit(da)*w.da+pillarFit(yr)*w.yr+pillarFit(mo)*w.mo+pillarFit(dy)*w.dy+pillarFit(hr)*w.hr);
+}
+
+// v1.3 攻擊值：契合度平均(40%) + 火氣加成(35%) + 主動性(25%)
 function v1Attack(yr,mo,dy,hr,da){
-  const all=[da,yr,mo,dy,hr];
-  // 火氣：流月 50% / 流日 25% / 流時 25%
-  let fireV=elContrib(mo,'火')*0.5+elContrib(dy,'火')*0.25+elContrib(hr,'火')*0.25;
-  // 火庫加成：未/戌（火庫餘氣）
-  if(['未','戌'].includes(mo.dz))fireV+=15;
+  const all=[da,yr,mo,dy,hr].filter(Boolean);
+  const baseFitAvg=Math.round(all.reduce((s,p)=>s+pillarFit(p),0)/all.length);
+  // 火氣：流年 20% + 流月 30% + 流日 20% + 流時 30%
+  let fireV=(yr?elContrib(yr,'火')*0.20:0)+elContrib(mo,'火')*0.30+elContrib(dy,'火')*0.20+elContrib(hr,'火')*0.30;
+  // 火庫餘氣
+  if(['未','戌'].includes(mo.dz))fireV+=12;
   if(['未','戌'].includes(dy.dz))fireV+=8;
-  if(['未','戌'].includes(hr.dz))fireV+=5;
+  if(['未','戌'].includes(hr.dz))fireV+=6;
   fireV=Math.min(100,Math.round(fireV));
+  // 主動性：流日+流時各佔 50%
   const activeV=Math.round((activeContrib(dy)+activeContrib(hr))/2);
   const goldV=avgC(all,p=>elContrib(p,'金'));
   const earthV=avgC(all,p=>elContrib(p,'土'));
-  // 水木壓制（按相同流月主導加權）
+  // 水木壓制（流月主導）
   const waterV=Math.round(elContrib(mo,'水')*0.5+elContrib(dy,'水')*0.25+elContrib(hr,'水')*0.25);
   const woodV=Math.round(elContrib(mo,'木')*0.5+elContrib(dy,'木')*0.25+elContrib(hr,'木')*0.25);
-  // 權重：火 30% / 主動 40% / 金 15% / 土 15%（主動性權重提高，符合 Ken 重視臨場節奏）
-  let raw=fireV*0.30+activeV*0.40+goldV*0.15+earthV*0.15;
-  if(waterV+woodV>60)raw-=6;
+  let raw=baseFitAvg*0.40+fireV*0.35+activeV*0.25;
+  if(waterV+woodV>70)raw-=5;
   if(fireV>=80&&goldV+earthV<25)raw-=5;
-  return{val:Math.max(0,Math.min(100,Math.round(raw))),fireV,activeV,goldV,earthV,waterV,woodV};
+  return{val:Math.max(0,Math.min(100,Math.round(raw))),fireV,activeV,goldV,earthV,waterV,woodV,baseFitAvg};
 }
 
-// 收官值（土 35% / 金 30% / 根基穩定 20% / 旬空虛浮 15%）
+// v1.3 收官值：契合度(25%) + 土(25%) + 金(20%) + 根基穩定(20%) + 旬空(10%)
 function v1Closing(yr,mo,dy,hr,da,natalHitMap,isVoid,isFireMo){
-  const focus=[mo,dy,hr];
-  const earthV=avgC(focus,p=>elContrib(p,'土'));
-  const goldV=avgC(focus,p=>elContrib(p,'金'));
-  // 根基穩定：子/丑/申 受擊每處 -25
+  const all=[da,yr,mo,dy,hr].filter(Boolean);
+  const baseFitAvg=Math.round(all.reduce((s,p)=>s+pillarFit(p),0)/all.length);
+  // 土金加重在流月日時（收官重點）
+  const earthBoost=Math.round(elContrib(mo,'土')*0.4+elContrib(dy,'土')*0.3+elContrib(hr,'土')*0.3);
+  const goldBoost=Math.round(elContrib(mo,'金')*0.4+elContrib(dy,'金')*0.3+elContrib(hr,'金')*0.3);
+  // 根基穩定：子/丑/申 每處 -20
   const baseHits=['子','丑','申'].filter(n=>natalHitMap[n]).length;
-  const baseStab=Math.max(0,100-baseHits*25);
-  // 旬空修正
+  const baseStab=Math.max(0,100-baseHits*20);
+  // 旬空：火月仍可承接，寒水月則明顯壓低
   let voidStab=100;
-  if(isVoid)voidStab=isFireMo?60:30;
-  const raw=earthV*0.35+goldV*0.30+baseStab*0.20+voidStab*0.15;
-  return{val:Math.max(0,Math.min(100,Math.round(raw))),earthV,goldV,baseStab,voidStab};
+  if(isVoid)voidStab=isFireMo?70:30;
+  const raw=baseFitAvg*0.25+earthBoost*0.25+goldBoost*0.20+baseStab*0.20+voidStab*0.10;
+  return{val:Math.max(0,Math.min(100,Math.round(raw))),earthV:earthBoost,goldV:goldBoost,baseStab,voidStab};
 }
 
 // 結構風險（核心位 0-10 / 重複受擊 0-4 / 合會成病 0-3 / 旬空虛旺 0-3，總上限 20）
@@ -563,14 +580,14 @@ function v1Risk(pilDZ,ju,isVoid,isFireMo){
   return{total,coreP,dupP,juP,voidP,coreNotes,juNotes,hits};
 }
 
-// 標籤（含覆蓋規則）
+// v1.3 標籤分級
 function v1Label(final,atk,clo){
-  if(atk>=72&&clo<=58)return{tag:'氣足難收日',col:'#E85A2A',rule:'override'};
-  if(atk<=63&&clo>=68)return{tag:'守值日',col:'#A07828',rule:'override'};
-  if(final>=80)return{tag:'主攻日',col:'#E85A2A'};
-  if(final>=72)return{tag:'順打日',col:'#F0C030'};
-  if(final>=64)return{tag:'可打日',col:'#D4960A'};
-  if(final>=56)return{tag:'收官日',col:'#A07828'};
+  if(atk>=72&&clo<=50)return{tag:'氣足難收日',col:'#E85A2A',rule:'override'};
+  if(atk<=55&&clo>=65)return{tag:'守值日',col:'#A07828',rule:'override'};
+  if(final>=75)return{tag:'主攻日',col:'#E85A2A'};
+  if(final>=65)return{tag:'順打日',col:'#F0C030'};
+  if(final>=55)return{tag:'可打日',col:'#D4960A'};
+  if(final>=45)return{tag:'短打觀察日',col:'#A07828'};
   return{tag:'避戰日',col:'#5A4A40'};
 }
 
@@ -594,23 +611,22 @@ function v1Insights(atk,clo,risk,ju,isVoid,isFireMo){
   return{adv:adv.slice(0,3).join('、'),traps:traps.slice(0,3).join('、')};
 }
 
-// 操作建議
+// v1.3 操作建議
 function v1Advice(label,atk,clo,isVoid,hits){
   const t=label.tag;
-  if(t==='氣足難收日')return'可進場但限時限量，獲利30%先鎖，禁止尾盤翻本，不准把贏面再賭大';
-  if(t==='守值日')return'低波動為主，不追高，適合穩定型節奏，避免拚大swing';
+  if(t==='氣足難收日')return'可進場但限時限量，獲利30%先鎖，禁止尾盤翻本';
+  if(t==='守值日')return'低波動為主，不追高，適合穩定節奏，避免拚大swing';
   if(t==='主攻日')return'可打主場、可放大一段，停利點仍要設好';
-  if(t==='順打日')return'進場打主力session，控制單局上限，獲利50%先鎖';
+  if(t==='順打日')return'進場打主力 session，控制單局上限，獲利50%先鎖';
   if(t==='可打日'){
     if(isVoid)return'短中段為宜，獲利30%先鎖，禁止尾盤翻本';
     return'看桌況進場，短中段為宜，不適合長戰';
   }
-  if(t==='收官日'){
+  if(t==='短打觀察日'){
     const corehits=['子','丑','申'].filter(n=>hits[n]).length;
-    if(isVoid&&corehits)return'火土仍有氣但收官壓力大，縮量守贏，盈利後立刻收，禁止尾盤證明自己';
-    return'適合短打縮量，贏了就收、輸了就散，不做翻身局';
+    if(corehits>=2)return'有火氣可用但水局壓住，僅短打觀察、小注娛樂，不宜重押或尾盤翻本';
+    return'小注、限時、見好就收，禁止長戰與翻本';
   }
-  // 避戰日：仍給出可行操作而非全盤否定
   return'不重押，若玩只能輕娛樂、限時限量，禁止尾盤翻本';
 }
 
@@ -624,11 +640,13 @@ function calcAll(yr,mo,dy,hr,da){
   const isVoid=NATAL.void.includes(dy.dz);
   const isFireMo=FIRE_MO.includes(mo.dz);
 
-  // v1.0 三層計算
+  // v1.3 計算層
+  const base=v1Base(yr,mo,dy,hr,da);
   const atk=v1Attack(yr,mo,dy,hr,da);
   const risk=v1Risk(pilDZ,ju,isVoid,isFireMo);
   const clo=v1Closing(yr,mo,dy,hr,da,risk.hits,isVoid,isFireMo);
-  const final=Math.max(0,Math.min(100,Math.round(atk.val*0.45+clo.val*0.55-risk.total*0.8)));
+  // 公式：底盤×0.45 + 攻×0.20 + 收×0.25 − 險×0.45
+  const final=Math.max(0,Math.min(100,Math.round(base*0.45+atk.val*0.20+clo.val*0.25-risk.total*0.45)));
   const label=v1Label(final,atk.val,clo.val);
   const insights=v1Insights(atk,clo,risk,ju,isVoid,isFireMo);
   const advice=v1Advice(label,atk.val,clo.val,isVoid,risk.hits);
@@ -640,20 +658,22 @@ function calcAll(yr,mo,dy,hr,da){
     `流月 ${mo.tg}${mo.dz}（${tenGodOfTg(mo.tg)}/${tenGodOfDz(mo.dz)}）${isFireMo?' 火旺月':COLD_MO.includes(mo.dz)?' 寒水月':''}\n`+
     `流日 ${dy.tg}${dy.dz}（${tenGodOfTg(dy.tg)}/${tenGodOfDz(dy.dz)}）${isVoid?' ◐旬空':''}\n`+
     `流時 ${hr.tg}${hr.dz}（${tenGodOfTg(hr.tg)}/${tenGodOfDz(hr.dz)}）\n`+
+    `\n── 底盤分（五柱契合度加權）──\n`+
+    `→ 底盤分 = ${base}/100\n`+
     `\n── 攻擊值分解 ──\n`+
-    `火 ${atk.fireV} ×35% + 主動 ${atk.activeV} ×30% + 金 ${atk.goldV} ×20% + 土 ${atk.earthV} ×15%\n`+
-    `水木壓制 ${atk.waterV+atk.woodV>80?'-8':'0'}　火過無收 ${atk.fireV>=80&&atk.goldV+atk.earthV<25?'-5':'0'}\n`+
+    `契合${atk.baseFitAvg}×40% + 火${atk.fireV}×35% + 主動${atk.activeV}×25%\n`+
+    `水木壓制 ${atk.waterV+atk.woodV>70?'-5':'0'}　火過無收 ${atk.fireV>=80&&atk.goldV+atk.earthV<25?'-5':'0'}\n`+
     `→ 攻擊值 = ${atk.val}/100\n`+
     `\n── 收官值分解 ──\n`+
-    `土 ${clo.earthV} ×35% + 金 ${clo.goldV} ×30% + 根基 ${clo.baseStab} ×20% + 旬空 ${clo.voidStab} ×15%\n`+
+    `契合×25% + 土${clo.earthV}×25% + 金${clo.goldV}×20% + 根基${clo.baseStab}×20% + 旬空${clo.voidStab}×10%\n`+
     `→ 收官值 = ${clo.val}/100\n`+
     `\n── 結構風險分解 ──\n`+
     `核心位 ${risk.coreP} + 重複擊 ${risk.dupP} + 合會病 ${risk.juP} + 旬空 ${risk.voidP}\n`+
     (risk.coreNotes.length?`　${risk.coreNotes.join('、')}\n`:'')+
     `→ 結構風險 = ${risk.total}/20\n`+
     `\n── 公式 ──\n`+
-    `最終 = ${atk.val}×0.45 + ${clo.val}×0.55 − ${risk.total}×0.8\n`+
-    `     = ${(atk.val*0.45).toFixed(1)} + ${(clo.val*0.55).toFixed(1)} − ${(risk.total*0.8).toFixed(1)}\n`+
+    `最終 = ${base}×0.45 + ${atk.val}×0.20 + ${clo.val}×0.25 − ${risk.total}×0.45\n`+
+    `     = ${(base*0.45).toFixed(1)} + ${(atk.val*0.20).toFixed(1)} + ${(clo.val*0.25).toFixed(1)} − ${(risk.total*0.45).toFixed(1)}\n`+
     `     = ${final}`;
 
   const warns=[];
@@ -674,8 +694,8 @@ function calcAll(yr,mo,dy,hr,da){
 
   return{
     yrS,moS,dyS,hrS,daS,
-    // v1.1 三分量
-    atk,clo,risk,final,label,insights,advice,
+    // v1.3 四分量
+    base,atk,clo,risk,final,label,insights,advice,
     // 相容舊欄位
     total:final,process,clashWarning,ju,vd,
     mode:{tag:label.tag,col:label.col,hint:advice}
@@ -740,8 +760,9 @@ function renderNow(){
   const tn=document.getElementById('totNum');
   tn.textContent=sc.total;tn.style.color=col;
   document.getElementById('totBar').style.cssText=`width:${sc.final}%;background:${grad}`;
-  // 三分量條
+  // v1.3 四分量條
   const triHtml=[
+    {l:'底盤分',v:sc.base,max:100,c:'#C8A060'},
     {l:'攻擊值',v:sc.atk.val,max:100,c:'#E85A2A'},
     {l:'收官值',v:sc.clo.val,max:100,c:'#D4960A'},
     {l:'結構險',v:sc.risk.total,max:20,c:'#8A6A50'}
@@ -825,10 +846,11 @@ function selDay(y,m,d){
     <div><div class="di-lbl">流　年</div><div class="di-val" style="color:${elCol(yr.te)}">${fmt(yr)}</div></div>
     <div><div class="di-lbl">流　月</div><div class="di-val" style="color:${elCol(mo.te)}">${fmt(mo)}</div></div>
     <div><div class="di-lbl">流　日</div><div class="di-val" style="color:${elCol(dy.te)}">${fmt(dy)}${NATAL.void.includes(dy.dz)?' ⚠空':''}</div></div>
-    <div><div class="di-lbl">攻擊/收官/險</div><div class="di-val" style="color:${col}">${sc.atk.val}·${sc.clo.val}·${sc.risk.total}</div></div>`;
-  // 詳情用代表時辰結果（午時為樣本）展示 v1.0 三分量
+    <div><div class="di-lbl">底/攻/收/險</div><div class="di-val" style="color:${col}">${sc.base}·${sc.atk.val}·${sc.clo.val}·${sc.risk.total}</div></div>`;
+  // 詳情面板：v1.3 四分量
   const lbl=sc.label;
   const triHtml=[
+    {l:'底盤分',v:sc.base,max:100,c:'#C8A060'},
     {l:'攻擊值',v:sc.atk.val,max:100,c:'#E85A2A'},
     {l:'收官值',v:sc.clo.val,max:100,c:'#D4960A'},
     {l:'結構險',v:sc.risk.total,max:20,c:'#8A6A50'}
@@ -954,24 +976,25 @@ const SYSTEM_PROMPT=`你是熟悉子平八字的命理顧問，專為命主「Ke
 
 【關注場景】德州撲克、Blackjack、虛擬幣交易、賭場旅遊、投資合作。財有可為，但忌情緒化、忌槓桿失控。
 
-【Ken 賭運模型 v1.0 三分量】
+【Ken 賭運模型 v1.3 四分量】
+- 底盤分（0-100）：五柱對 Ken 喜忌的整體契合度（加權平均）
 - 攻擊值（0-100）：氣場、主動權、進場優勢
 - 收官值（0-100）：能不能帶得走、贏面守得住
 - 結構風險（0-20）：原局根基受擾、旬空虛旺、忌神成局
-- 公式：最終 = 攻×0.45 + 收×0.55 − 險×0.8
-- 標籤：80+主攻 / 72-79順打 / 64-71可打 / 56-63收官 / <56避戰
-- 覆蓋規則：攻≥72且收≤58 → 氣足難收日；攻≤63且收≥68 → 守值日
+- 公式：最終 = 底盤×0.45 + 攻×0.20 + 收×0.25 − 險×0.45
+- 標籤：75+主攻 / 65-74順打 / 55-64可打 / 45-54短打觀察 / <45避戰
+- 覆蓋規則：攻≥72且收≤50 → 氣足難收日；攻≤55且收≥65 → 守值日
 
 【判斷層級】旺衰調候 → 用神到位 → 刑沖合會 → 旬空神煞（修正非否決）
 
 【旬空】火月遇午未 = 氣足收要硬，可打但停利硬點；寒水月遇午未 = 底盤不暖看盤為主。
 
 【輸出格式（嚴格八行，每行不超過 30 字）】
-1. 攻擊值：__/100
-2. 收官值：__/100
-3. 結構風險：__/20
-4. 最終實戰分：__/100
-5. 操作標籤：（系統判定的標籤名稱）
+1. 底盤分：__/100
+2. 攻擊值：__/100
+3. 收官值：__/100
+4. 結構風險：__/20
+5. 最終實戰分：__/100　操作標籤：__
 6. 今日最大優勢：（一句話直述）
 7. 今日最大雷點：（一句話直述）
 8. 實戰操作建議：（一句話可執行）
@@ -990,7 +1013,8 @@ async function aiAnalyze(date,ctx){
 大運：${ctx.da?ctx.da.tg+ctx.da.dz+`（${ctx.da.start}-${ctx.da.end}）`:'—'}
 流年：${ctx.yr.tg}${ctx.yr.dz}　流月：${ctx.mo.tg}${ctx.mo.dz}（${moCtx}）　流日：${ctx.dy.tg}${ctx.dy.dz}${NATAL.void.includes(ctx.dy.dz)?'（旬空）':''}
 
-【系統 v1.0 計算結果】
+【系統 v1.3 計算結果】
+底盤分：${ctx.base}/100
 攻擊值：${ctx.atk}/100
 收官值：${ctx.clo}/100
 結構風險：${ctx.risk}/20
@@ -1000,7 +1024,7 @@ async function aiAnalyze(date,ctx){
 最大雷點：${ctx.traps}
 特殊局：${ctx.juNotes||'無'}
 
-請以系統計算結果為準，按 v1.0 八行格式輸出。標籤可加修飾（如「主攻日·防沖」）但分數不可改。`;
+請以系統計算結果為準，按 v1.3 八行格式輸出。標籤可加修飾（如「順打日·防沖」）但分數不可改。`;
   const resp=await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
     headers:{
@@ -1036,7 +1060,7 @@ document.getElementById('aiBtn').onclick=async()=>{
   try{
     const r=await aiAnalyze(date,{
       da,yr,mo,dy,
-      atk:sc.atk.val,clo:sc.clo.val,risk:sc.risk.total,final:sc.final,
+      base:sc.base,atk:sc.atk.val,clo:sc.clo.val,risk:sc.risk.total,final:sc.final,
       labelTag:sc.label.tag,
       adv:sc.insights.adv,traps:sc.insights.traps,
       juNotes:sc.ju.notes.join('、')||'無'
