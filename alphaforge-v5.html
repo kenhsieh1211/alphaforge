@@ -2666,6 +2666,8 @@ async function manualCorrect(taskId){
       });
     }
   });
+  // 重新排序
+  t.assignees = sortAssigneesByOrder(t.assignees);
 
   // 學習
   var pattern = extractTaskPattern(t.text);
@@ -3304,18 +3306,19 @@ function assignTask(){
     emailSent: false,
     emailSentAt: null,
     ceoSummary: '',
-    // 每位執行人有自己的子任務 + 狀態
-    assignees: assigneeNames.map(function(who){
+    // 每位執行人有自己的子任務 + 狀態（按邏輯順序排好）
+    assignees: (typeof sortAssigneesByOrder==='function' ? sortAssigneesByOrder : function(x){return x;})(assigneeNames.map(function(who){
       return {
         who: who,
         subtask: ceoBreakdownSubtask(who, text),
         status: 'assigned',
         report: '',
+        startedAt: null,
         doneAt: null
       };
-    })
+    }))
   };
-  var assignees = assigneeNames;  // 給後面動畫用
+  var assignees = task.assignees.map(function(a){return a.who;});  // 給後面動畫用
   // CEO 思考動畫
   document.getElementById('mr-assign-btn').disabled = true;
   document.getElementById('mr-assign-btn').textContent = '⏳ CEO 分析中...';
@@ -4742,6 +4745,19 @@ async function testTelegram(){
   }
 }
 
+// === Agent 邏輯執行順序（上游 → 下游）===
+// MA 給總經方向 → QR 找因子 → TC 看圖 → CX 跨域假說 → DS 驗證 → RM 風控 → EX 執行 → CEO 最後整合
+var AGENT_EXEC_ORDER = ['MA','QR','TC','CX','DS','RM','EX','CEO'];
+function sortAssigneesByOrder(arr){
+  return arr.slice().sort(function(a,b){
+    var ia = AGENT_EXEC_ORDER.indexOf(a.who);
+    var ib = AGENT_EXEC_ORDER.indexOf(b.who);
+    if(ia<0) ia = 99;
+    if(ib<0) ib = 99;
+    return ia - ib;
+  });
+}
+
 // === 編輯任務 ===
 var editingTaskId = null;
 function editTask(id){
@@ -4801,15 +4817,32 @@ function saveTaskEdit(){
       subtask: ceoBreakdownSubtask(who, newText),
       status: 'assigned',
       report: '',
+      startedAt: null,
       doneAt: null
     };
   });
+  // 套用邏輯執行順序：MA → QR → TC → CX → DS → RM → EX → CEO
+  t.assignees = sortAssigneesByOrder(t.assignees);
+  // 若有新加入的（assigned 狀態）→ 重置 ceoSummary 讓他們先研究
+  var hasUnstarted = t.assignees.some(function(a){ return a.status === 'assigned'; });
+  if(hasUnstarted){
+    t.ceoSummary = '';
+    t.emailSent = false;
+    t.emailSentAt = null;
+    t.ceoDecision = null;
+  }
   localStorage.setItem('af_meeting_tasks', JSON.stringify(meetingTasks));
   renderMeetingTasks();
   document.getElementById('task-edit-modal').classList.remove('show');
-  toast('✓','任務已更新',t.text.substring(0,30));
+  toast('✓','任務已更新',t.text.substring(0,30)+(hasUnstarted?' · 即將自動執行':''));
   // 紀錄到日誌
-  addLogEntry(timeStr(),'CEO','rgba(212,160,23,0.2)','var(--gold2)','Ken 修改任務 #'+t.id.toString().slice(-6),'任務','rgba(212,160,23,0.15)');
+  addLogEntry(timeStr(),'CEO','rgba(212,160,23,0.2)','var(--gold2)','Ken 修改任務 #'+t.id.toString().slice(-6)+'：'+t.assignees.map(function(a){return a.who;}).join('→'),'任務','rgba(212,160,23,0.15)');
+
+  // 自動執行（如果開關打開且有未開始的子任務）
+  if(hasUnstarted && localStorage.getItem('af_auto_execute') !== 'false'){
+    autoExecutingTaskId = null;  // 清舊鎖
+    setTimeout(function(){ autoExecuteTask(t.id); }, 1000);
+  }
 }
 
 function deleteTask(id){
