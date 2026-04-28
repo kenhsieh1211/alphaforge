@@ -1067,51 +1067,48 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
 <div class="page" id="page-dashboard">
 <div class="page-inner">
   <div class="page-title">損益儀表板</div>
-  <div class="page-sub">本金 $10,000 USD · 啟動日期 2026.01.01 · 追蹤台股 / 美股 / 加密貨幣</div>
+  <div class="page-sub" id="dash-subtitle">本金 $10,000 USD · 啟動日期 -- · 追蹤加密貨幣 / 台股 / 美股</div>
   <div class="metric-row">
-    <div class="metric-box gold"><div class="metric-lbl">總資產</div><div class="metric-val" style="color:var(--gold2);">$10,847</div><div class="metric-sub">本金 $10,000</div></div>
-    <div class="metric-box green"><div class="metric-lbl">總報酬</div><div class="metric-val" style="color:var(--green2);">+8.47%</div><div class="metric-sub">+$847 USD</div></div>
-    <div class="metric-box terra"><div class="metric-lbl">夏普比率</div><div class="metric-val" style="color:var(--terra3);">1.82</div><div class="metric-sub">年化估算</div></div>
-    <div class="metric-box red"><div class="metric-lbl">最大回撤</div><div class="metric-val" style="color:var(--red2);">-4.3%</div><div class="metric-sub">-$430 USD</div></div>
-    <div class="metric-box gold"><div class="metric-lbl">勝率</div><div class="metric-val" style="color:var(--cream2);">68%</div><div class="metric-sub">34勝 16負</div></div>
-    <div class="metric-box green"><div class="metric-lbl">盈虧比</div><div class="metric-val" style="color:var(--green2);">2.4x</div><div class="metric-sub">盈均$82 / 虧均$34</div></div>
+    <div class="metric-box gold"><div class="metric-lbl">總資產</div><div class="metric-val" style="color:var(--gold2);" id="dash-nav">$10,000</div><div class="metric-sub" id="dash-nav-sub">本金 $10,000</div></div>
+    <div class="metric-box green"><div class="metric-lbl">總報酬</div><div class="metric-val" style="color:var(--green2);" id="dash-ret-pct">+0.00%</div><div class="metric-sub" id="dash-ret-usd">+$0 USD</div></div>
+    <div class="metric-box terra"><div class="metric-lbl">夏普比率</div><div class="metric-val" style="color:var(--terra3);" id="dash-sharpe">--</div><div class="metric-sub" id="dash-sharpe-sub">需 ≥10 日資料</div></div>
+    <div class="metric-box red"><div class="metric-lbl">最大回撤</div><div class="metric-val" style="color:var(--red2);" id="dash-mdd">0.0%</div><div class="metric-sub" id="dash-mdd-sub">$0</div></div>
+    <div class="metric-box gold"><div class="metric-lbl">勝率</div><div class="metric-val" style="color:var(--cream2);" id="dash-winrate">--</div><div class="metric-sub" id="dash-winrate-sub">0勝 0負</div></div>
+    <div class="metric-box green"><div class="metric-lbl">盈虧比</div><div class="metric-val" style="color:var(--green2);" id="dash-pnlratio">--</div><div class="metric-sub" id="dash-pnlratio-sub">尚無交易</div></div>
   </div>
   <div class="chart-wrap">
-    <div class="chart-hd"><span class="chart-title-sm">資產曲線 — 2026 YTD</span><span style="font-family:'Space Mono',monospace;font-size:12px;color:var(--green2);">$10,847 ▲</span></div>
-    <svg width="100%" height="160" viewBox="0 0 680 160">
+    <div class="chart-hd"><span class="chart-title-sm">資產曲線 — <span id="dash-curve-period">YTD</span></span><span style="font-family:'Space Mono',monospace;font-size:12px;color:var(--green2);" id="dash-curve-label">$10,000</span></div>
+    <svg width="100%" height="160" viewBox="0 0 680 160" id="dash-equity-svg">
       <defs><linearGradient id="eq-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--gold)" stop-opacity="0.35"/><stop offset="100%" stop-color="var(--gold)" stop-opacity="0"/></linearGradient></defs>
       <line x1="0" y1="120" x2="680" y2="120" stroke="rgba(212,160,23,0.08)"/>
       <line x1="0" y1="80" x2="680" y2="80" stroke="rgba(212,160,23,0.08)"/>
       <line x1="0" y1="40" x2="680" y2="40" stroke="rgba(212,160,23,0.08)"/>
       <line x1="0" y1="128" x2="680" y2="128" stroke="rgba(255,255,255,0.08)" stroke-width="0.5" stroke-dasharray="4 4"/>
-      <path d="M0,128 L40,124 L80,126 L120,118 L160,108 L200,114 L240,100 L280,88 L320,95 L360,82 L400,72 L440,68 L480,60 L520,55 L560,48 L600,42 L640,36 L680,32 L680,150 L0,150 Z" fill="url(#eq-g)"/>
-      <path d="M0,128 L40,124 L80,126 L120,118 L160,108 L200,114 L240,100 L280,88 L320,95 L360,82 L400,72 L440,68 L480,60 L520,55 L560,48 L600,42 L640,36 L680,32" fill="none" stroke="var(--gold)" stroke-width="2"/>
-      <text x="4" y="155" fill="var(--text3)" font-size="9" font-family="Space Mono">Jan</text>
-      <text x="160" y="155" fill="var(--text3)" font-size="9" font-family="Space Mono">Feb</text>
-      <text x="320" y="155" fill="var(--text3)" font-size="9" font-family="Space Mono">Mar</text>
-      <text x="480" y="155" fill="var(--text3)" font-size="9" font-family="Space Mono">Apr</text>
-      <text x="4" y="132" fill="var(--text3)" font-size="9" font-family="Space Mono">$10k</text>
-      <text x="4" y="42" fill="var(--text3)" font-size="9" font-family="Space Mono">$11k</text>
+      <path id="dash-eq-area" d="M0,128 L680,128 L680,150 L0,150 Z" fill="url(#eq-g)"/>
+      <path id="dash-eq-line" d="M0,128 L680,128" fill="none" stroke="var(--gold)" stroke-width="2"/>
+      <text x="4" y="132" fill="var(--text3)" font-size="9" font-family="Space Mono" id="dash-y-low">$10k</text>
+      <text x="4" y="42" fill="var(--text3)" font-size="9" font-family="Space Mono" id="dash-y-high">$11k</text>
+      <text x="640" y="155" fill="var(--text3)" font-size="9" font-family="Space Mono" id="dash-curve-empty" style="display:none;">尚無資料</text>
     </svg>
   </div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:1.25rem;">
-    <div class="chart-wrap">
-      <div class="chart-hd"><span class="chart-title-sm">加密貨幣</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--green2);">+5.2%</span></div>
-      <div style="font-size:10px;color:var(--text3);margin-bottom:6px;">BTC / ETH / SOL / DOGE</div>
-      <div style="display:flex;gap:8px;font-size:10px;"><span style="color:var(--text2);">已實現</span><span style="font-family:'Space Mono',monospace;color:var(--green2);">+$312</span><span style="color:var(--text2);">未實現</span><span style="font-family:'Space Mono',monospace;color:var(--green2);">+$75</span></div>
-      <div class="pr-tr" style="margin-top:8px;"><div class="pr-fl" style="width:75%;background:linear-gradient(90deg,#e0b060,var(--gold2));"></div></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:1.25rem;" id="dash-market-cards">
+    <div class="chart-wrap" data-market="crypto">
+      <div class="chart-hd"><span class="chart-title-sm">加密貨幣</span><span style="font-family:'Space Mono',monospace;font-size:11px;" class="mkt-pct">+0.00%</span></div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:6px;">BTC / ETH / SOL / DOGE 等</div>
+      <div style="display:flex;gap:8px;font-size:10px;"><span style="color:var(--text2);">已實現</span><span style="font-family:'Space Mono',monospace;" class="mkt-realized">$0</span><span style="color:var(--text2);">未實現</span><span style="font-family:'Space Mono',monospace;" class="mkt-unrealized">$0</span></div>
+      <div class="pr-tr" style="margin-top:8px;"><div class="pr-fl mkt-bar" style="width:0%;background:linear-gradient(90deg,#e0b060,var(--gold2));"></div></div>
     </div>
-    <div class="chart-wrap">
-      <div class="chart-hd"><span class="chart-title-sm">台股</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--green2);">+2.1%</span></div>
+    <div class="chart-wrap" data-market="tw">
+      <div class="chart-hd"><span class="chart-title-sm">台股</span><span style="font-family:'Space Mono',monospace;font-size:11px;" class="mkt-pct">+0.00%</span></div>
       <div style="font-size:10px;color:var(--text3);margin-bottom:6px;">TSMC / 台股 ETF</div>
-      <div style="display:flex;gap:8px;font-size:10px;"><span style="color:var(--text2);">已實現</span><span style="font-family:'Space Mono',monospace;color:var(--green2);">+$98</span><span style="color:var(--text2);">未實現</span><span style="font-family:'Space Mono',monospace;color:var(--green2);">+$49</span></div>
-      <div class="pr-tr" style="margin-top:8px;"><div class="pr-fl" style="width:45%;background:linear-gradient(90deg,var(--terracotta),var(--terra2));"></div></div>
+      <div style="display:flex;gap:8px;font-size:10px;"><span style="color:var(--text2);">已實現</span><span style="font-family:'Space Mono',monospace;" class="mkt-realized">$0</span><span style="color:var(--text2);">未實現</span><span style="font-family:'Space Mono',monospace;" class="mkt-unrealized">$0</span></div>
+      <div class="pr-tr" style="margin-top:8px;"><div class="pr-fl mkt-bar" style="width:0%;background:linear-gradient(90deg,var(--terracotta),var(--terra2));"></div></div>
     </div>
-    <div class="chart-wrap">
-      <div class="chart-hd"><span class="chart-title-sm">美股</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--terra3);">+1.17%</span></div>
+    <div class="chart-wrap" data-market="us">
+      <div class="chart-hd"><span class="chart-title-sm">美股</span><span style="font-family:'Space Mono',monospace;font-size:11px;" class="mkt-pct">+0.00%</span></div>
       <div style="font-size:10px;color:var(--text3);margin-bottom:6px;">SPY / QQQ / 個股</div>
-      <div style="display:flex;gap:8px;font-size:10px;"><span style="color:var(--text2);">已實現</span><span style="font-family:'Space Mono',monospace;color:var(--green2);">+$86</span><span style="color:var(--text2);">未實現</span><span style="font-family:'Space Mono',monospace;color:var(--green2);">+$3</span></div>
-      <div class="pr-tr" style="margin-top:8px;"><div class="pr-fl" style="width:28%;background:linear-gradient(90deg,var(--cream),var(--cream2));"></div></div>
+      <div style="display:flex;gap:8px;font-size:10px;"><span style="color:var(--text2);">已實現</span><span style="font-family:'Space Mono',monospace;" class="mkt-realized">$0</span><span style="color:var(--text2);">未實現</span><span style="font-family:'Space Mono',monospace;" class="mkt-unrealized">$0</span></div>
+      <div class="pr-tr" style="margin-top:8px;"><div class="pr-fl mkt-bar" style="width:0%;background:linear-gradient(90deg,var(--cream),var(--cream2));"></div></div>
     </div>
   </div>
   <div class="chart-wrap">
@@ -1124,13 +1121,7 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
         <th style="text-align:right;padding:6px 8px;font-size:9px;color:var(--text3);border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;">損益</th>
         <th style="text-align:left;padding:6px 8px;font-size:9px;color:var(--text3);border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;">策略</th>
       </tr></thead>
-      <tbody>
-        <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;font-size:10px;">04/24</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);font-weight:500;">SOL/USDT</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--green2);">多</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;color:var(--green2);font-family:'Space Mono',monospace;">+$87.40</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);font-size:10px;color:var(--text3);">TC 型態突破</td></tr>
-        <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;font-size:10px;">04/23</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);font-weight:500;">2330.TW</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--green2);">多</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;color:var(--green2);font-family:'Space Mono',monospace;">+$62.10</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);font-size:10px;color:var(--text3);">QR 外資追蹤</td></tr>
-        <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;font-size:10px;">04/22</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);font-weight:500;">QQQ</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--red2);">多</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;color:var(--red2);font-family:'Space Mono',monospace;">-$34.80</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);font-size:10px;color:var(--text3);">MA 總經止損</td></tr>
-        <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;font-size:10px;">04/21</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);font-weight:500;">BTC/USDT</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--green2);">多</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;color:var(--green2);font-family:'Space Mono',monospace;">+$119.60</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);font-size:10px;color:var(--text3);">TC 鯨魚策略</td></tr>
-        <tr><td style="padding:6px 8px;font-family:'Space Mono',monospace;font-size:10px;">04/18</td><td style="padding:6px 8px;font-weight:500;">DOGE/USDT</td><td style="padding:6px 8px;color:var(--green2);">多</td><td style="padding:6px 8px;text-align:right;color:var(--green2);font-family:'Space Mono',monospace;">+$44.20</td><td style="padding:6px 8px;font-size:10px;color:var(--text3);">CX 道奇效應</td></tr>
-      </tbody>
+      <tbody id="dash-trade-rows"></tbody>
     </table>
   </div>
 </div>
@@ -4469,6 +4460,8 @@ function updateSimDashboard(){
   }
   // 更新組合曲線 SVG（office 右側）
   updateOfficeEquityCurve();
+  // 更新完整損益儀表板（page-dashboard 上的所有指標 / 曲線 / 三市場 / 交易紀錄）
+  if(typeof updateFullDashboard === 'function') updateFullDashboard();
 }
 setInterval(updateSimDashboard, 5000);
 setTimeout(updateSimDashboard, 3000);
@@ -4543,14 +4536,8 @@ async function restartSimulationWithMission(){
   takeNavSnapshot();
   updateSimDashboard();
 
-  // 7) 清掉儀表板「近期交易紀錄」靜態表（如果存在）
-  var dashTradeRows = document.querySelectorAll('#page-dashboard table tbody tr');
-  if(dashTradeRows && dashTradeRows.length){
-    var tb = dashTradeRows[0].parentNode;
-    if(tb){
-      tb.innerHTML = '<tr><td colspan="5" style="padding:18px;text-align:center;color:var(--text3);font-style:italic;font-size:11px;">尚無交易紀錄 · 等 CEO 決策進場</td></tr>';
-    }
-  }
+  // 7) 強制更新整個損益儀表板
+  if(typeof updateFullDashboard === 'function') updateFullDashboard();
 
   console.log('[Reset] 完成：positions=', positions, 'meetingTasks=', meetingTasks, 'simState=', simState);
   toast('🔄','已徹底重啟','本金 $'+SIM_INITIAL_CAPITAL.toLocaleString()+' · 持倉/任務/決策全清空');
@@ -4625,6 +4612,194 @@ async function restartSimulationWithMission(){
   }, 2000);
 
   toast('🚀','任務已交付','7 位同仁開始研究中長期加密貨幣 · 完成後 CEO 推送決策');
+}
+
+// === 完整損益儀表板更新（取代寫死的 HTML 數字）===
+function updateFullDashboard(){
+  var s = calcSimSnapshot();
+  var hist = simState.navHistory || [];
+
+  // 啟動日期
+  var dashSub = document.getElementById('dash-subtitle');
+  if(dashSub){
+    var startDate = hist.length ? hist[0].date.replace(/-/g,'.') : todayStr().replace(/-/g,'.');
+    dashSub.textContent = '本金 $'+simState.initial.toLocaleString()+' USD · 啟動日期 '+startDate+' · 即時連動 Binance API';
+  }
+
+  // 上方 6 個 metric
+  var setText = function(id, txt, color){
+    var el = document.getElementById(id);
+    if(el){
+      el.textContent = txt;
+      if(color) el.style.color = color;
+    }
+  };
+  setText('dash-nav', '$'+s.nav.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,','));
+  setText('dash-nav-sub', '本金 $'+simState.initial.toLocaleString());
+  var retSign = s.totalReturn>=0?'+':'';
+  setText('dash-ret-pct', retSign+s.totalReturnPct.toFixed(2)+'%', s.totalReturn>=0?'var(--green2)':'var(--red2)');
+  setText('dash-ret-usd', retSign+'$'+Math.abs(s.totalReturn).toFixed(0)+' USD');
+
+  // 夏普比率（需要至少 10 天資料）
+  if(hist.length >= 10){
+    var rets = [];
+    for(var i=1;i<hist.length;i++){
+      var r = (hist[i].nav - hist[i-1].nav) / hist[i-1].nav;
+      rets.push(r);
+    }
+    var avg = rets.reduce(function(a,b){return a+b;},0)/rets.length;
+    var variance = rets.reduce(function(a,b){return a+Math.pow(b-avg,2);},0)/rets.length;
+    var sd = Math.sqrt(variance);
+    var sharpe = sd > 0 ? (avg/sd)*Math.sqrt(365) : 0;
+    setText('dash-sharpe', sharpe.toFixed(2), sharpe>1.5?'var(--green2)':sharpe>0.5?'var(--gold2)':'var(--red2)');
+    setText('dash-sharpe-sub', '年化估算 (n='+hist.length+')');
+  } else {
+    setText('dash-sharpe', '--');
+    setText('dash-sharpe-sub', '需 ≥10 日資料（目前 '+hist.length+'）');
+  }
+
+  // 最大回撤
+  if(hist.length >= 2){
+    var peak = hist[0].nav, mdd = 0, mddDollar = 0;
+    hist.forEach(function(h){
+      if(h.nav > peak) peak = h.nav;
+      var dd = (h.nav - peak)/peak;
+      if(dd < mdd){ mdd = dd; mddDollar = h.nav - peak; }
+    });
+    setText('dash-mdd', (mdd*100).toFixed(2)+'%');
+    setText('dash-mdd-sub', '$'+mddDollar.toFixed(0));
+  } else {
+    setText('dash-mdd', '0.0%');
+    setText('dash-mdd-sub', '$0');
+  }
+
+  // 勝率與盈虧比
+  var closed = simState.closedTrades || [];
+  if(closed.length){
+    var wins = closed.filter(function(c){return c.pnl>0;});
+    var losses = closed.filter(function(c){return c.pnl<=0;});
+    var winRate = wins.length/closed.length*100;
+    setText('dash-winrate', winRate.toFixed(0)+'%', winRate>50?'var(--green2)':'var(--cream2)');
+    setText('dash-winrate-sub', wins.length+'勝 '+losses.length+'負');
+    if(wins.length && losses.length){
+      var avgWin = wins.reduce(function(a,c){return a+c.pnl;},0)/wins.length;
+      var avgLoss = Math.abs(losses.reduce(function(a,c){return a+c.pnl;},0)/losses.length);
+      var ratio = avgLoss>0 ? avgWin/avgLoss : 0;
+      setText('dash-pnlratio', ratio.toFixed(1)+'x', ratio>1.5?'var(--green2)':ratio>1?'var(--gold2)':'var(--red2)');
+      setText('dash-pnlratio-sub', '盈均$'+avgWin.toFixed(0)+' / 虧均$'+avgLoss.toFixed(0));
+    } else if(wins.length){
+      setText('dash-pnlratio', '∞');
+      setText('dash-pnlratio-sub', '尚無虧損交易');
+    } else {
+      setText('dash-pnlratio', '0');
+      setText('dash-pnlratio-sub', '尚無獲利交易');
+    }
+  } else {
+    setText('dash-winrate', '--');
+    setText('dash-winrate-sub', '0勝 0負');
+    setText('dash-pnlratio', '--');
+    setText('dash-pnlratio-sub', '尚無交易');
+  }
+
+  // 資產曲線
+  var curveLabel = document.getElementById('dash-curve-label');
+  if(curveLabel) curveLabel.textContent = '$'+s.nav.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',') + (s.totalReturn>=0?' ▲':' ▼');
+  var areaPath = document.getElementById('dash-eq-area');
+  var linePath = document.getElementById('dash-eq-line');
+  var emptyText = document.getElementById('dash-curve-empty');
+  if(hist.length < 2){
+    if(emptyText) emptyText.style.display = '';
+    if(areaPath) areaPath.setAttribute('d', 'M0,128 L680,128 L680,150 L0,150 Z');
+    if(linePath) linePath.setAttribute('d', 'M0,128 L680,128');
+    setText('dash-y-low', '$'+(simState.initial/1000).toFixed(0)+'k');
+    setText('dash-y-high', '$'+(simState.initial/1000).toFixed(0)+'k');
+  } else {
+    if(emptyText) emptyText.style.display = 'none';
+    var W = 680, H = 160;
+    var minNav = Math.min.apply(null, hist.map(function(h){return h.nav;}));
+    var maxNav = Math.max.apply(null, hist.map(function(h){return h.nav;}));
+    var range = maxNav - minNav || 1;
+    // 留 padding
+    var padTop = 25, padBot = 30;
+    var pts = hist.map(function(h, i){
+      var x = (i/(hist.length-1))*W;
+      var y = H - padBot - ((h.nav-minNav)/range)*(H-padTop-padBot);
+      return x.toFixed(1)+','+y.toFixed(1);
+    });
+    if(linePath) linePath.setAttribute('d', 'M'+pts.join(' L'));
+    if(areaPath) areaPath.setAttribute('d', 'M'+pts[0]+' L'+pts.slice(1).join(' L')+' L'+W+','+(H-padBot+10)+' L0,'+(H-padBot+10)+' Z');
+    setText('dash-y-low', '$'+(minNav/1000).toFixed(1)+'k');
+    setText('dash-y-high', '$'+(maxNav/1000).toFixed(1)+'k');
+  }
+
+  // 三市場小卡（連動實際倉位 + 已實現）
+  ['crypto','tw','us'].forEach(function(mkt){
+    var card = document.querySelector('[data-market="'+mkt+'"]');
+    if(!card) return;
+    var posInMkt = (typeof positions !== 'undefined' ? positions : []).filter(function(p){return p.mkt === mkt;});
+    var realizedInMkt = (simState.closedTrades||[]).filter(function(c){return c.mkt === mkt;}).reduce(function(a,c){return a+c.pnl;},0);
+    var unrealizedInMkt = 0;
+    posInMkt.forEach(function(p){
+      var cur = null;
+      var key = symToPrice[p.sym] || symToPrice[p.sym.toUpperCase()];
+      if(key && prices[key]) cur = prices[key].base;
+      else {
+        var bSym = p.sym.replace(/\/USDT$|USDT$/i,'').toUpperCase();
+        if(binanceData[bSym]) cur = binanceData[bSym].price;
+      }
+      if(cur != null && typeof p.ep === 'number'){
+        var dir = p.dir.includes('多')?1:-1;
+        unrealizedInMkt += ((cur-p.ep)/p.ep)*p.amt*dir;
+      }
+    });
+    var totalPnl = realizedInMkt + unrealizedInMkt;
+    var totalPctOfCapital = (totalPnl/simState.initial*100);
+    var pctEl = card.querySelector('.mkt-pct');
+    if(pctEl){
+      pctEl.textContent = (totalPctOfCapital>=0?'+':'')+totalPctOfCapital.toFixed(2)+'%';
+      pctEl.style.color = totalPctOfCapital>=0?'var(--green2)':'var(--red2)';
+    }
+    var realizedEl = card.querySelector('.mkt-realized');
+    if(realizedEl){
+      realizedEl.textContent = (realizedInMkt>=0?'+$':'-$')+Math.abs(realizedInMkt).toFixed(0);
+      realizedEl.style.color = realizedInMkt>=0?'var(--green2)':'var(--red2)';
+    }
+    var unrealizedEl = card.querySelector('.mkt-unrealized');
+    if(unrealizedEl){
+      unrealizedEl.textContent = (unrealizedInMkt>=0?'+$':'-$')+Math.abs(unrealizedInMkt).toFixed(0);
+      unrealizedEl.style.color = unrealizedInMkt>=0?'var(--green2)':'var(--red2)';
+    }
+    var barEl = card.querySelector('.mkt-bar');
+    if(barEl){
+      var posValue = posInMkt.reduce(function(a,p){return a+p.amt;},0);
+      barEl.style.width = Math.min(100,(posValue/simState.initial*100)).toFixed(1)+'%';
+    }
+  });
+
+  // 近期交易紀錄
+  var rowsEl = document.getElementById('dash-trade-rows');
+  if(rowsEl){
+    if(closed.length === 0){
+      rowsEl.innerHTML = '<tr><td colspan="5" style="padding:18px;text-align:center;color:var(--text3);font-style:italic;font-size:11px;">尚無交易紀錄 · 等 CEO 決策進場</td></tr>';
+    } else {
+      var rows = closed.slice().reverse().slice(0, 10).map(function(c){
+        var dt = new Date(c.closedAt);
+        var dtStr = String(dt.getMonth()+1).padStart(2,'0')+'/'+String(dt.getDate()).padStart(2,'0');
+        var dirColor = c.dir.includes('多')?'var(--green2)':'var(--red2)';
+        var pnlColor = c.pnl>=0?'var(--green2)':'var(--red2)';
+        var pnlStr = (c.pnl>=0?'+':'-')+'$'+Math.abs(c.pnl).toFixed(2);
+        var strategy = (c.openedLogic||'').substring(0,30);
+        return '<tr>'+
+          '<td style="padding:6px 8px;border-bottom:1px solid var(--border);font-family:\'Space Mono\',monospace;font-size:10px;">'+dtStr+'</td>'+
+          '<td style="padding:6px 8px;border-bottom:1px solid var(--border);font-weight:500;">'+c.sym+'</td>'+
+          '<td style="padding:6px 8px;border-bottom:1px solid var(--border);color:'+dirColor+';">'+c.dir+'</td>'+
+          '<td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;color:'+pnlColor+';font-family:\'Space Mono\',monospace;">'+pnlStr+'</td>'+
+          '<td style="padding:6px 8px;border-bottom:1px solid var(--border);font-size:10px;color:var(--text3);">'+(c.agent||'CEO')+(strategy?' · '+strategy:'')+'</td>'+
+        '</tr>';
+      }).join('');
+      rowsEl.innerHTML = rows;
+    }
+  }
 }
 
 // 用 navHistory 重新繪製組合曲線
