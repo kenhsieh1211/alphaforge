@@ -859,8 +859,9 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
 
     <div class="mobile-actions" id="mobile-actions">
       <button class="ma-btn primary" onclick="restartSimulationWithMission()" title="重啟模擬投資 + CEO 派團隊研究中長期加密貨幣">🚀 重啟模擬</button>
+      <button class="ma-btn" onclick="syncCloudPush()" title="推送目前狀態到雲端（Telegram 備份）">☁ 推送</button>
+      <button class="ma-btn" onclick="syncCloudPull()" title="從雲端拉取狀態（覆蓋本機）">📥 拉取</button>
       <button class="ma-btn" onclick="sendDailyReport(true)" title="立即發送日報到 Telegram">📨 日報</button>
-      <button class="ma-btn" onclick="viewDailyReports()" title="歷史日報">📚 歷史</button>
       <button class="ma-btn" onclick="confirmMeeting()" title="召開全員會議">🛎 開會</button>
       <span id="ma-nav-info" style="margin-left:auto;font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);"></span>
     </div>
@@ -1532,6 +1533,16 @@ CEO 會分析任務並指派給最適合的 AI 同仁，並設定交付日期。
       <b>① Bot Token：</b>找 @BotFather 建 Bot → 拿 Token<br>
       <b>② Chat ID：</b>找 @userinfobot → 取得你的 ID<br>
       <b>③ 重要：</b>請先傳一句話給你的 Bot，否則 Bot 無法主動傳訊給你
+    </div>
+    <div style="background:rgba(74,144,160,0.06);border:1px solid rgba(74,144,160,0.2);border-radius:5px;padding:9px 11px;margin-bottom:10px;">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;color:var(--text);margin-bottom:5px;">
+        <input type="checkbox" id="cb-auto-trade" onchange="localStorage.setItem('af_auto_trade', this.checked?'true':'false')">
+        <span><b style="color:var(--gold2);">🚀 自動進場</b>：CEO 決策後直接執行交易（模擬投資不需核准）</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;color:var(--text);">
+        <input type="checkbox" id="cb-auto-sync" onchange="localStorage.setItem('af_auto_sync', this.checked?'true':'false');if(this.checked)startAutoSync();">
+        <span><b style="color:#7ab0d4;">☁ 自動雲端同步</b>：每 30 秒推送狀態到 Telegram，跨裝置可拉取還原</span>
+      </label>
     </div>
     <div class="modal-btns" style="margin-bottom:8px;">
       <button class="mbtn save" onclick="saveEmailSettings()">💾 儲存設定</button>
@@ -3661,12 +3672,95 @@ async function autoExecuteTask(taskId){
       if(currentDetailTaskId === taskId) renderTaskDetail();
       var decisionEmoji = decision.decision === 'GO' ? '✅' : decision.decision === 'PARTIAL' ? '⚠️' : '❌';
       toast(decisionEmoji,'CEO 決策：'+decision.decision,'信心 '+(decision.confidence*100).toFixed(0)+'% · '+(decision.trades||[]).length+' 筆建議交易');
+
+      // ⭐ 模擬交易：CEO 決策後自動進場（不用 Ken 核准）
+      if(localStorage.getItem('af_auto_trade') !== 'false' && (decision.decision === 'GO' || decision.decision === 'PARTIAL')){
+        await autoExecuteTrades(taskId);
+      }
     }
   }
 
   // 自動推 TG
   await sendTaskEmail(taskId);
   autoExecutingTaskId = null;
+}
+
+// === 自動執行 CEO 建議的交易（模擬投資，無需核准）===
+async function autoExecuteTrades(taskId){
+  var t = meetingTasks.find(function(x){ return x.id===taskId; });
+  if(!t || !t.ceoDecision || !t.ceoDecision.trades) return;
+  var executed = [];
+  var skipped = [];
+  for(var i=0; i<t.ceoDecision.trades.length; i++){
+    var trade = t.ceoDecision.trades[i];
+    if(trade.executed || trade.rejected) continue;
+    // 檢查現金
+    var snap = calcSimSnapshot();
+    if(snap.cash < trade.amount_usd){
+      skipped.push({sym:trade.symbol, reason:'現金不足 ($'+snap.cash.toFixed(0)+' < $'+trade.amount_usd+')'});
+      trade.rejected = true;
+      trade.rejectedAt = new Date().toISOString();
+      trade.rejectReason = '現金不足';
+      continue;
+    }
+    // 檢查單一標的曝險
+    var sameSymTotal = (typeof positions !== 'undefined' ? positions : []).filter(function(p){return p.sym === trade.symbol;}).reduce(function(a,p){return a+p.amt;},0);
+    var newTotal = sameSymTotal + trade.amount_usd;
+    if(newTotal > simState.initial * 0.10){  // 單一標的 10% 上限（CEO 建議是 5%，給點 buffer）
+      skipped.push({sym:trade.symbol, reason:'單一標的曝險超過 10%'});
+      trade.rejected = true;
+      trade.rejectedAt = new Date().toISOString();
+      trade.rejectReason = '曝險超限';
+      continue;
+    }
+    // 進場
+    simOpenPosition(trade.amount_usd);
+    if(typeof window.nextPosId === 'undefined') window.nextPosId = (positions.length>0?Math.max.apply(null,positions.map(function(p){return p.id;}))+1:100);
+    positions.push({
+      id: nextPosId++,
+      sym: trade.symbol,
+      mkt: trade.market || 'crypto',
+      dir: trade.direction.includes('多')?'多':'空',
+      amt: trade.amount_usd,
+      ep: trade.entry_price,
+      sl: trade.stop_loss_pct || 5,
+      logic: 'CEO 自動進場：'+trade.rationale+'（任務 #'+t.id.toString().slice(-6)+'）',
+      agent: 'CEO'
+    });
+    if(typeof savePositions === 'function') savePositions();
+    trade.executed = true;
+    trade.executedAt = new Date().toISOString();
+    executed.push(trade);
+    addLogEntry(timeStr(),'CEO','rgba(74,144,96,0.2)','var(--green2)','自動進場 '+trade.symbol+' '+trade.direction+' $'+trade.amount_usd,'進場','rgba(74,144,96,0.15)');
+    // 給瀏覽器一點呼吸時間
+    await new Promise(function(r){setTimeout(r,200);});
+  }
+  if(typeof renderPositions === 'function') renderPositions();
+  takeNavSnapshot();
+  updateSimDashboard();
+  localStorage.setItem('af_meeting_tasks', JSON.stringify(meetingTasks));
+  renderMeetingTasks();
+  if(currentDetailTaskId === taskId) renderTaskDetail();
+  if(executed.length){
+    toast('🚀','自動進場 '+executed.length+' 筆','現金剩 $'+simState.cash.toFixed(0));
+    // 推 Telegram
+    if(getTelegramConfig().token){
+      var tgMsg = '🚀 *CEO 自動進場（模擬）*\n\n' +
+        '任務 #'+t.id.toString().slice(-6)+'\n\n' +
+        '進場清單：\n' +
+        executed.map(function(tr){
+          return '• '+tr.symbol+' '+tr.direction+' $'+tr.amount_usd+' @ $'+tr.entry_price+'（停損 -'+tr.stop_loss_pct+'%）';
+        }).join('\n') +
+        '\n\n剩餘現金：$'+simState.cash.toFixed(0) +
+        (skipped.length ? '\n\n跳過：\n'+skipped.map(function(s){return '• '+s.sym+'（'+s.reason+'）';}).join('\n') : '') +
+        '\n\n_自動進場已完成，無需核准_';
+      sendTelegram(tgMsg, {parseMode:'Markdown'}).catch(function(){
+        sendTelegram(tgMsg.replace(/[*_]/g,'')).catch(function(){});
+      });
+    }
+  } else if(skipped.length){
+    toast('⏭','全部跳過',skipped.length+' 筆未進場');
+  }
 }
 
 // === CEO 決策區塊 HTML ===
@@ -4318,6 +4412,162 @@ function buildEmailBody(t){
   lines.push('-- AlphaForge AI 系統自動寄出');
   return lines.join('\n');
 }
+
+// ╔════════════════════════════════╗
+// ║   跨裝置同步（用 Telegram 當雲端）║
+// ╚════════════════════════════════╝
+// 收集所有需要同步的狀態
+function collectAllState(){
+  return {
+    v: 5,
+    timestamp: Date.now(),
+    positions: typeof positions !== 'undefined' ? positions : [],
+    meetingTasks: typeof meetingTasks !== 'undefined' ? meetingTasks : [],
+    simState: typeof simState !== 'undefined' ? simState : null,
+    chatHistory: typeof chatHistory !== 'undefined' ? chatHistory : [],
+    learnedRoutes: typeof learnedRoutes !== 'undefined' ? learnedRoutes : [],
+    strategies: typeof strategies !== 'undefined' ? strategies : [],
+    watchlist: typeof watchlist !== 'undefined' ? watchlist : [],
+    dailyReports: JSON.parse(localStorage.getItem('af_daily_reports')||'[]'),
+    meetingNo: parseInt(localStorage.getItem('af_meeting_no')||'0')
+  };
+}
+
+// 應用同步下來的狀態到本機
+function applyAllState(s){
+  if(!s || !s.v) return false;
+  if(s.positions){
+    if(typeof positions !== 'undefined'){
+      positions.splice(0, positions.length);
+      s.positions.forEach(function(p){ positions.push(p); });
+    } else window.positions = s.positions;
+    localStorage.setItem('af_positions', JSON.stringify(s.positions));
+  }
+  if(s.meetingTasks){
+    if(typeof meetingTasks !== 'undefined'){ meetingTasks.splice(0, meetingTasks.length); s.meetingTasks.forEach(function(t){ meetingTasks.push(t); }); }
+    else window.meetingTasks = s.meetingTasks;
+    localStorage.setItem('af_meeting_tasks', JSON.stringify(s.meetingTasks));
+  }
+  if(s.simState){
+    simState = s.simState;
+    localStorage.setItem('af_sim_state', JSON.stringify(simState));
+  }
+  if(s.chatHistory){
+    if(typeof chatHistory !== 'undefined'){
+      chatHistory.splice(0, chatHistory.length);
+      s.chatHistory.forEach(function(c){ chatHistory.push(c); });
+    }
+    localStorage.setItem('af_office_chat', JSON.stringify(s.chatHistory));
+  }
+  if(s.learnedRoutes){
+    if(typeof learnedRoutes !== 'undefined'){ learnedRoutes.splice(0, learnedRoutes.length); s.learnedRoutes.forEach(function(r){ learnedRoutes.push(r); }); }
+    localStorage.setItem('af_learned_routes', JSON.stringify(s.learnedRoutes));
+  }
+  if(s.strategies){
+    if(typeof strategies !== 'undefined'){ strategies.splice(0, strategies.length); s.strategies.forEach(function(x){ strategies.push(x); }); }
+    localStorage.setItem('af_strategies', JSON.stringify(s.strategies));
+  }
+  if(s.watchlist){
+    if(typeof watchlist !== 'undefined'){ watchlist.splice(0, watchlist.length); s.watchlist.forEach(function(x){ watchlist.push(x); }); }
+    localStorage.setItem('af_watchlist', JSON.stringify(s.watchlist));
+  }
+  if(s.dailyReports) localStorage.setItem('af_daily_reports', JSON.stringify(s.dailyReports));
+  if(s.meetingNo) localStorage.setItem('af_meeting_no', s.meetingNo);
+  // 重新渲染所有
+  if(typeof renderPositions==='function') renderPositions();
+  if(typeof renderMeetingTasks==='function') renderMeetingTasks();
+  if(typeof renderChat==='function') renderChat();
+  if(typeof renderStrategies==='function') renderStrategies();
+  if(typeof renderWatchlist==='function') renderWatchlist();
+  if(typeof updateSimDashboard==='function') updateSimDashboard();
+  return true;
+}
+
+// 推送狀態到 Telegram（作為雲端儲存）
+async function pushStateToCloud(silent){
+  var cfg = getTelegramConfig();
+  if(!cfg.token || !cfg.chatId) throw new Error('未設定 Telegram');
+  var state = collectAllState();
+  var blob = new Blob([JSON.stringify(state)], {type:'application/json'});
+  var fd = new FormData();
+  fd.append('chat_id', cfg.chatId);
+  fd.append('document', blob, 'alphaforge-state.json');
+  fd.append('caption', '☁ AlphaForge 狀態同步\n時間：'+new Date().toLocaleString('zh-TW')+'\n持倉：'+state.positions.length+' · 任務：'+state.meetingTasks.length+' · NAV：$'+(state.simState?state.simState.cash.toFixed(0):'?'));
+  var r = await fetch('https://api.telegram.org/bot'+cfg.token+'/sendDocument', {method:'POST', body:fd});
+  var data = await r.json();
+  if(!data.ok) throw new Error(data.description || 'Telegram 失敗');
+  // 把 file_id 寫到 bot description（用作雲端「指針」）
+  var fileId = data.result.document.file_id;
+  await fetch('https://api.telegram.org/bot'+cfg.token+'/setMyDescription?description=' + encodeURIComponent('AF_STATE:'+fileId+':'+Date.now()));
+  localStorage.setItem('af_last_sync_push', Date.now());
+  if(!silent) toast('☁','已推送雲端','Telegram 收到備份檔案');
+  return fileId;
+}
+
+// 從 Telegram 拉狀態回來
+async function pullStateFromCloud(){
+  var cfg = getTelegramConfig();
+  if(!cfg.token) throw new Error('未設定 Telegram');
+  // 從 bot description 讀 file_id
+  var dResp = await fetch('https://api.telegram.org/bot'+cfg.token+'/getMyDescription');
+  var dData = await dResp.json();
+  if(!dData.ok || !dData.result || !dData.result.description) throw new Error('雲端尚無資料（先推送一次）');
+  var desc = dData.result.description;
+  if(desc.indexOf('AF_STATE:') !== 0) throw new Error('雲端格式錯誤');
+  var parts = desc.split(':');
+  var fileId = parts[1];
+  var remoteTimestamp = parseInt(parts[2]||'0');
+  // getFile 拿下載 URL
+  var fResp = await fetch('https://api.telegram.org/bot'+cfg.token+'/getFile?file_id='+fileId);
+  var fData = await fResp.json();
+  if(!fData.ok) throw new Error('檔案 ID 失效，請先推送一次');
+  var dlUrl = 'https://api.telegram.org/file/bot'+cfg.token+'/'+fData.result.file_path;
+  var dlResp = await fetch(dlUrl);
+  if(!dlResp.ok) throw new Error('下載失敗 '+dlResp.status);
+  var stateStr = await dlResp.text();
+  var state = JSON.parse(stateStr);
+  return { state: state, remoteTimestamp: remoteTimestamp };
+}
+
+async function syncCloudPush(){
+  try{
+    await pushStateToCloud(false);
+    return true;
+  }catch(e){
+    toast('❌','雲端推送失敗',e.message);
+    return false;
+  }
+}
+
+async function syncCloudPull(){
+  if(!confirm('☁ 從雲端拉取狀態？\n\n會覆蓋目前本機的：持倉 / 任務 / 聊天 / 策略 / 觀察列表 / NAV\n\n你的 API Key、Telegram 設定不會被覆蓋。\n\n確定？')) return false;
+  try{
+    var result = await pullStateFromCloud();
+    var ok = applyAllState(result.state);
+    if(ok){
+      var localTimestamp = localStorage.getItem('af_last_sync_push') || '0';
+      var dt = new Date(result.remoteTimestamp);
+      toast('☁','已從雲端還原','備份時間：'+dt.toLocaleString('zh-TW'));
+    } else {
+      toast('⚠','資料格式異常','已忽略');
+    }
+    return ok;
+  }catch(e){
+    toast('❌','雲端拉取失敗',e.message);
+    return false;
+  }
+}
+
+// 自動同步：每 30 秒推一次（如果有開）
+function startAutoSync(){
+  if(localStorage.getItem('af_auto_sync') !== 'true') return;
+  setInterval(function(){
+    if(localStorage.getItem('af_auto_sync') === 'true'){
+      pushStateToCloud(true).catch(function(e){ console.warn('auto sync failed', e.message); });
+    }
+  }, 30000);
+}
+setTimeout(startAutoSync, 12000);
 
 // ╔════════════════════════════════╗
 // ║   模擬投資計畫（資金 / 淨值 / 實現損益）║
@@ -5216,6 +5466,11 @@ function openEmailSettings(){
   document.getElementById('em-token').value = localStorage.getItem('af_tg_token') || DEFAULT_TG_TOKEN;
   document.getElementById('em-chatid').value = localStorage.getItem('af_tg_chatid') || DEFAULT_TG_CHATID;
   document.getElementById('em-test-result').textContent = '';
+  // 自動交易 / 自動同步預設值
+  var autoTrade = localStorage.getItem('af_auto_trade');
+  if(autoTrade === null){ autoTrade = 'true'; localStorage.setItem('af_auto_trade','true'); }
+  document.getElementById('cb-auto-trade').checked = (autoTrade === 'true');
+  document.getElementById('cb-auto-sync').checked = (localStorage.getItem('af_auto_sync') === 'true');
   document.getElementById('email-modal').classList.add('show');
 }
 
