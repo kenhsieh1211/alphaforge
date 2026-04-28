@@ -176,7 +176,7 @@ html,body{background:var(--bg);font-family:'Noto Serif TC',serif;color:var(--tx)
 <div class="sec">今日流時</div>
 <div class="hr-grid" id="hrGrid"></div>
 
-<div class="foot">Ken 賭運模型 v1.3 · 底盤×0.45 + 攻×0.20 + 收×0.25 − 險×0.45</div>
+<div class="foot">Ken 賭運模型 v1.3 · 底盤×0.45 + 攻×0.25 + 收×0.30 − 險×0.45</div>
 </div>
 
 <div class="modal" id="setModal" role="dialog" aria-label="設定">
@@ -476,15 +476,16 @@ function activeContrib(p){
 }
 function avgC(pillars,fn){const v=pillars.filter(Boolean);if(!v.length)return 0;return Math.round(v.reduce((s,p)=>s+fn(p),0)/v.length);}
 
-// v1.3 五柱契合度（pillarMini 對 Ken 喜忌）
+// v1.3 五柱契合度（與卡片顯示同口徑：火土金 active 加分 + 火 加成 + 30 底）
 function pillarFit(p){
   if(!p)return 0;
-  const a=['火','土','金'].includes(p.te)?40:0;
-  const b=['火','土','金'].includes(p.ze)?60:0;
-  return Math.min(100,a+b);
+  const a=['火','土','金'].includes(p.te)?1:0;
+  const b=['火','土','金'].includes(p.ze)?1:0;
+  const fire=(p.te==='火'?1:0)+(p.ze==='火'?1:0);
+  return Math.min(100,(a+b)*35+fire*15+30);
 }
 
-// v1.3 底盤分：依加權看五柱整體氣場
+// v1.3 底盤分：依加權看五柱整體氣場（卡片分數的加權平均）
 function v1Base(yr,mo,dy,hr,da){
   const w={da:0.10,yr:0.08,mo:0.27,dy:0.32,hr:0.23};
   return Math.round(pillarFit(da)*w.da+pillarFit(yr)*w.yr+pillarFit(mo)*w.mo+pillarFit(dy)*w.dy+pillarFit(hr)*w.hr);
@@ -533,10 +534,10 @@ function v1Closing(yr,mo,dy,hr,da,natalHitMap,isVoid,isFireMo){
 
 // 結構風險（核心位 0-10 / 重複受擊 0-4 / 合會成病 0-3 / 旬空虛旺 0-3，總上限 20）
 const NATAL_RISK={
-  '申':{n:'日支(決策)',v:[6,3,1]},
-  '子':{n:'月支(情緒)',v:[5,2,1]},
-  '丑':{n:'年支(根基)',v:[5,2,0]},
-  '卯':{n:'時支(臨場)',v:[4,2,0]}
+  '申':{n:'決策位',v:[6,3,1]},
+  '子':{n:'情緒位',v:[5,2,1]},
+  '丑':{n:'根基位',v:[5,2,0]},
+  '卯':{n:'臨場位',v:[4,2,0]}
 };
 function v1Risk(pilDZ,ju,isVoid,isFireMo){
   // 統計每個原局支被打到的次數
@@ -603,7 +604,7 @@ function v1Insights(atk,clo,risk,ju,isVoid,isFireMo){
     else adv.push('氣場偏弱，等氣為主');
   }
   Object.entries(risk.hits).forEach(([n,c])=>{
-    if(NATAL_RISK[n])traps.push(`${NATAL_RISK[n].n}${n}受擾×${c}`);
+    if(NATAL_RISK[n])traps.push(`${NATAL_RISK[n].n}受沖${c>1?`×${c}`:''}`);
   });
   if(isVoid)traps.push(`流日落旬空${isFireMo?'(火月減半)':''}`);
   ju.notes.filter(n=>(n.includes('水局')||n.includes('水方')||n.includes('木局')||n.includes('木方'))&&(n.startsWith('★')||n.startsWith('☆'))).forEach(n=>traps.push(n.replace(/[★☆]\s*/,'')+'(忌神成勢)'));
@@ -645,8 +646,8 @@ function calcAll(yr,mo,dy,hr,da){
   const atk=v1Attack(yr,mo,dy,hr,da);
   const risk=v1Risk(pilDZ,ju,isVoid,isFireMo);
   const clo=v1Closing(yr,mo,dy,hr,da,risk.hits,isVoid,isFireMo);
-  // 公式：底盤×0.45 + 攻×0.20 + 收×0.25 − 險×0.45
-  const final=Math.max(0,Math.min(100,Math.round(base*0.45+atk.val*0.20+clo.val*0.25-risk.total*0.45)));
+  // 公式：底盤×0.45 + 攻×0.25 + 收×0.30 − 險×0.45（正向權重總和 = 1.00）
+  const final=Math.max(0,Math.min(100,Math.round(base*0.45+atk.val*0.25+clo.val*0.30-risk.total*0.45)));
   const label=v1Label(final,atk.val,clo.val);
   const insights=v1Insights(atk,clo,risk,ju,isVoid,isFireMo);
   const advice=v1Advice(label,atk.val,clo.val,isVoid,risk.hits);
@@ -672,14 +673,21 @@ function calcAll(yr,mo,dy,hr,da){
     (risk.coreNotes.length?`　${risk.coreNotes.join('、')}\n`:'')+
     `→ 結構風險 = ${risk.total}/20\n`+
     `\n── 公式 ──\n`+
-    `最終 = ${base}×0.45 + ${atk.val}×0.20 + ${clo.val}×0.25 − ${risk.total}×0.45\n`+
-    `     = ${(base*0.45).toFixed(1)} + ${(atk.val*0.20).toFixed(1)} + ${(clo.val*0.25).toFixed(1)} − ${(risk.total*0.45).toFixed(1)}\n`+
+    `最終 = ${base}×0.45 + ${atk.val}×0.25 + ${clo.val}×0.30 − ${risk.total}×0.45\n`+
+    `     = ${(base*0.45).toFixed(1)} + ${(atk.val*0.25).toFixed(1)} + ${(clo.val*0.30).toFixed(1)} − ${(risk.total*0.45).toFixed(1)}\n`+
     `     = ${final}`;
 
   const warns=[];
-  if(risk.coreP>=5)warns.push('⚠ 核心位重擊 -'+risk.coreP);
-  if(isVoid&&!isFireMo)warns.push('⚠ 旬空非火月');
-  else if(isVoid)warns.push('◐ 旬空火月');
+  // 核心位受擾用「人話」說明（決策位/情緒位/根基位/臨場位）
+  if(risk.coreNotes.length){
+    const friendly=risk.coreNotes.map(n=>{
+      const m=n.match(/(決策位|情緒位|根基位|臨場位)(子|丑|申|卯)×\d+ -(\d+)/);
+      return m?`${m[1]}受沖 -${m[3]}`:n;
+    }).join('、');
+    warns.push('⚠ '+friendly);
+  }
+  if(isVoid&&!isFireMo)warns.push('⚠ 流日落旬空（寒水月加重）');
+  else if(isVoid)warns.push('◐ 流日旬空（火月減半）');
   const clashWarning=warns.join('　');
 
   // 各柱單分（顯示用）：以該柱五行 te+ze 對 Ken 喜忌的契合度 0-100
@@ -981,7 +989,7 @@ const SYSTEM_PROMPT=`你是熟悉子平八字的命理顧問，專為命主「Ke
 - 攻擊值（0-100）：氣場、主動權、進場優勢
 - 收官值（0-100）：能不能帶得走、贏面守得住
 - 結構風險（0-20）：原局根基受擾、旬空虛旺、忌神成局
-- 公式：最終 = 底盤×0.45 + 攻×0.20 + 收×0.25 − 險×0.45
+- 公式：最終 = 底盤×0.45 + 攻×0.25 + 收×0.30 − 險×0.45
 - 標籤：75+主攻 / 65-74順打 / 55-64可打 / 45-54短打觀察 / <45避戰
 - 覆蓋規則：攻≥72且收≤50 → 氣足難收日；攻≤55且收≥65 → 守值日
 
