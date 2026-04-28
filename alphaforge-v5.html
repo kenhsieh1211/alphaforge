@@ -333,10 +333,17 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
 .stop-btn:hover{background:rgba(208,48,32,0.25);}
 .stop-btn.show{display:inline-block;}
 .agent-card-hd{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.mobile-actions{display:none;}
+.ma-btn{padding:6px 11px;background:rgba(212,160,23,0.08);border:1px solid var(--border2);border-radius:5px;color:var(--gold2);font-size:11px;cursor:pointer;font-family:'Space Mono',monospace;letter-spacing:0.04em;flex-shrink:0;transition:all 0.15s;}
+.ma-btn:hover{background:rgba(212,160,23,0.18);}
+.ma-btn:active{transform:scale(0.96);}
+.ma-btn.primary{background:linear-gradient(135deg,var(--terracotta),var(--terra2));color:var(--cream);border-color:transparent;font-weight:600;}
+.ma-btn.primary:hover{background:linear-gradient(135deg,var(--terra2),var(--terra3));}
 @media(max-width:900px){
   .office-layout{grid-template-columns:1fr;}
   .sr{display:none;}
   .desks-row{gap:8px;}
+  .mobile-actions{display:flex;gap:6px;padding:8px 10px;background:linear-gradient(180deg,rgba(28,21,16,0.95),rgba(20,16,8,0.85));border-bottom:1px solid var(--border);overflow-x:auto;align-items:center;-webkit-overflow-scrolling:touch;}
 }
 @media(max-width:700px){
   .sl{display:none;}
@@ -846,6 +853,13 @@ nav{display:flex;background:var(--panel);border-bottom:1px solid var(--border);p
       </div>
     </div>
 
+    <div class="mobile-actions" id="mobile-actions">
+      <button class="ma-btn primary" onclick="restartSimulationWithMission()" title="重啟模擬投資 + CEO 派團隊研究中長期加密貨幣">🚀 重啟模擬</button>
+      <button class="ma-btn" onclick="sendDailyReport(true)" title="立即發送日報到 Telegram">📨 日報</button>
+      <button class="ma-btn" onclick="viewDailyReports()" title="歷史日報">📚 歷史</button>
+      <button class="ma-btn" onclick="confirmMeeting()" title="召開全員會議">🛎 開會</button>
+      <span id="ma-nav-info" style="margin-left:auto;font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);"></span>
+    </div>
     <div class="office-tabs">
       <button class="tb act" onclick="ofTab('log',this)">工作日誌</button>
       <button class="tb" onclick="ofTab('progress',this)">今日進度</button>
@@ -2754,18 +2768,24 @@ function exportDailyReports(){
 
 function updateNextReportBadge(){
   var el = document.getElementById('next-report-badge');
-  if(!el) return;
+  var elM = document.getElementById('ma-nav-info');
   var lastDate = localStorage.getItem('af_last_daily_report');
   var todayDone = lastDate === todayStr();
   var ms = msToMidnight();
   var hr = Math.floor(ms/3600000);
   var min = Math.floor((ms%3600000)/60000);
-  if(todayDone){
-    el.innerHTML = '✓ 今日已發 · 下次 '+hr+'h '+min+'m';
-    el.style.color = 'var(--green2)';
-  } else {
-    el.innerHTML = '⏳ 距下次推送 '+hr+'h '+min+'m';
-    el.style.color = 'var(--gold2)';
+  if(el){
+    if(todayDone){ el.innerHTML = '✓ 今日已發 · 下次 '+hr+'h '+min+'m'; el.style.color = 'var(--green2)'; }
+    else { el.innerHTML = '⏳ 距下次推送 '+hr+'h '+min+'m'; el.style.color = 'var(--gold2)'; }
+  }
+  // 手機版顯示淨值狀態
+  if(elM){
+    var s = (typeof calcSimSnapshot==='function') ? calcSimSnapshot() : null;
+    if(s){
+      var sign = s.totalReturn>=0?'+':'';
+      var color = s.totalReturn>=0?'var(--green2)':'var(--red2)';
+      elM.innerHTML = '$'+s.nav.toFixed(0)+' <span style="color:'+color+';">'+sign+s.totalReturnPct.toFixed(1)+'%</span>';
+    }
   }
 }
 
