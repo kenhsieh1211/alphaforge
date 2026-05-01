@@ -51,20 +51,16 @@
       0 0 0 1px #5a3018,
       0 0 60px rgba(220, 80, 0, 0.35),
       0 10px 40px rgba(0,0,0,0.8);
-    /* 直向手機適配：依視窗高度等比縮放 */
-    width: min(100vw, calc(100vh * 720 / 1280));
-    height: min(100vh, calc(100vw * 1280 / 720));
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    /* 不指定寬高，由內部 canvas 撐起來，保持 720:1280 比例 */
+    line-height: 0;
   }
 
   /* 四角朱紅印章裝飾 */
   .game-frame::before, .game-frame::after,
-  .corner-tl, .corner-tr, .corner-bl, .corner-br {
+  .corner-bl, .corner-br {
     content: '';
     position: absolute;
-    width: 16px; height: 16px;
+    width: 14px; height: 14px;
     background: linear-gradient(135deg, #c41e1e, #8b0000);
     border: 1px solid #ffd700;
     z-index: 2;
@@ -78,8 +74,11 @@
     display: block;
     background:
       radial-gradient(ellipse at center, #2a1408 0%, #0f0503 100%);
-    width: 100%;
-    height: 100%;
+    /* 由瀏覽器依 canvas 固有尺寸（720×1280）保持比例縮放 */
+    max-width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+    /* 舊瀏覽器 fallback */
+    max-height: calc(100vh - 16px);
     image-rendering: optimizeQuality;
     touch-action: none;
   }
