@@ -142,6 +142,10 @@ const CONFIG = {
 
   CARD_W: 56,
   CARD_H: 80,
+
+  // 敵方縮小版牌尺寸（只是資訊參考）
+  ENEMY_CARD_W: 42,
+  ENEMY_CARD_H: 60,
   SHAKE_DECAY: 0.85,
 
   AI_THINK_DELAY: 600,  // AI 出牌延遲（ms）營造對戰感
@@ -1794,21 +1798,24 @@ function screenToCanvas(clientX, clientY) {
 
 // 雙人對戰版面：上方敵方三道、下方玩家三道、中間雙方棄牌堆
 function getRowY(row, isEnemy) {
+  // 敵方用小牌(60px)，玩家用標準牌(80px)
   if (isEnemy) {
-    if (row === 'front') return 88;
-    if (row === 'middle') return 178;
-    return 268;
+    if (row === 'front')  return 92;
+    if (row === 'middle') return 160;   // 92+60+8
+    return 228;                         // 160+60+8，228+60=288
   } else {
-    if (row === 'front') return 405;
-    if (row === 'middle') return 495;
-    return 585;  // 後墩到 585+80=665
+    if (row === 'front')  return 412;
+    if (row === 'middle') return 502;   // 412+80+10
+    return 592;                         // 502+80+10，592+80=672
   }
 }
 function getRowSlotX(row, idx, isEnemy) {
   const cap = (game.cardCaps || CONFIG.ROW_CAPS)[row];
-  const w = cap * CONFIG.CARD_W + (cap - 1) * 6;
+  const cw = isEnemy ? CONFIG.ENEMY_CARD_W : CONFIG.CARD_W;
+  const gap = isEnemy ? 4 : 6;
+  const w = cap * cw + (cap - 1) * gap;
   const startX = CONFIG.W/2 - w/2;
-  return startX + idx * (CONFIG.CARD_W + 6);
+  return startX + idx * (cw + gap);
 }
 function getEnemyHpBarX() { return 30; }
 function getPlayerHpBarX() { return CONFIG.W - 350; }
@@ -1856,7 +1863,7 @@ function draw() {
     ctx.scale(t.scale, t.scale);
     ctx.globalAlpha = Math.min(1, t.life / 50);
     ctx.fillStyle = t.color;
-    ctx.font = 'bold 42px "Ma Shan Zheng", "Noto Serif TC", serif';
+    ctx.font = 'bold 42px "Ma Shan Zheng", "Noto Serif TC",serif';
     ctx.textAlign = 'center';
     ctx.shadowColor = t.color;
     ctx.shadowBlur = 20;
@@ -1876,12 +1883,12 @@ function drawMenu() {
   ctx.save();
   // 副標
   ctx.fillStyle = '#9c6638';
-  ctx.font = '14px "Noto Serif TC", serif';
+  ctx.font = '14px "Noto Serif TC",serif';
   ctx.textAlign = 'center';
   ctx.fillText('— 蜀漢 · 趙子龍 —', CONFIG.W/2, 50);
 
   // 主標題（書法）
-  ctx.font = 'bold 72px "Ma Shan Zheng", "Noto Serif TC", serif';
+  ctx.font = 'bold 72px "Ma Shan Zheng", "Noto Serif TC",serif';
   ctx.textAlign = 'center';
 
   // 標題陰影層
@@ -1899,12 +1906,12 @@ function drawMenu() {
   ctx.shadowBlur = 0;
 
   // 副標題
-  ctx.font = '24px "Noto Serif TC", serif';
+  ctx.font = '24px "Noto Serif TC",serif';
   ctx.fillStyle = '#cc9966';
   ctx.fillText('趙雲菠蘿傳', CONFIG.W/2, 158);
 
   // 引言
-  ctx.font = 'italic 14px "Noto Serif TC", serif';
+  ctx.font = 'italic 14px "Noto Serif TC",serif';
   ctx.fillStyle = '#8a6045';
   ctx.fillText('「吾乃常山趙子龍是也！」', CONFIG.W/2, 188);
   ctx.restore();
@@ -1940,7 +1947,7 @@ function drawMenu() {
     ctx.shadowBlur = 25;
   }
   ctx.fillStyle = '#ffe680';
-  ctx.font = 'bold 36px "Ma Shan Zheng", "Noto Serif TC", serif';
+  ctx.font = 'bold 36px "Ma Shan Zheng", "Noto Serif TC",serif';
   ctx.textAlign = 'center';
   ctx.fillText(hovering ? '⚔ 殺出重圍 ⚔' : '⚔ 出  戰 ⚔', CONFIG.W/2, btnY + 48);
   ctx.shadowBlur = 0;
@@ -1950,12 +1957,12 @@ function drawMenu() {
   drawScroll(80, 305, CONFIG.W - 160, 480);
 
   ctx.fillStyle = '#aa3300';
-  ctx.font = 'bold 22px "Ma Shan Zheng", "Noto Serif TC", serif';
+  ctx.font = 'bold 22px "Ma Shan Zheng", "Noto Serif TC",serif';
   ctx.textAlign = 'center';
   ctx.fillText('— 戰 場 規 則 —', CONFIG.W/2, 340);
 
   ctx.textAlign = 'left';
-  ctx.font = '14px "Noto Serif TC", serif';
+  ctx.font = '14px "Noto Serif TC",serif';
   const rules = [
     { color: '#aa3300', text: '【對戰】' },
     { color: '#3a2010', text: '・你 vs 敵將，雙方 HP 互拚至一方歸零' },
@@ -1989,9 +1996,9 @@ function drawMenu() {
     if (!line.text) return;
     ctx.fillStyle = line.color;
     if (line.text.startsWith('【')) {
-      ctx.font = 'bold 15px "Noto Serif TC", serif';
+      ctx.font = 'bold 15px "Noto Serif TC",serif';
     } else {
-      ctx.font = '14px "Noto Serif TC", serif';
+      ctx.font = '14px "Noto Serif TC",serif';
     }
     ctx.fillText(line.text, 110, 370 + i * 18);
   });
@@ -2076,7 +2083,7 @@ function drawGameOver() {
 
   // 標題
   ctx.fillStyle = '#aa1010';
-  ctx.font = 'bold 110px "Ma Shan Zheng", "Noto Serif TC", serif';
+  ctx.font = 'bold 110px "Ma Shan Zheng", "Noto Serif TC",serif';
   ctx.textAlign = 'center';
   ctx.shadowColor = '#ff0000';
   ctx.shadowBlur = 50;
@@ -2085,19 +2092,19 @@ function drawGameOver() {
 
   // 副標
   ctx.fillStyle = '#cc8888';
-  ctx.font = '24px "Noto Serif TC", serif';
+  ctx.font = '24px "Noto Serif TC",serif';
   ctx.fillText(`你撐到了第 ${game.stage + 1} 關 — ${ENEMIES[game.stage].name}`, CONFIG.W/2, 340);
 
   ctx.fillStyle = '#aa6666';
-  ctx.font = 'italic 18px "Noto Serif TC", serif';
+  ctx.font = 'italic 18px "Noto Serif TC",serif';
   ctx.fillText('「阿斗未能救出，但你的英魂將化為下一局的力量」', CONFIG.W/2, 380);
 
   if (game.relics.length > 0) {
     ctx.fillStyle = '#aa7700';
-    ctx.font = 'bold 14px "Noto Serif TC", serif';
+    ctx.font = 'bold 14px "Noto Serif TC",serif';
     ctx.fillText('— 此戰所得神兵 —', CONFIG.W/2, 430);
     ctx.fillStyle = '#cc9966';
-    ctx.font = '14px "Noto Serif TC", serif';
+    ctx.font = '14px "Noto Serif TC",serif';
     ctx.fillText(game.relics.map(r => r.name).join('  ·  '), CONFIG.W/2, 455);
   }
 
@@ -2114,7 +2121,7 @@ function drawGameOver() {
   ctx.lineWidth = 3;
   roundRect(btnX, btnY, btnW, btnH, 6, false, true);
   ctx.fillStyle = '#ffe680';
-  ctx.font = 'bold 32px "Ma Shan Zheng", "Noto Serif TC", serif';
+  ctx.font = 'bold 32px "Ma Shan Zheng", "Noto Serif TC",serif';
   ctx.textAlign = 'center';
   ctx.fillText('再  戰  一  場', CONFIG.W/2, btnY + 44);
   game._endBtn = { x: btnX, y: btnY, w: btnW, h: btnH };
@@ -2201,72 +2208,40 @@ function drawBattlefield() {
   // 背景：戰場煙塵
   drawBattleBackground(enemy);
 
-  // === 敵方上半部 ===
-  // 敵將頭像區（左上角，圓形像章）
-  drawWarriorPortrait(75, 45, enemy.name, enemy.color, true);
+  // === 敵方上半部（壓縮版，只是資訊參考）===
+  drawWarriorPortrait(22, 38, enemy.name, enemy.color, true);
 
-  // 敵將名 + 引號
-  ctx.fillStyle = '#ffe680';
-  ctx.font = 'bold 28px "Ma Shan Zheng", "Noto Serif TC", serif';
+  ctx.fillStyle = '#ffcc88';
+  ctx.font = 'bold 18px "Ma Shan Zheng","Noto Serif TC",serif';
   ctx.textAlign = 'left';
   ctx.shadowColor = enemy.color;
-  ctx.shadowBlur = 12;
-  ctx.fillText(`${enemy.name}`, 145, 32);
+  ctx.shadowBlur = 8;
+  ctx.fillText(`${enemy.name}`, 55, 26);
   ctx.shadowBlur = 0;
 
-  ctx.font = 'italic 12px "Noto Serif TC", serif';
-  ctx.fillStyle = '#cc9966';
-  ctx.fillText(`「${enemy.quote}」`, 145, 50);
+  ctx.font = 'italic 11px "Noto Serif TC",serif';
+  ctx.fillStyle = '#aa8855';
+  ctx.fillText(`「${enemy.quote.substring(0, 20)}${enemy.quote.length > 20 ? '…' : ''}」`, 55, 42);
 
-  // 敵 HP 條（竹簡風）
-  drawScrollBar(145, 60, 280, 22, game.enemyHp, game.enemyMaxHp, '#c41e1e', '#8b0000');
+  drawScrollBar(55, 48, 220, 14, game.enemyHp, game.enemyMaxHp, '#c41e1e', '#8b0000');
 
-  // 特殊能力描述
   if (enemy.modifierDesc && enemy.modifierDesc !== '無特殊能力') {
-    ctx.font = 'bold 11px "Noto Serif TC", sans-serif';
+    ctx.font = '10px "Noto Serif TC",serif';
     ctx.fillStyle = '#ff8866';
-    ctx.fillText('▸ ' + enemy.modifierDesc, 145, 100);
+    ctx.fillText('▸ ' + enemy.modifierDesc.substring(0, 30), 55, 74);
   }
 
-  // 敵方三道
-  drawRow('front', getRowY('front', true), game.enemyRows.front, CONFIG.ROW_CAPS.front, '前 鋒', true);
-  drawRow('middle', getRowY('middle', true), game.enemyRows.middle, CONFIG.ROW_CAPS.middle, '中 軍', true);
-  drawRow('back', getRowY('back', true), game.enemyRows.back, CONFIG.ROW_CAPS.back, '後 陣', true);
+  // 敵方三道（小牌）
+  drawRow('front', getRowY('front', true), game.enemyRows.front, CONFIG.ROW_CAPS.front, '前', true);
+  drawRow('middle', getRowY('middle', true), game.enemyRows.middle, CONFIG.ROW_CAPS.middle, '中', true);
+  drawRow('back', getRowY('back', true), game.enemyRows.back, CONFIG.ROW_CAPS.back, '後', true);
 
-  // 敵方棄牌堆
-  drawDiscardPile(CONFIG.W - 245, 35, game.enemyDiscards, '敵棄');
+  // 敵方棄牌堆（右上角小顯示）
+  drawDiscardPile(CONFIG.W - 200, 10, game.enemyDiscards, '敵棄');
 
-  // === 中央分隔（戰場線） ===
   drawCentralDivider();
 
   // === 玩家下半部 ===
-  // 玩家頭像
-  drawWarriorPortrait(75, 678, '雲', '#3a7aa0', false);
-
-  ctx.fillStyle = '#ffe680';
-  ctx.font = 'bold 22px "Ma Shan Zheng", "Noto Serif TC", serif';
-  ctx.textAlign = 'left';
-  ctx.shadowColor = '#3a7aa0';
-  ctx.shadowBlur = 12;
-  ctx.fillText('趙 雲', 130, 672);
-  ctx.shadowBlur = 0;
-
-  drawScrollBar(130, 682, 220, 18, game.playerHp, CONFIG.PLAYER_MAX_HP, '#5cd965', '#2c8c30');
-
-  // 提示（HP 條右側）
-  if (game.phase === 'placing') {
-    ctx.font = 'bold 13px "Noto Serif TC", serif';
-    ctx.textAlign = 'left';
-    if (game.mustPlace > 0) {
-      ctx.fillStyle = '#ffd700';
-      ctx.fillText(`✦ 還需擺 ${game.mustPlace} 張`, 360, 696);
-    } else if (game.aiThinking) {
-      ctx.fillStyle = '#88ddff';
-      const dots = '.'.repeat(Math.floor(Date.now() / 300) % 4);
-      ctx.fillText(`對手運籌中${dots}`, 360, 696);
-    }
-  }
-
   // 玩家三道
   drawRow('front', getRowY('front', false), game.rows.front, game.cardCaps.front, '前 鋒', false);
   drawRow('middle', getRowY('middle', false), game.rows.middle, game.cardCaps.middle, '中 軍', false);
@@ -2275,22 +2250,52 @@ function drawBattlefield() {
   // 玩家棄牌堆
   drawDiscardPile(CONFIG.W - 245, 405, game.discards, '我棄');
 
-  // 按鈕區
-  if (game.inFantasyland) {
-    // Fantasyland 專屬按鈕 — 獨立一行在 HP 條下方
-    drawScrollButton(130, 703, 108, 30, '↺ 全部重置', game.phase === 'placing', 'fl_reset');
-    drawScrollButton(248, 703, 108, 30, '♦ 花色排序', game.phase === 'placing', 'sort_suit');
-    drawScrollButton(366, 703, 108, 30, '# 點數排序', game.phase === 'placing', 'sort_rank');
-  } else {
-    drawScrollButton(550, 672, 85, 28, '龍膽 [Q]', !game.skillUsed && game.phase === 'placing', 'skill');
-    drawScrollButton(644, 672, 85, 28, '重置 [R]', game.phase === 'placing', 'reset');
+  // ===== 底欄（y=676~726）=====
+  // 底欄背景
+  ctx.fillStyle = 'rgba(10,5,3,0.88)';
+  ctx.fillRect(0, 676, CONFIG.W, 50);
+  ctx.strokeStyle = 'rgba(255,215,0,0.3)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, 676); ctx.lineTo(CONFIG.W, 676); ctx.stroke();
+
+  // 頭像（小版）
+  drawWarriorPortrait(28, 701, '雲', '#3a7aa0', false);
+
+  // 名字 + HP 條
+  ctx.fillStyle = '#ffe680';
+  ctx.font = 'bold 14px "Ma Shan Zheng","Noto Serif TC",serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('趙 雲', 58, 686);
+  drawScrollBar(58, 689, 200, 16, game.playerHp, CONFIG.PLAYER_MAX_HP, '#5cd965', '#2c8c30');
+
+  // 提示文字
+  if (game.phase === 'placing') {
+    ctx.font = 'bold 12px "Noto Serif TC",serif';
+    if (game.mustPlace > 0) {
+      ctx.fillStyle = '#ffd700';
+      ctx.fillText(`✦ 還需擺 ${game.mustPlace} 張`, 58, 718);
+    } else if (game.aiThinking) {
+      ctx.fillStyle = '#88ddff';
+      ctx.fillText(`對手運籌中${'·'.repeat(Math.floor(Date.now()/300)%4+1)}`, 58, 718);
+    }
   }
+
+  // 按鈕區（永遠顯示，Fantasyland 時多顯示三個排序按鈕）
+  const btnBaseX = 270;
+  drawScrollButton(btnBaseX,      681, 82, 28, '龍膽 [Q]', !game.skillUsed && game.phase === 'placing', 'skill');
+  drawScrollButton(btnBaseX + 90, 681, 82, 28, '重置 [R]',  game.phase === 'placing', 'reset');
+
+  if (game.inFantasyland) {
+    drawScrollButton(btnBaseX + 180, 681, 85, 28, '↺ 全退', game.phase === 'placing', 'fl_reset');
+    drawScrollButton(btnBaseX + 273, 681, 85, 28, '♦ 花色', game.phase === 'placing', 'sort_suit');
+    drawScrollButton(btnBaseX + 366, 681, 85, 28, '# 點數', game.phase === 'placing', 'sort_rank');
+  }
+
+  // 遺物列（右側）
+  drawRelicsBar(740, 679);
 
   // 右上角牌局紀錄按鈕
   drawLogButton();
-
-  // 遺物列（按鈕右側）
-  drawRelicsBar(740, 670);
 
   // 關卡指示（中央上方）
   drawStageIndicator();
@@ -2299,30 +2304,30 @@ function drawBattlefield() {
   ctx.save();
   if (game.inFantasyland) {
     // Fantasyland 紫紅光暈背景
-    const flGrad = ctx.createLinearGradient(0, 350, 0, 396);
+    const flGrad = ctx.createLinearGradient(0, 358, 0, 406);
     flGrad.addColorStop(0, 'rgba(160, 0, 100, 0.85)');
     flGrad.addColorStop(1, 'rgba(80, 0, 50, 0.85)');
     ctx.fillStyle = flGrad;
-    ctx.fillRect(0, 352, CONFIG.W, 44);
+    ctx.fillRect(0, 360, CONFIG.W, 44);
     ctx.strokeStyle = '#ff44ff';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(0, 352); ctx.lineTo(CONFIG.W, 352);
-    ctx.moveTo(0, 396); ctx.lineTo(CONFIG.W, 396);
+    ctx.moveTo(0, 360); ctx.lineTo(CONFIG.W, 360);
+    ctx.moveTo(0, 404); ctx.lineTo(CONFIG.W, 404);
     ctx.stroke();
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 17px "Ma Shan Zheng", "Noto Serif TC", serif';
+    ctx.font = 'bold 17px "Ma Shan Zheng", "Noto Serif TC",serif';
     ctx.textAlign = 'center';
     ctx.shadowColor = '#ff44ff';
     ctx.shadowBlur = 15;
-    ctx.fillText('★ 夢 幻 國 度 ★ ' + game.message, CONFIG.W/2, 380);
+    ctx.fillText('★ 夢 幻 國 度 ★ ' + game.message, CONFIG.W/2, 388);
     ctx.shadowBlur = 0;
   } else {
-    const msgGrad = ctx.createLinearGradient(0, 350, 0, 396);
+    const msgGrad = ctx.createLinearGradient(0, 358, 0, 406);
     msgGrad.addColorStop(0, 'rgba(0,0,0,0.85)');
     msgGrad.addColorStop(1, 'rgba(0,0,0,0.7)');
     ctx.fillStyle = msgGrad;
-    ctx.fillRect(0, 352, CONFIG.W, 44);
+    ctx.fillRect(0, 360, CONFIG.W, 44);
     ctx.strokeStyle = 'rgba(255, 215, 0, 0.4)';
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -2330,9 +2335,9 @@ function drawBattlefield() {
     ctx.moveTo(0, 396); ctx.lineTo(CONFIG.W, 396);
     ctx.stroke();
     ctx.fillStyle = '#ffe680';
-    ctx.font = 'bold 15px "Noto Serif TC", serif';
+    ctx.font = 'bold 15px "Noto Serif TC",serif';
     ctx.textAlign = 'center';
-    ctx.fillText(game.message, CONFIG.W/2, 380);
+    ctx.fillText(game.message, CONFIG.W/2, 388);
   }
   ctx.restore();
 
@@ -2393,12 +2398,11 @@ function drawBattleBackground(enemy) {
 }
 
 function drawCentralDivider() {
-  // 中央分隔線：金色雙線 + 陰陽紋
-  ctx.strokeStyle = 'rgba(255, 215, 0, 0.4)';
+  ctx.strokeStyle = 'rgba(255, 215, 0, 0.35)';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(0, 348); ctx.lineTo(CONFIG.W, 348);
-  ctx.moveTo(0, 400); ctx.lineTo(CONFIG.W, 400);
+  ctx.moveTo(0, 356); ctx.lineTo(CONFIG.W, 356);
+  ctx.moveTo(0, 406); ctx.lineTo(CONFIG.W, 406);
   ctx.stroke();
 }
 
@@ -2420,7 +2424,7 @@ function drawWarriorPortrait(x, y, name, color, isEnemy) {
   ctx.fill();
   // 文字
   ctx.fillStyle = '#fff';
-  ctx.font = 'bold 24px "Ma Shan Zheng", "Noto Serif TC", serif';
+  ctx.font = 'bold 24px "Ma Shan Zheng", "Noto Serif TC",serif';
   ctx.textAlign = 'center';
   ctx.shadowColor = '#000';
   ctx.shadowBlur = 4;
@@ -2470,7 +2474,7 @@ function drawScrollBar(x, y, w, h, hp, max, fillColor, deepColor) {
 
   // 數字
   ctx.fillStyle = '#fff';
-  ctx.font = 'bold 13px "Noto Serif TC", sans-serif';
+  ctx.font = 'bold 13px "Noto Serif TC",serif';
   ctx.textAlign = 'center';
   ctx.shadowColor = '#000';
   ctx.shadowBlur = 3;
@@ -2499,7 +2503,7 @@ function drawScrollButton(x, y, w, h, label, enabled, key) {
   }
 
   ctx.fillStyle = enabled ? '#ffe680' : '#888';
-  ctx.font = 'bold 13px "Noto Serif TC", serif';
+  ctx.font = 'bold 13px "Noto Serif TC",serif';
   ctx.textAlign = 'center';
   ctx.fillText(label, x + w/2, y + h/2 + 5);
 
@@ -2542,7 +2546,7 @@ function drawStageIndicator() {
       ctx.arc(cx, y, 10, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = '#ff8888';
-      ctx.font = 'bold 10px "Noto Serif TC",sans-serif';
+      ctx.font = 'bold 10px "Noto Serif TC",serif';
       ctx.textAlign = 'center';
       ctx.fillText(ENEMIES[i].name, cx, y + 22);
     }
@@ -2550,14 +2554,14 @@ function drawStageIndicator() {
 
   // 回合數
   ctx.fillStyle = '#ffe680';
-  ctx.font = 'bold 13px "Noto Serif TC", serif';
+  ctx.font = 'bold 13px "Noto Serif TC",serif';
   ctx.textAlign = 'center';
   ctx.fillText(`第 ${game.round}/${CONFIG.TOTAL_ROUNDS} 回合`, CONFIG.W/2, 45);
 }
 
 function drawRelicsBar(startX, y) {
   ctx.fillStyle = '#aa7700';
-  ctx.font = 'bold 13px "Noto Serif TC", serif';
+  ctx.font = 'bold 13px "Noto Serif TC",serif';
   ctx.textAlign = 'left';
   ctx.fillText('神兵 ▸', startX, y + 22);
   game.relics.forEach((r, i) => {
@@ -2577,10 +2581,10 @@ function drawRelicsBar(startX, y) {
     ctx.strokeRect(x + 2, y + 2, 32, 28);
 
     ctx.fillStyle = '#ffe680';
-    ctx.font = 'bold 11px "Ma Shan Zheng", "Noto Serif TC", serif';
+    ctx.font = 'bold 11px "Ma Shan Zheng", "Noto Serif TC",serif';
     ctx.textAlign = 'center';
     ctx.fillText(r.name.substring(0, 1), x + 18, y + 17);
-    ctx.font = 'bold 10px "Noto Serif TC", serif';
+    ctx.font = 'bold 10px "Noto Serif TC",serif';
     ctx.fillText(r.name.substring(1, 2), x + 18, y + 28);
     r._iconBox = { x, y, w: 36, h: 32 };
   });
@@ -2691,7 +2695,7 @@ function drawResults() {
       ctx.fillStyle = pColor;
       ctx.fillText(handTypeName(step.playerHand.type), leftX + 140, rowY + 14);
       ctx.fillStyle = '#888';
-      ctx.font = '11px sans-serif';
+      ctx.font = '11px \"Noto Serif TC\",serif';
       ctx.fillText('VS', leftX + 230, rowY + 14);
       ctx.fillStyle = eColor;
       ctx.font = 'bold 16px "Noto Serif TC",serif';
@@ -2706,10 +2710,10 @@ function drawResults() {
         const maxCalcW = leftW - 80; // 留右邊傷害數字的空間
         // 自動縮小字體適配
         let fontSize = 11;
-        ctx.font = `${fontSize}px "Noto Serif TC",sans-serif`;
+        ctx.font = `${fontSize}px "Noto Serif TC",serif`;
         while (ctx.measureText(calcLine).width > maxCalcW && fontSize > 8) {
           fontSize--;
-          ctx.font = `${fontSize}px "Noto Serif TC",sans-serif`;
+          ctx.font = `${fontSize}px "Noto Serif TC",serif`;
         }
         // 如果還是太長，拆兩行
         if (ctx.measureText(calcLine).width > maxCalcW) {
@@ -2717,7 +2721,7 @@ function drawResults() {
           const mid = Math.floor(step.calcSteps.length / 2);
           const line1 = step.calcSteps.slice(0, mid).join(' → ');
           const line2 = step.calcSteps.slice(mid).join(' → ');
-          ctx.font = `10px "Noto Serif TC",sans-serif`;
+          ctx.font = `10px "Noto Serif TC",serif`;
           ctx.fillText(line1, leftX + 8, rowY + 28);
           ctx.fillText(line2, leftX + 8, rowY + 40);
         } else {
@@ -2750,7 +2754,7 @@ function drawResults() {
       ctx.fillText(step.label, leftX + 8, rowY + 18);
       if (step.calcSteps) {
         ctx.fillStyle = '#ccc';
-        ctx.font = '11px sans-serif';
+        ctx.font = '11px \"Noto Serif TC\",serif';
         ctx.fillText(step.calcSteps.slice(0, 2).join(' → '), leftX + 8, rowY + 34);
       }
       ctx.textAlign = 'right';
@@ -2919,7 +2923,7 @@ function drawLogPanel() {
     ctx.fillText(`第 ${log.stage + 1} 關 · vs ${log.enemyName}`, px + 16, ey + 16);
     if (log.inFantasyland) {
       ctx.fillStyle = '#ff44ff';
-      ctx.font = 'bold 10px sans-serif';
+      ctx.font = 'bold 10px \"Noto Serif TC\",serif';
       ctx.fillText('★夢幻', px + pw - 55, ey + 16);
     }
 
@@ -2965,7 +2969,7 @@ function drawDiscardPile(x, y, cards, label) {
 
   // 標籤
   ctx.fillStyle = '#aa7700';
-  ctx.font = 'bold 12px "Noto Serif TC", serif';
+  ctx.font = 'bold 12px "Noto Serif TC",serif';
   ctx.textAlign = 'left';
   ctx.fillText(`${label} ▸ ${cards.length}`, x + 8, y + 16);
 
@@ -2990,7 +2994,7 @@ function drawMiniCard(x, y, card) {
     ctx.lineWidth = 1.5;
     roundRect(x, y, 40, 56, 3, false, true);
     ctx.fillStyle = '#8b0a50';
-    ctx.font = 'bold 22px sans-serif';
+    ctx.font = 'bold 22px \"Noto Serif TC\",serif';
     ctx.textAlign = 'center';
     ctx.fillText('★', x + 20, y + 38);
     return;
@@ -3006,10 +3010,10 @@ function drawMiniCard(x, y, card) {
 
   const isRed = card.suit === '♥' || card.suit === '♦';
   ctx.fillStyle = isRed ? '#c41e1e' : '#1a1a1a';
-  ctx.font = 'bold 13px "Noto Serif TC", serif';
+  ctx.font = 'bold 13px "Noto Serif TC",serif';
   ctx.textAlign = 'left';
   ctx.fillText(rankStr(card.rank), x + 3, y + 14);
-  ctx.font = 'bold 18px sans-serif';
+  ctx.font = 'bold 18px \"Noto Serif TC\",serif';
   ctx.textAlign = 'center';
   ctx.fillText(card.suit, x + 20, y + 38);
 }
@@ -3021,7 +3025,7 @@ function drawButton(x, y, w, h, label, enabled, bg, key) {
   ctx.lineWidth = 1;
   ctx.strokeRect(x, y, w, h);
   ctx.fillStyle = enabled ? '#fff' : '#888';
-  ctx.font = 'bold 11px sans-serif';
+  ctx.font = 'bold 11px \"Noto Serif TC\",serif';
   ctx.textAlign = 'center';
   ctx.fillText(label, x + w/2, y + h/2 + 4);
   game._buttons = game._buttons || {};
@@ -3051,13 +3055,13 @@ function drawRelicTooltip() {
 
       // 標題
       ctx.fillStyle = '#aa3300';
-      ctx.font = 'bold 16px "Ma Shan Zheng", "Noto Serif TC", serif';
+      ctx.font = 'bold 16px "Ma Shan Zheng", "Noto Serif TC",serif';
       ctx.textAlign = 'left';
       ctx.fillText('▣ ' + r.name, tx + 12, ty + 22);
 
       // 說明
       ctx.fillStyle = '#3a2010';
-      ctx.font = '13px "Noto Serif TC", serif';
+      ctx.font = '13px "Noto Serif TC",serif';
       wrapText(r.desc, tx + 12, ty + 44, 250, 18, 'left');
       break;
     }
@@ -3065,7 +3069,10 @@ function drawRelicTooltip() {
 }
 
 function drawRow(rowKey, y, cards, cap, label, isEnemy) {
-  const w = cap * CONFIG.CARD_W + (cap - 1) * 6;
+  const CW = isEnemy ? CONFIG.ENEMY_CARD_W : CONFIG.CARD_W;
+  const CH = isEnemy ? CONFIG.ENEMY_CARD_H : CONFIG.CARD_H;
+  const gap = isEnemy ? 4 : 6;
+  const w = cap * CW + (cap - 1) * gap;
   const startX = CONFIG.W/2 - w/2;
   const glow = (isEnemy ? game.glowRows.enemy : game.glowRows.player)[rowKey];
 
@@ -3073,56 +3080,54 @@ function drawRow(rowKey, y, cards, cap, label, isEnemy) {
   if (glow) {
     const alpha = glow / 60;
     ctx.shadowColor = `rgba(255, 215, 0, ${alpha})`;
-    ctx.shadowBlur = 30;
-    ctx.fillStyle = `rgba(255, 215, 0, ${alpha * 0.3})`;
-    ctx.fillRect(startX - 12, y - 8, w + 24, CONFIG.CARD_H + 16);
+    ctx.shadowBlur = 20;
+    ctx.fillStyle = `rgba(255, 215, 0, ${alpha * 0.25})`;
+    ctx.fillRect(startX - 8, y - 4, w + 16, CH + 8);
     ctx.shadowBlur = 0;
   }
 
-  // 槽位（古銅色凹槽）
+  // 槽位
   for (let i = 0; i < cap; i++) {
-    const cx = startX + i * (CONFIG.CARD_W + 6);
-    // 凹槽陰影
-    const slotGrad = ctx.createLinearGradient(cx, y, cx, y + CONFIG.CARD_H);
+    const cx = startX + i * (CW + gap);
+    const slotGrad = ctx.createLinearGradient(cx, y, cx, y + CH);
     if (isEnemy) {
-      slotGrad.addColorStop(0, '#2a0808');
-      slotGrad.addColorStop(1, '#1a0404');
+      slotGrad.addColorStop(0, '#1e0606');
+      slotGrad.addColorStop(1, '#120303');
     } else {
       slotGrad.addColorStop(0, '#0a1828');
       slotGrad.addColorStop(1, '#040810');
     }
     ctx.fillStyle = slotGrad;
-    roundRect(cx, y, CONFIG.CARD_W, CONFIG.CARD_H, 4, true, false);
-
-    // 內陰影
-    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+    roundRect(cx, y, CW, CH, 3, true, false);
+    ctx.strokeStyle = isEnemy ? 'rgba(150, 80, 0, 0.4)' : 'rgba(170, 119, 0, 0.5)';
     ctx.lineWidth = 1;
-    roundRect(cx + 1, y + 1, CONFIG.CARD_W - 2, CONFIG.CARD_H - 2, 3, false, true);
-    // 金邊（淡）
-    ctx.strokeStyle = 'rgba(170, 119, 0, 0.4)';
-    ctx.lineWidth = 1;
-    roundRect(cx, y, CONFIG.CARD_W, CONFIG.CARD_H, 4, false, true);
+    roundRect(cx, y, CW, CH, 3, false, true);
   }
 
-  // 卡片
+  // 卡片（敵方用縮小版）
   cards.forEach((c, i) => {
-    const cx = startX + i * (CONFIG.CARD_W + 6);
-    drawCard(cx, y, c, true);
+    const cx = startX + i * (CW + gap);
+    if (isEnemy) {
+      drawCardScaled(cx, y, c, CONFIG.ENEMY_CARD_W / CONFIG.CARD_W);
+    } else {
+      drawCard(cx, y, c, true);
+    }
   });
 
-  // 標籤（書法字 + 縱向）
-  ctx.fillStyle = isEnemy ? '#cc6644' : '#88aacc';
-  ctx.font = 'bold 14px "Ma Shan Zheng", "Noto Serif TC", serif';
+  // 道別標籤
+  ctx.fillStyle = isEnemy ? '#bb5533' : '#6699cc';
+  ctx.font = isEnemy
+    ? 'bold 12px "Ma Shan Zheng","Noto Serif TC",serif'
+    : 'bold 16px "Ma Shan Zheng","Noto Serif TC",serif';
   ctx.textAlign = 'right';
-  ctx.shadowColor = isEnemy ? 'rgba(196, 30, 30, 0.6)' : 'rgba(60, 100, 180, 0.6)';
-  ctx.shadowBlur = 6;
-  ctx.fillText(label, startX - 12, y + CONFIG.CARD_H/2 + 5);
+  ctx.shadowColor = isEnemy ? 'rgba(180,50,0,0.5)' : 'rgba(60,100,180,0.6)';
+  ctx.shadowBlur = 5;
+  ctx.fillText(label, startX - 8, y + CH/2 + 5);
   ctx.shadowBlur = 0;
   ctx.textAlign = 'left';
 
-  // 牌型 + Royalty
+  // 牌型 + Royalty（敵方字小一點）
   if (cards.length > 0) {
-    // 三道全擺滿時，用最佳合法解顯示牌型；否則用最大可能
     const allRows = isEnemy ? game.enemyRows : game.rows;
     const allFull = allRows.front.length === game.cardCaps.front &&
                     allRows.middle.length === game.cardCaps.middle &&
@@ -3137,38 +3142,40 @@ function drawRow(rowKey, y, cards, cap, label, isEnemy) {
     }
 
     const fullColor = cards.length === cap;
+    const tagX = startX + w + 8;
+    const tagW = isEnemy ? 72 : 88;
+    const tagH = isEnemy ? CH - 4 : CH - 10;
 
-    // 牌型標籤背景
     if (fullColor) {
-      const tagX = startX + w + 12;
-      const tagW = 90;
-      ctx.fillStyle = 'rgba(0,0,0,0.6)';
-      ctx.fillRect(tagX, y + 5, tagW, CONFIG.CARD_H - 10);
-      ctx.strokeStyle = '#ffd700';
+      ctx.fillStyle = 'rgba(0,0,0,0.65)';
+      ctx.fillRect(tagX, y + 2, tagW, tagH);
+      ctx.strokeStyle = isEnemy ? 'rgba(255,215,0,0.5)' : '#ffd700';
       ctx.lineWidth = 1;
-      ctx.strokeRect(tagX, y + 5, tagW, CONFIG.CARD_H - 10);
+      ctx.strokeRect(tagX, y + 2, tagW, tagH);
 
       ctx.fillStyle = '#ffe680';
-      ctx.font = 'bold 14px "Noto Serif TC", serif';
+      ctx.font = isEnemy
+        ? 'bold 11px "Noto Serif TC",serif'
+        : 'bold 14px "Noto Serif TC",serif';
       ctx.textAlign = 'center';
-      ctx.fillText(handTypeName(ev.type), tagX + tagW/2, y + 28);
+      ctx.fillText(handTypeName(ev.type), tagX + tagW/2, y + tagH/2 + (isEnemy ? 8 : 10));
 
       const royalty = getRoyalty(rowKey, ev);
-      if (royalty > 0) {
+      if (royalty > 0 && !isEnemy) {
         ctx.fillStyle = '#ffaa00';
-        ctx.font = 'bold 12px "Noto Serif TC", sans-serif';
-        ctx.fillText(`+${royalty} mult`, tagX + tagW/2, y + 50);
+        ctx.font = 'bold 11px "Noto Serif TC",serif';
+        ctx.fillText(`+${royalty}`, tagX + tagW/2, y + tagH/2 + 26);
       }
-    } else {
-      ctx.fillStyle = '#888';
-      ctx.font = '12px "Noto Serif TC", serif';
-      ctx.fillText(handTypeName(ev.type), startX + w + 12, y + CONFIG.CARD_H/2 + 5);
+    } else if (cards.length > 0) {
+      ctx.fillStyle = isEnemy ? '#666' : '#999';
+      ctx.font = isEnemy ? '10px "Noto Serif TC",serif' : '12px "Noto Serif TC",serif';
+      ctx.fillText(handTypeName(ev.type), tagX, y + CH/2 + 4);
     }
   }
 
   if (!isEnemy) {
     game._rowZones = game._rowZones || {};
-    game._rowZones[rowKey] = { x: startX, y, w, h: CONFIG.CARD_H };
+    game._rowZones[rowKey] = { x: startX, y, w, h: CH };
   }
 }
 
@@ -3187,7 +3194,7 @@ function drawCard(x, y, card, showFace) {
     roundRect(x + 3, y + 3, CONFIG.CARD_W - 6, CONFIG.CARD_H - 6, 3, false, true);
     // 「魏」字（曹軍）
     ctx.fillStyle = '#ffd700';
-    ctx.font = 'bold 28px "Ma Shan Zheng", "Noto Serif TC", serif';
+    ctx.font = 'bold 28px "Ma Shan Zheng", "Noto Serif TC",serif';
     ctx.textAlign = 'center';
     ctx.shadowColor = '#000';
     ctx.shadowBlur = 4;
@@ -3223,7 +3230,7 @@ function drawCard(x, y, card, showFace) {
 
     // 「鬼」字
     ctx.fillStyle = '#6a0530';
-    ctx.font = 'bold 12px "Ma Shan Zheng", "Noto Serif TC", serif';
+    ctx.font = 'bold 12px "Ma Shan Zheng", "Noto Serif TC",serif';
     ctx.textAlign = 'left';
     ctx.fillText('鬼', x + 4, y + 15);
     ctx.textAlign = 'right';
@@ -3231,7 +3238,7 @@ function drawCard(x, y, card, showFace) {
 
     // 大星星
     ctx.fillStyle = '#8b0a50';
-    ctx.font = 'bold 30px sans-serif';
+    ctx.font = 'bold 30px \"Noto Serif TC\",serif';
     ctx.textAlign = 'center';
     ctx.fillText('★', x + CONFIG.CARD_W/2, y + CONFIG.CARD_H/2 + 12);
     return;
@@ -3258,25 +3265,25 @@ function drawCard(x, y, card, showFace) {
 
   // 左上角：點數 + 花色
   ctx.fillStyle = mainColor;
-  ctx.font = 'bold 16px "Noto Serif TC", serif';
+  ctx.font = 'bold 16px "Noto Serif TC",serif';
   ctx.textAlign = 'left';
   ctx.fillText(rankStr(card.rank), x + 4, y + 17);
-  ctx.font = 'bold 12px sans-serif';
+  ctx.font = 'bold 12px \"Noto Serif TC\",serif';
   ctx.fillText(card.suit, x + 4, y + 30);
 
   // 右下角：旋轉 180 度的小點數
   ctx.save();
   ctx.translate(x + CONFIG.CARD_W - 4, y + CONFIG.CARD_H - 5);
   ctx.rotate(Math.PI);
-  ctx.font = 'bold 16px "Noto Serif TC", serif';
+  ctx.font = 'bold 16px "Noto Serif TC",serif';
   ctx.fillText(rankStr(card.rank), 0, 12);
-  ctx.font = 'bold 12px sans-serif';
+  ctx.font = 'bold 12px \"Noto Serif TC\",serif';
   ctx.fillText(card.suit, 0, 24);
   ctx.restore();
 
   // 中央大花色
   ctx.fillStyle = mainColor;
-  ctx.font = 'bold 28px sans-serif';
+  ctx.font = 'bold 28px \"Noto Serif TC\",serif';
   ctx.textAlign = 'center';
   ctx.shadowColor = isRed ? 'rgba(196, 30, 30, 0.3)' : 'rgba(0,0,0,0.3)';
   ctx.shadowBlur = 4;
@@ -3309,7 +3316,7 @@ function roundRect(x, y, w, h, r, fill, stroke) {
 }
 
 function drawHand() {
-  const handY = CONFIG.H - 92;  // 728 — 給狀態列留 700-720 空間
+  const handY = CONFIG.H - 88;  // 732 — 底欄 676+50=726，手牌從 736 開始
   const total = game.hand.length;
   const totalW = total * (CONFIG.CARD_W + 6);
   const startX = (CONFIG.W - totalW) / 2;
@@ -3329,7 +3336,7 @@ function drawHand() {
 
     // 標題（小字置於背景內）
     ctx.fillStyle = '#ffe680';
-    ctx.font = 'bold 11px "Ma Shan Zheng", "Noto Serif TC", serif';
+    ctx.font = 'bold 11px "Ma Shan Zheng", "Noto Serif TC",serif';
     ctx.textAlign = 'center';
     ctx.shadowColor = '#000';
     ctx.shadowBlur = 4;
@@ -3376,7 +3383,7 @@ function drawHpBar(x, y, w, h, hp, max, color) {
   ctx.lineWidth = 1;
   ctx.strokeRect(x, y, w, h);
   ctx.fillStyle = '#fff';
-  ctx.font = 'bold 12px sans-serif';
+  ctx.font = 'bold 12px \"Noto Serif TC\",serif';
   ctx.textAlign = 'center';
   ctx.fillText(`${hp} / ${max}`, x + w/2, y + h - 4);
 }
@@ -3470,7 +3477,7 @@ function drawReward() {
     ctx.fillStyle = labelGrad;
     roundRect(x, y, w, 28, 8, true, false);
     ctx.fillStyle = rs.textColor;
-    ctx.font = 'bold 12px "Noto Serif TC",sans-serif';
+    ctx.font = 'bold 12px "Noto Serif TC",serif';
     ctx.textAlign = 'center';
     ctx.fillText(rs.label, x + w/2, y + 18);
 
