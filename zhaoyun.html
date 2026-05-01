@@ -104,17 +104,17 @@ const CONFIG = {
   LAYOUT: {
     TOP_BAR_H: 38,
     ENEMY_INFO_Y: 42,
-    ENEMY_INFO_H: 100,                                    // 42-142；給名+引言+HP+修飾語留空間
-    ENEMY_ROW_Y: { front: 148, middle: 254, back: 360 },  // gap 106; cards end at 244, 350, 456
+    ENEMY_INFO_H: 100,                                    // 42-142
+    ENEMY_ROW_Y: { front: 148, middle: 254, back: 360 },  // 卡牌 end 244, 350, 456
     DIVIDER_Y: 462,
     MSG_Y: 466,
     MSG_H: 40,
-    PLAYER_ROW_Y: { front: 512, middle: 618, back: 724 }, // gap 106; cards end at 608, 714, 820
+    PLAYER_ROW_Y: { front: 512, middle: 618, back: 724 }, // 卡牌 end 608, 714, 820
     PLAYER_INFO_Y: 826,
-    PLAYER_INFO_H: 70,
-    HAND_Y: 902,         // 單排：902-998；雙排：902-998 + 1002-1098
+    PLAYER_INFO_H: 64,                                    // 826-890；緊湊
+    HAND_Y: 908,                                          // 與玩家資訊間距 18px；單排 908-1004；雙排 908-1104
     HAND_2ROW_GAP: 4,
-    BOTTOM_Y: 1110,      // 按鈕 1110-1150；遺物列 1158-；底部留 ~50-100 空白
+    BOTTOM_Y: 1116,                                       // 按鈕 1116-1156；遺物 1172-1244；底部 ~36 留白
   },
 
   PLAYER_MAX_HP: 150,    // 10 關需要更多緩衝
@@ -900,8 +900,9 @@ function placeCard(rowName) {
   playSound('place');
 
   // Fantasyland：擺滿 13 張後自動棄掉剩餘所有牌
-  if (game.inFantasyland && game.mustPlace === 0 && game.hand.length > 0) {
-    setTimeout(() => autoDiscardAll(), 300);
+  if (game.inFantasyland && game.mustPlace === 0) {
+    // 不自動棄牌；等使用者確認
+    game._flConfirmPending = true;
     return;
   }
 
@@ -2314,27 +2315,36 @@ function drawBattlefield() {
   // 玩家棄牌 2×2，置於玩家前鋒道右側
   drawDiscardPile(560, L.PLAYER_ROW_Y.front + 4, game.discards, '我棄');
 
-  // 提示（HP 條下方）
+  // 提示（HP 條右側，與 HP 對齊）
   if (game.phase === 'placing') {
     ctx.font = 'bold 18px "Noto Serif TC", serif';
     ctx.textAlign = 'left';
     if (game.mustPlace > 0) {
       ctx.fillStyle = '#ffd700';
-      ctx.fillText(`✦ 還需擺 ${game.mustPlace} 張`, 95, L.PLAYER_INFO_Y + 58);
+      ctx.fillText(`✦ 還需擺 ${game.mustPlace}`, 485, L.PLAYER_INFO_Y + 44);
     } else if (game.aiThinking) {
       ctx.fillStyle = '#88ddff';
       const dots = '.'.repeat(Math.floor(Date.now() / 300) % 4);
-      ctx.fillText(`對手運籌中${dots}`, 95, L.PLAYER_INFO_Y + 58);
+      ctx.fillText(`對手運籌中${dots}`, 485, L.PLAYER_INFO_Y + 44);
+    } else if (game.inFantasyland && game.mustPlace === 0) {
+      ctx.fillStyle = '#ff88ff';
+      ctx.fillText('★ 陣型完成', 485, L.PLAYER_INFO_Y + 44);
     }
   }
 
   // 按鈕區（底部一列）
   const btnY = L.BOTTOM_Y;
   if (game.inFantasyland) {
-    // Fantasyland 專屬按鈕：3 顆均分
-    drawScrollButton(20,  btnY, 215, 40, '↺ 全部重置', game.phase === 'placing', 'fl_reset');
-    drawScrollButton(252, btnY, 215, 40, '♦ 花色排序', game.phase === 'placing', 'sort_suit');
-    drawScrollButton(485, btnY, 215, 40, '# 點數排序', game.phase === 'placing', 'sort_rank');
+    // Fantasyland：陣型完成且未開啟 modal → 顯示「送出」按鈕；否則顯示三排序鈕
+    if (game.mustPlace === 0 && !game._flConfirmPending) {
+      drawScrollButton(20,  btnY, 215, 40, '↺ 重排', game.phase === 'placing', 'fl_reset');
+      drawScrollButton(252, btnY, 215, 40, '♦ 花色', game.phase === 'placing', 'sort_suit');
+      drawScrollButton(485, btnY, 215, 40, '✦ 送出陣型 ✦', game.phase === 'placing', 'fl_submit');
+    } else {
+      drawScrollButton(20,  btnY, 215, 40, '↺ 全部重置', game.phase === 'placing', 'fl_reset');
+      drawScrollButton(252, btnY, 215, 40, '♦ 花色排序', game.phase === 'placing', 'sort_suit');
+      drawScrollButton(485, btnY, 215, 40, '# 點數排序', game.phase === 'placing', 'sort_rank');
+    }
   } else {
     drawScrollButton(40,  btnY, 200, 40, '龍膽 [Q]', !game.skillUsed && game.phase === 'placing', 'skill');
     drawScrollButton(260, btnY, 200, 40, '重置 [R]', game.phase === 'placing', 'reset');
@@ -2408,6 +2418,88 @@ function drawBattlefield() {
   if (game.logViewIdx >= 0) {
     drawResults();
   }
+
+  // Fantasyland 送出確認 modal（最上層）
+  if (game._flConfirmPending) {
+    drawFLConfirm();
+  }
+}
+
+function drawFLConfirm() {
+  // 半透明遮罩
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+  ctx.fillRect(0, 0, CONFIG.W, CONFIG.H);
+
+  // Modal 背景
+  const mw = 560, mh = 280;
+  const mx = (CONFIG.W - mw) / 2;
+  const my = (CONFIG.H - mh) / 2;
+  const grad = ctx.createLinearGradient(mx, my, mx, my + mh);
+  grad.addColorStop(0, '#3a1810');
+  grad.addColorStop(1, '#1a0808');
+  ctx.fillStyle = grad;
+  roundRect(mx, my, mw, mh, 10, true, false);
+  ctx.strokeStyle = '#ff44ff';
+  ctx.lineWidth = 3;
+  roundRect(mx, my, mw, mh, 10, false, true);
+  ctx.strokeStyle = 'rgba(255, 100, 255, 0.4)';
+  ctx.lineWidth = 1;
+  roundRect(mx + 5, my + 5, mw - 10, mh - 10, 8, false, true);
+
+  // 標題
+  ctx.fillStyle = '#ff88ff';
+  ctx.font = 'bold 32px "Noto Serif TC", serif';
+  ctx.textAlign = 'center';
+  ctx.shadowColor = '#ff44ff';
+  ctx.shadowBlur = 16;
+  ctx.fillText('★ 夢 幻 國 度 — 陣 型 完 成 ★', mx + mw/2, my + 60);
+  ctx.shadowBlur = 0;
+
+  // 說明
+  ctx.fillStyle = '#ffe680';
+  ctx.font = '18px "Noto Serif TC", serif';
+  ctx.fillText('確認送出陣型，將與敵方比牌', mx + mw/2, my + 110);
+  ctx.fillStyle = '#aa8855';
+  ctx.font = '15px "Noto Serif TC", serif';
+  ctx.fillText('（多餘的牌將自動棄掉，無法回頭）', mx + mw/2, my + 138);
+
+  // 按鈕
+  const btnW = 220, btnH = 56;
+  const cy = my + mh - 80;
+
+  // 「確認送出」（綠色）
+  const cx1 = mx + 30;
+  const okHover = mousePos.x >= cx1 && mousePos.x <= cx1 + btnW &&
+                  mousePos.y >= cy && mousePos.y <= cy + btnH;
+  const gOk = ctx.createLinearGradient(cx1, cy, cx1, cy + btnH);
+  gOk.addColorStop(0, okHover ? '#5fbb55' : '#3f8a35');
+  gOk.addColorStop(1, okHover ? '#3f8a35' : '#1f5a15');
+  ctx.fillStyle = gOk;
+  roundRect(cx1, cy, btnW, btnH, 6, true, false);
+  ctx.strokeStyle = '#88ff88';
+  ctx.lineWidth = okHover ? 3 : 2;
+  roundRect(cx1, cy, btnW, btnH, 6, false, true);
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 22px "Noto Serif TC", serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('✦ 確 認 送 出 ✦', cx1 + btnW/2, cy + 36);
+  game._flConfirmYesBtn = { x: cx1, y: cy, w: btnW, h: btnH };
+
+  // 「繼續調整」（紅色）
+  const cx2 = mx + mw - 30 - btnW;
+  const noHover = mousePos.x >= cx2 && mousePos.x <= cx2 + btnW &&
+                  mousePos.y >= cy && mousePos.y <= cy + btnH;
+  const gNo = ctx.createLinearGradient(cx2, cy, cx2, cy + btnH);
+  gNo.addColorStop(0, noHover ? '#bb5555' : '#8a3535');
+  gNo.addColorStop(1, noHover ? '#8a3535' : '#5a1515');
+  ctx.fillStyle = gNo;
+  roundRect(cx2, cy, btnW, btnH, 6, true, false);
+  ctx.strokeStyle = '#ff8888';
+  ctx.lineWidth = noHover ? 3 : 2;
+  roundRect(cx2, cy, btnW, btnH, 6, false, true);
+  ctx.fillStyle = '#fff';
+  ctx.fillText('↺ 繼續調整', cx2 + btnW/2, cy + 36);
+  game._flConfirmNoBtn = { x: cx2, y: cy, w: btnW, h: btnH };
 }
 
 // 戰場背景：硝煙、紋路
@@ -3769,8 +3861,9 @@ function placeCardDrag(rowName, cardObj) {
   game.placedThisRound++;
   playSound('place');
 
-  if (game.inFantasyland && game.mustPlace === 0 && game.hand.length > 0) {
-    setTimeout(() => autoDiscardAll(), 300);
+  if (game.inFantasyland && game.mustPlace === 0) {
+    // 不自動棄牌；等使用者確認
+    game._flConfirmPending = true;
     return true;
   }
   if (game.mustPlace === 0 && game.mustDiscard === 1 && game.hand.length === 1) {
@@ -3791,6 +3884,7 @@ function unplaceCardDrag(fromRow, cardObj) {
   game.hand.push(cardObj);
   game.mustPlace++;
   game.placedThisRound--;
+  game._flConfirmPending = false;  // 收回卡 → 取消確認
   playSound('deal');
   return true;
 }
@@ -3807,6 +3901,76 @@ function moveCardBetweenRows(fromRow, toRow, cardObj) {
   game.rows[fromRow] = game.rows[fromRow].filter(c => c !== cardObj);
   game.rows[toRow].push(cardObj);
   cardObj._placedRound = game.round;
+  playSound('place');
+  return true;
+}
+
+// 找出該座標下的牌（用於拖曳交換偵測）
+function findCardAt(x, y, exclude) {
+  // 玩家三道
+  for (const rowKey of ['front', 'middle', 'back']) {
+    for (const c of game.rows[rowKey]) {
+      if (c === exclude) continue;
+      if (c._x !== undefined &&
+          x >= c._x && x <= c._x + CONFIG.CARD_W &&
+          y >= c._y && y <= c._y + CONFIG.CARD_H) {
+        return { card: c, location: rowKey };
+      }
+    }
+  }
+  // 手牌
+  for (const c of game.hand) {
+    if (c === exclude) continue;
+    if (c._x !== undefined &&
+        x >= c._x && x <= c._x + CONFIG.CARD_W &&
+        y >= c._y && y <= c._y + CONFIG.CARD_H) {
+      return { card: c, location: 'hand' };
+    }
+  }
+  return null;
+}
+
+// 交換兩張牌的位置
+function swapCards(cardA, locA, cardB, locB) {
+  // 兩張都在手牌：純手牌排序
+  if (locA === 'hand' && locB === 'hand') {
+    const i = game.hand.indexOf(cardA), j = game.hand.indexOf(cardB);
+    [game.hand[i], game.hand[j]] = [game.hand[j], game.hand[i]];
+    playSound('deal');
+    return true;
+  }
+  // 三道的牌須是本回合擺的
+  if (locA !== 'hand' && cardA._placedRound !== game.round) {
+    flashMessage('已成型的牌不能交換'); playSound('error'); return false;
+  }
+  if (locB !== 'hand' && cardB._placedRound !== game.round) {
+    flashMessage('已成型的牌不能交換'); playSound('error'); return false;
+  }
+  // 同一道內：排序交換
+  if (locA === locB) {
+    const arr = game.rows[locA];
+    const i = arr.indexOf(cardA), j = arr.indexOf(cardB);
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+    playSound('place');
+    return true;
+  }
+  // 跨容器交換（手牌 ↔ 道、道 ↔ 道）
+  const arrA = locA === 'hand' ? game.hand : game.rows[locA];
+  const arrB = locB === 'hand' ? game.hand : game.rows[locB];
+  const i = arrA.indexOf(cardA), j = arrB.indexOf(cardB);
+  arrA[i] = cardB;
+  arrB[j] = cardA;
+  // 更新 _placedRound 旗標
+  if (locA === 'hand') {
+    cardA._placedRound = game.round;
+    delete cardB._placedRound;
+  } else if (locB === 'hand') {
+    cardB._placedRound = game.round;
+    delete cardA._placedRound;
+  } else {
+    cardA._placedRound = game.round;
+    cardB._placedRound = game.round;
+  }
   playSound('place');
   return true;
 }
@@ -3862,6 +4026,7 @@ const DRAG_THRESHOLD = 8;  // 移動超過此距離才視為拖曳
 
 function pointerDown(x, y) {
   if (game.phase !== 'placing') return;
+  if (game._flConfirmPending) return;  // modal 開著不允許拖曳
   const pick = pickCardAt(x, y);
   if (pick) {
     game._drag = {
@@ -3886,7 +4051,14 @@ function pointerMove(x, y) {
 function pointerUp(x, y) {
   const d = game._drag;
   if (d && d.hasMoved) {
-    // 拖曳釋放：找目標
+    // 1. 優先：拖曳到另一張牌上 → 交換
+    const target = findCardAt(x, y, d.card);
+    if (target) {
+      swapCards(d.card, d.fromRow, target.card, target.location);
+      game._drag = null;
+      return;
+    }
+    // 2. 拖到某道空位
     const targetRow = findRowAt(x, y);
     if (targetRow) {
       if (d.fromRow === 'hand') {
@@ -3895,9 +4067,10 @@ function pointerUp(x, y) {
         moveCardBetweenRows(d.fromRow, targetRow, d.card);
       }
     } else if (isOverHandArea(x, y) && d.fromRow !== 'hand') {
+      // 3. 拖回手牌區
       unplaceCardDrag(d.fromRow, d.card);
     } else {
-      // 沒落在合法區：什麼也不做
+      // 沒落在合法區
       playSound('error');
     }
     game._drag = null;
@@ -3909,6 +4082,25 @@ function pointerUp(x, y) {
 }
 
 function handleClick(mx, my) {
+  // Fantasyland 確認 modal 優先處理
+  if (game._flConfirmPending) {
+    const yes = game._flConfirmYesBtn;
+    const no = game._flConfirmNoBtn;
+    if (yes && mx >= yes.x && mx <= yes.x + yes.w && my >= yes.y && my <= yes.y + yes.h) {
+      // 確認送出 → 自動棄掉剩餘 + 進入比牌
+      game._flConfirmPending = false;
+      playSound('place');
+      if (game.hand.length > 0) autoDiscardAll(); else checkRoundProgress();
+      return;
+    }
+    if (no && mx >= no.x && mx <= no.x + no.w && my >= no.y && my <= no.y + no.h) {
+      game._flConfirmPending = false;  // 繼續調整
+      playSound('deal');
+      return;
+    }
+    // modal 開著時其他點擊都忽略
+    return;
+  }
 
   if (game.phase === 'menu') {
     const b = game._menuBtn;
@@ -3979,6 +4171,13 @@ function handleClick(mx, my) {
       const flr = game._buttons.fl_reset;
       if (flr && mx >= flr.x && mx <= flr.x+flr.w && my >= flr.y && my <= flr.y+flr.h) {
         resetFantasyland(); return;
+      }
+      const fls = game._buttons.fl_submit;
+      if (fls && mx >= fls.x && mx <= fls.x+fls.w && my >= fls.y && my <= fls.y+fls.h) {
+        // 已擺完，使用者主動再開確認 modal
+        game._flConfirmPending = true;
+        playSound('deal');
+        return;
       }
       const ss = game._buttons.sort_suit;
       if (ss && mx >= ss.x && mx <= ss.x+ss.w && my >= ss.y && my <= ss.y+ss.h) {
