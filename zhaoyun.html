@@ -8,10 +8,9 @@
 <title>長坂坡 · 趙雲菠蘿傳</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&family=Ma+Shan+Zheng&family=ZCOOL+KuaiLe&family=Noto+Serif+TC:wght@400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+TC:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
   html, body {
     width: 100%; height: 100%;
     overflow: hidden;
@@ -20,13 +19,10 @@
     -webkit-tap-highlight-color: transparent;
     user-select: none; -webkit-user-select: none;
   }
-
   body {
     display: flex; justify-content: center; align-items: center;
-    font-family: "Noto Serif TC", "Microsoft JhengHei", serif;
-    position: relative;
+    font-family: "Noto Serif TC", serif;
   }
-
   body::before {
     content: '';
     position: fixed; inset: 0;
@@ -36,37 +32,21 @@
     );
     pointer-events: none; z-index: 100;
   }
-
-  .game-wrap {
-    position: relative;
-    transform-origin: center center;
-  }
-
+  .game-wrap { position: relative; transform-origin: center center; }
   .game-frame {
-    position: relative;
-    padding: 6px;
+    position: relative; padding: 6px;
     background: linear-gradient(135deg, #2a1208 0%, #1a0805 100%);
     border-radius: 4px;
-    box-shadow:
-      0 0 0 2px #5a3018,
-      0 0 0 4px #1a0805,
-      0 0 60px rgba(220, 80, 0, 0.35),
-      0 10px 40px rgba(0,0,0,0.8);
+    box-shadow: 0 0 0 2px #5a3018, 0 0 0 4px #1a0805,
+                0 0 60px rgba(220,80,0,0.35), 0 10px 40px rgba(0,0,0,0.8);
   }
-  .game-frame::before { content: ''; position: absolute; width: 20px; height: 20px; background: linear-gradient(135deg, #c41e1e, #8b0000); border: 2px solid #ffd700; top: -2px; left: -2px; }
-  .game-frame::after  { content: ''; position: absolute; width: 20px; height: 20px; background: linear-gradient(135deg, #c41e1e, #8b0000); border: 2px solid #ffd700; top: -2px; right: -2px; }
-  .corner-bl, .corner-br { position: absolute; width: 20px; height: 20px; background: linear-gradient(135deg, #c41e1e, #8b0000); border: 2px solid #ffd700; }
-  .corner-bl { bottom: -2px; left: -2px; }
-  .corner-br { bottom: -2px; right: -2px; }
-
-  canvas {
-    display: block;
-    background: radial-gradient(ellipse at center, #2a1408 0%, #0f0503 100%);
-    /* 不用 cursor: crosshair，手機沒有游標 */
-  }
-  @media (pointer: fine) {
-    canvas { cursor: crosshair; }
-  }
+  .game-frame::before { content:''; position:absolute; width:18px; height:18px; background:linear-gradient(135deg,#c41e1e,#8b0000); border:2px solid #ffd700; top:-2px; left:-2px; }
+  .game-frame::after  { content:''; position:absolute; width:18px; height:18px; background:linear-gradient(135deg,#c41e1e,#8b0000); border:2px solid #ffd700; top:-2px; right:-2px; }
+  .corner-bl, .corner-br { position:absolute; width:18px; height:18px; background:linear-gradient(135deg,#c41e1e,#8b0000); border:2px solid #ffd700; }
+  .corner-bl { bottom:-2px; left:-2px; }
+  .corner-br { bottom:-2px; right:-2px; }
+  canvas { display:block; background: radial-gradient(ellipse at center, #2a1408 0%, #0f0503 100%); }
+  @media (pointer: fine) { canvas { cursor: crosshair; } }
 </style>
 </head>
 <body>
@@ -74,7 +54,7 @@
   <div class="game-frame">
     <span class="corner-bl"></span>
     <span class="corner-br"></span>
-    <canvas id="game" width="1280" height="820"></canvas>
+    <canvas id="game"></canvas>
   </div>
 </div>
 
@@ -83,13 +63,12 @@
 // 【CONFIG】v0.4 雙人對戰版
 // ============================================================
 const CONFIG = {
-  W: 1280,
+  W: 1280,  // 動態更新（updateScale 會改這裡）
   H: 820,
 
-  PLAYER_MAX_HP: 150,    // 10 關需要更多緩衝
+  PLAYER_MAX_HP: 150,
 
   ROW_CAPS: { front: 3, middle: 5, back: 5 },
-
   // 牌型基礎籌碼 × 倍率
   HAND_BASE: {
     HIGH:           { chips: 5,   mult: 1 },
@@ -148,11 +127,14 @@ const CONFIG = {
   ENEMY_CARD_H: 60,
   SHAKE_DECAY: 0.85,
 
-  AI_THINK_DELAY: 600,  // AI 出牌延遲（ms）營造對戰感
+  AI_THINK_DELAY: 600,
 };
 
+// CONFIG 定義完後初始化縮放（會更新 CONFIG.W/H）
+updateScale();
+
 // ============================================================
-// 【敵將】每關 BOSS 都是「玩家+趙雲」 vs 「敵將+敵將兵」
+// 【敵將】
 // ============================================================
 const ENEMIES = [
   // 第 1 關：入門（長坂坡外圍散兵）
@@ -456,6 +438,10 @@ function initGame() {
     matchLog: [],
     showLog: false,       // 右上角紀錄面板開關
     logViewIdx: -1,       // 正在回顧第幾局（-1=不在回顧）
+
+    // 拖曳狀態
+    drag: null,          // { card, fromHand, fromRow, fromIdx, x, y }
+    confirmPending: false,  // 擺完等待確認
 
     message: "",
     shake: 0,
@@ -846,6 +832,95 @@ function startRound() {
   playSound('deal');
 }
 
+
+// ============================================================
+// 【拖曳系統】
+// ============================================================
+function startDrag(card, clientX, clientY, fromHand, fromRow) {
+  if (game.phase !== 'placing') return;
+  const p = screenToCanvas(clientX, clientY);
+  game.drag = { card, fromHand, fromRow, x: p.x, y: p.y };
+  if (fromHand) {
+    game.hand = game.hand.filter(c => c !== card);
+  } else if (fromRow) {
+    game.rows[fromRow] = game.rows[fromRow].filter(c => c !== card);
+    game.mustPlace++;
+    game.placedThisRound--;
+    delete card._placedRound;
+  }
+  game.selectedCard = null;
+}
+
+function moveDrag(clientX, clientY) {
+  if (!game.drag) return;
+  const p = screenToCanvas(clientX, clientY);
+  game.drag.x = p.x;
+  game.drag.y = p.y;
+}
+
+function endDrag(clientX, clientY) {
+  if (!game.drag) return;
+  const p = screenToCanvas(clientX, clientY);
+  const mx = p.x, my = p.y;
+  const card = game.drag.card;
+  const fromRow = game.drag.fromRow;
+  let placed = false;
+
+  // 拖到三道區域
+  if (game._rowZones) {
+    for (const k of ['front', 'middle', 'back']) {
+      const z = game._rowZones[k];
+      if (z && mx >= z.x - 20 && mx <= z.x + z.w + 20 &&
+              my >= z.y - 20 && my <= z.y + z.h + 20) {
+        if (game.rows[k].length < game.cardCaps[k]) {
+          if (!fromRow) game.mustPlace--;
+          card._placedRound = game.round;
+          game.rows[k].push(card);
+          game.placedThisRound++;
+          placed = true;
+          playSound('place');
+          spawnParticles(mx, my, '#ffd700', 8);
+          if (game.inFantasyland && game.mustPlace === 0 && game.hand.length > 0) {
+            setTimeout(() => autoDiscardAll(), 300);
+          } else if (game.mustPlace === 0 && game.mustDiscard === 1 && game.hand.length === 1) {
+            setTimeout(() => autoDiscard(), 300);
+          } else {
+            checkRoundProgress();
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  // 拖到手牌區 → 退回
+  if (!placed) {
+    const hz = game._handZone;
+    if (hz && mx >= hz.x - 30 && mx <= hz.x + hz.w + 30 &&
+              my >= hz.y - 30 && my <= hz.y + hz.h + 50) {
+      game.hand.push(card);
+      placed = true;
+      playSound('deal');
+    }
+  }
+
+  // 沒放成功 → 退回原位
+  if (!placed) {
+    if (game.drag.fromHand) {
+      game.hand.push(card);
+    } else if (fromRow) {
+      game.mustPlace--;
+      game.placedThisRound++;
+      card._placedRound = game.round;
+      game.rows[fromRow].push(card);
+    } else {
+      game.hand.push(card);
+    }
+  }
+  game.drag = null;
+}
+
+
 function placeCard(rowName) {
   if (!game.selectedCard) return;
   if (game.mustPlace <= 0) {
@@ -947,7 +1022,6 @@ function discardCard() {
 
 function checkRoundProgress() {
   if (game.mustPlace === 0 && game.mustDiscard === 0) {
-    // Fantasyland 模式：玩家擺完了，要等 AI 也擺完才能結算
     if (game.inFantasyland) {
       if (game._enemyFantasyDone) {
         game.message = "夢幻國度比牌中...";
@@ -957,13 +1031,28 @@ function checkRoundProgress() {
       }
       return;
     }
-    // 一般模式：觸發 AI 擺牌
-    if (!game.aiThinking) {
-      game.aiThinking = true;
-      game.message = "對手思考中...";
-      setTimeout(() => doEnemyTurn(), CONFIG.AI_THINK_DELAY);
+    // 顯示確認按鈕
+    if (!game.aiThinking && !game.confirmPending) {
+      game.confirmPending = true;
+      game.message = "確認出牌？還是重新調整？";
     }
   }
+}
+
+// 確認後才觸發 AI
+function doConfirm() {
+  game.confirmPending = false;
+  if (!game.aiThinking) {
+    game.aiThinking = true;
+    game.message = "對手思考中...";
+    setTimeout(() => doEnemyTurn(), CONFIG.AI_THINK_DELAY);
+  }
+}
+
+// 取消確認：退回本回合所有牌
+function cancelConfirm() {
+  game.confirmPending = false;
+  resetThisRoundOnly();
 }
 
 // AI 出牌（同步當前回合）
@@ -1090,11 +1179,16 @@ function aiDecide(strength, mustPlace, mustDiscard) {
   let bestPlan = null;
   const totalAttempts = Math.floor(60 + strength * 200); // 強度高 → 更多嘗試
 
-  // 生成候選棄牌列表
+  // 生成候選棄牌列表（絕對不棄鬼牌）
+  const nonJokerHand = currentHand.filter(c => !c.isJoker);
+  const randomDiscard = nonJokerHand.length > 0
+    ? nonJokerHand[Math.floor(Math.random() * nonJokerHand.length)]
+    : null;
+
   const discardCandidates = mustDiscard > 0
     ? (strength > 0.75
-        ? [aiFindBestDiscard(currentHand), currentHand[Math.floor(Math.random()*currentHand.length)]]
-        : [currentHand[Math.floor(Math.random()*currentHand.length)]]
+        ? [aiFindBestDiscard(currentHand), randomDiscard]
+        : [randomDiscard]
       ).filter(Boolean)
     : [null];
 
@@ -1765,60 +1859,116 @@ function playSound(type) {
 // ============================================================
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
-const GAME_W = 1280, GAME_H = 820;
 let mousePos = { x: 0, y: 0 };
 let _scale = 1;
+let _portrait = false; // 直立模式
 
-// ============================================================
-// 【響應式縮放】— 自動適配手機/桌機螢幕
-// ============================================================
+// 橫向版面：1280×820
+const LAND_W = 1280, LAND_H = 820;
+// 直立版面：480×900（手機優化）
+const PORT_W = 480,  PORT_H = 900;
+
+// 當前使用的尺寸（隨方向切換）
+let GAME_W = LAND_W, GAME_H = LAND_H;
+
+// CONFIG 裡的 W/H 也要跟著更新
+function syncConfigSize() {
+  CONFIG.W = GAME_W;
+  CONFIG.H = GAME_H;
+}
+
 function updateScale() {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  // 判斷是否直立模式（手機直立 or 視窗高 > 寬）
+  _portrait = vh > vw && vw < 700;
+
+  if (_portrait) {
+    GAME_W = PORT_W; GAME_H = PORT_H;
+  } else {
+    GAME_W = LAND_W; GAME_H = LAND_H;
+  }
+
+  canvas.width  = GAME_W;
+  canvas.height = GAME_H;
+  syncConfigSize();
+
+  _scale = Math.min(vw / (GAME_W + 12), vh / (GAME_H + 12));
+  _scale = Math.min(_scale, 1.5); // 允許小螢幕放大到 1.5x
+
   const wrap = document.getElementById('gameWrap');
-  const maxW = window.innerWidth;
-  const maxH = window.innerHeight;
-  _scale = Math.min(maxW / (GAME_W + 16), maxH / (GAME_H + 16));
-  _scale = Math.min(_scale, 1); // 桌機不放大，只縮小
   wrap.style.transform = `scale(${_scale})`;
 }
-window.addEventListener('resize', updateScale);
-window.addEventListener('orientationchange', () => setTimeout(updateScale, 300));
-updateScale();
 
-// 將螢幕座標轉換為 canvas 邏輯座標
+window.addEventListener('resize', () => { updateScale(); });
+window.addEventListener('orientationchange', () => setTimeout(updateScale, 300));
+
 function screenToCanvas(clientX, clientY) {
   const rect = canvas.getBoundingClientRect();
-  // rect 已被 CSS scale 影響，需要反推
   const scaleX = GAME_W / rect.width;
   const scaleY = GAME_H / rect.height;
-  return {
-    x: (clientX - rect.left) * scaleX,
-    y: (clientY - rect.top) * scaleY,
-  };
+  return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
 }
+
+// 先初始化一次（在 CONFIG 定義後才能呼叫 syncConfigSize）
+// updateScale() 會在 CONFIG 定義後呼叫
 
 // 雙人對戰版面：上方敵方三道、下方玩家三道、中間雙方棄牌堆
 function getRowY(row, isEnemy) {
-  // 敵方用小牌(60px)，玩家用標準牌(80px)
-  if (isEnemy) {
-    if (row === 'front')  return 92;
-    if (row === 'middle') return 160;   // 92+60+8
-    return 228;                         // 160+60+8，228+60=288
+  if (_portrait) {
+    // 直立模式：對手在上（迷你），玩家在中下
+    if (isEnemy) {
+      const cH = Math.floor(CONFIG.CARD_H * 0.55); // 迷你高 44px
+      const gap = 6;
+      if (row === 'front')  return 80;
+      if (row === 'middle') return 80 + cH + gap;
+      return 80 + (cH + gap) * 2;
+    } else {
+      // 玩家三道：放在畫面下半，牌比橫向稍小
+      const cH = Math.floor(CONFIG.CARD_H * 0.85); // 68px
+      const gap = 8;
+      const startY = CONFIG.H - (cH * 3 + gap * 2) - 180; // 留手牌空間
+      if (row === 'front')  return startY;
+      if (row === 'middle') return startY + cH + gap;
+      return startY + (cH + gap) * 2;
+    }
   } else {
-    if (row === 'front')  return 412;
-    if (row === 'middle') return 502;   // 412+80+10
-    return 592;                         // 502+80+10，592+80=672
+    // 橫向模式
+    if (isEnemy) {
+      if (row === 'front')  return 92;
+      if (row === 'middle') return 160;
+      return 228;
+    } else {
+      if (row === 'front')  return 412;
+      if (row === 'middle') return 502;
+      return 592;
+    }
   }
 }
+
+function getCardSize(isEnemy) {
+  if (_portrait) {
+    return isEnemy
+      ? { w: Math.floor(CONFIG.CARD_W * 0.55), h: Math.floor(CONFIG.CARD_H * 0.55) }
+      : { w: Math.floor(CONFIG.CARD_W * 0.85), h: Math.floor(CONFIG.CARD_H * 0.85) };
+  }
+  return isEnemy
+    ? { w: CONFIG.ENEMY_CARD_W || CONFIG.CARD_W, h: CONFIG.CARD_H }
+    : { w: CONFIG.CARD_W, h: CONFIG.CARD_H };
+}
+
 function getRowSlotX(row, idx, isEnemy) {
   const cap = (game.cardCaps || CONFIG.ROW_CAPS)[row];
-  const cw = isEnemy ? CONFIG.ENEMY_CARD_W : CONFIG.CARD_W;
-  const gap = isEnemy ? 4 : 6;
-  const w = cap * cw + (cap - 1) * gap;
+  const cs = getCardSize(isEnemy);
+  const gap = isEnemy ? (_portrait ? 3 : 4) : (_portrait ? 4 : 6);
+  const w = cap * cs.w + (cap - 1) * gap;
   const startX = CONFIG.W/2 - w/2;
-  return startX + idx * (cw + gap);
+  return startX + idx * (cs.w + gap);
 }
-function getEnemyHpBarX() { return 30; }
-function getPlayerHpBarX() { return CONFIG.W - 350; }
+
+function getEnemyHpBarX() { return _portrait ? 8 : 30; }
+function getPlayerHpBarX() { return _portrait ? 8 : CONFIG.W - 350; }
 
 function draw() {
   const sx = (Math.random() - 0.5) * game.shake;
@@ -1872,7 +2022,68 @@ function draw() {
     ctx.restore();
   });
 
+  // 拖曳中的牌：浮在最上層，跟著游標/手指
+  if (game.drag) {
+    const d = game.drag;
+    const cW = _portrait ? Math.floor(CONFIG.CARD_W * 0.88) : CONFIG.CARD_W;
+    const cH = _portrait ? Math.floor(CONFIG.CARD_H * 0.88) : CONFIG.CARD_H;
+    ctx.globalAlpha = 0.9;
+    ctx.shadowColor = '#ffd700';
+    ctx.shadowBlur = 20;
+    if (_portrait && cW !== CONFIG.CARD_W) {
+      drawCardScaled(d.x - cW/2, d.y - cH/2, d.card, cW / CONFIG.CARD_W);
+    } else {
+      drawCard(d.x - cW/2, d.y - cH/2, d.card, true);
+    }
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+  }
+
+  // 確認送出按鈕（擺完後彈出）
+  if (game.confirmPending && game.phase === 'placing') {
+    drawConfirmButton();
+  }
+
   ctx.restore();
+}
+
+function drawConfirmButton() {
+  const bw = _portrait ? 200 : 240, bh = _portrait ? 52 : 60;
+  const bx = CONFIG.W/2 - bw/2;
+  const by = _portrait ? CONFIG.H/2 - bh/2 - 20 : CONFIG.H/2 + 30;
+
+  // 暗色背景
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.fillRect(0, by - 30, CONFIG.W, bh + 60);
+
+  // 確認按鈕
+  const hovConf = mousePos.x >= bx && mousePos.x <= bx + bw &&
+                  mousePos.y >= by && mousePos.y <= by + bh;
+  const confGrad = ctx.createLinearGradient(bx, by, bx, by + bh);
+  confGrad.addColorStop(0, hovConf ? '#dc2c2c' : '#aa1010');
+  confGrad.addColorStop(1, hovConf ? '#aa1010' : '#6a0808');
+  ctx.fillStyle = confGrad;
+  roundRect(bx, by, bw, bh, 8, true, false);
+  ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 3;
+  roundRect(bx, by, bw, bh, 8, false, true);
+  ctx.fillStyle = '#ffe680';
+  ctx.font = `bold ${_portrait ? 22 : 26}px "Ma Shan Zheng","Noto Serif TC",serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('⚔ 確認出牌！', CONFIG.W/2, by + bh/2 + 9);
+  game._confirmBtn = { x: bx, y: by, w: bw, h: bh };
+
+  // 重置按鈕（取消確認）
+  const rx = bx - bw/2 - 10, rw = bw/2 - 5;
+  const hovReset = mousePos.x >= rx && mousePos.x <= rx + rw &&
+                   mousePos.y >= by && mousePos.y <= by + bh;
+  ctx.fillStyle = hovReset ? '#3a2010' : '#2a1408';
+  roundRect(rx, by, rw, bh, 8, true, false);
+  ctx.strokeStyle = 'rgba(255,215,0,0.5)'; ctx.lineWidth = 1;
+  roundRect(rx, by, rw, bh, 8, false, true);
+  ctx.fillStyle = '#cc9966';
+  ctx.font = `bold ${_portrait ? 14 : 16}px "Noto Serif TC",serif`;
+  ctx.fillText('↺ 重新調整', rx + rw/2, by + bh/2 + 6);
+  game._confirmResetBtn = { x: rx, y: by, w: rw, h: bh };
 }
 
 function drawMenu() {
@@ -3316,53 +3527,63 @@ function roundRect(x, y, w, h, r, fill, stroke) {
 }
 
 function drawHand() {
-  const handY = CONFIG.H - 88;  // 732 — 底欄 676+50=726，手牌從 736 開始
+  const cW = _portrait ? Math.floor(CONFIG.CARD_W * 0.88) : CONFIG.CARD_W;
+  const cH = _portrait ? Math.floor(CONFIG.CARD_H * 0.88) : CONFIG.CARD_H;
+  const gap = _portrait ? 5 : 6;
   const total = game.hand.length;
-  const totalW = total * (CONFIG.CARD_W + 6);
-  const startX = (CONFIG.W - totalW) / 2;
+  if (total === 0 && !game.drag) return;
 
-  if (total > 0) {
-    // 竹簡背景
-    const bgX = startX - 16, bgW = totalW + 24;
-    const bgGrad = ctx.createLinearGradient(0, handY - 22, 0, handY + CONFIG.CARD_H + 8);
-    bgGrad.addColorStop(0, 'rgba(60, 30, 15, 0.9)');
-    bgGrad.addColorStop(0.5, 'rgba(40, 20, 10, 0.85)');
-    bgGrad.addColorStop(1, 'rgba(60, 30, 15, 0.9)');
-    ctx.fillStyle = bgGrad;
-    roundRect(bgX, handY - 22, bgW, CONFIG.CARD_H + 30, 6, true, false);
-    ctx.strokeStyle = 'rgba(255, 215, 0, 0.4)';
-    ctx.lineWidth = 1;
-    roundRect(bgX, handY - 22, bgW, CONFIG.CARD_H + 30, 6, false, true);
+  const totalW = total * (cW + gap) - gap;
+  const handY = CONFIG.H - cH - 8;
+  const startX = Math.max(8, (CONFIG.W - totalW) / 2);
 
-    // 標題（小字置於背景內）
-    ctx.fillStyle = '#ffe680';
-    ctx.font = 'bold 11px "Ma Shan Zheng", "Noto Serif TC",serif';
-    ctx.textAlign = 'center';
-    ctx.shadowColor = '#000';
-    ctx.shadowBlur = 4;
-    ctx.fillText(`◆ 手 中 ${total} 張 ◆`, CONFIG.W/2, handY - 8);
-    ctx.shadowBlur = 0;
-  }
+  const bgX = startX - 14;
+  const bgW = Math.min(CONFIG.W - bgX - 8, totalW + 28);
+  const bgH = cH + (_portrait ? 28 : 32);
+  const bgY = handY - (_portrait ? 20 : 22);
 
-  game.hand.forEach((c, i) => {
-    const x = startX + i * (CONFIG.CARD_W + 6);
+  const bgGrad = ctx.createLinearGradient(0, bgY, 0, bgY + bgH);
+  bgGrad.addColorStop(0, 'rgba(60,30,15,0.92)');
+  bgGrad.addColorStop(1, 'rgba(30,12,6,0.92)');
+  ctx.fillStyle = bgGrad;
+  roundRect(bgX, bgY, bgW, bgH, 6, true, false);
+  ctx.strokeStyle = 'rgba(255,215,0,0.5)';
+  ctx.lineWidth = 1.5;
+  roundRect(bgX, bgY, bgW, bgH, 6, false, true);
+
+  ctx.fillStyle = '#ffe680';
+  ctx.font = 'bold 12px "Ma Shan Zheng","Noto Serif TC",serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('◆ 手中 ' + total + ' 張 ◆', bgX + bgW/2, handY - 6);
+
+  game._handZone = { x: bgX, y: bgY, w: bgW, h: bgH };
+
+  game.hand.forEach(function(c, i) {
+    const x = startX + i * (cW + gap);
     let y = handY;
-    if (game.selectedCard === c) {
-      y -= 24;
-      ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
-      ctx.shadowBlur = 20;
-      ctx.fillStyle = 'rgba(255, 215, 0, 0.3)';
-      roundRect(x - 4, y - 4, CONFIG.CARD_W + 8, CONFIG.CARD_H + 8, 6, true, false);
+    const isSelected = game.selectedCard === c;
+
+    if (isSelected) {
+      y -= _portrait ? 18 : 22;
+      ctx.shadowColor = 'rgba(255,215,0,0.9)';
+      ctx.shadowBlur = 18;
+      ctx.fillStyle = 'rgba(255,215,0,0.25)';
+      roundRect(x - 4, y - 4, cW + 8, cH + 8, 6, true, false);
       ctx.shadowBlur = 0;
     }
-    drawCard(x, y, c, true);
-    c._x = x; c._y = y;
+
+    if (game.drag && game.drag.card === c) return;
+
+    if (_portrait && cW !== CONFIG.CARD_W) {
+      drawCardScaled(x, y, c, cW / CONFIG.CARD_W);
+    } else {
+      drawCard(x, y, c, true);
+    }
+    c._x = x; c._y = y; c._cW = cW; c._cH = cH;
   });
 }
 
-function rowMap(r) {
-  return { front: '前墩', middle: '中墩', back: '後墩' }[r] || r;
-}
+
 function handTypeName(t) {
   return {
     HIGH:'高牌', PAIR:'對子', TWO_PAIR:'兩對', THREE_KIND:'三條',
@@ -3566,24 +3787,88 @@ function wrapText(text, x, y, maxW, lh, align) {
 canvas.addEventListener('mousemove', (e) => {
   const p = screenToCanvas(e.clientX, e.clientY);
   mousePos.x = p.x; mousePos.y = p.y;
+  if (game.drag) moveDrag(e.clientX, e.clientY);
+});
+
+canvas.addEventListener('mousedown', (e) => {
+  if (game.phase !== 'placing') return;
+  const p = screenToCanvas(e.clientX, e.clientY);
+  // 找點到的牌
+  for (const c of game.hand) {
+    const cW = c._cW || CONFIG.CARD_W;
+    const cH = c._cH || CONFIG.CARD_H;
+    if (c._x !== undefined && p.x >= c._x && p.x <= c._x + cW &&
+        p.y >= c._y && p.y <= c._y + cH) {
+      startDrag(c, e.clientX, e.clientY, true, null);
+      return;
+    }
+  }
+  // 三道裡的牌（本回合才放的）
+  for (const row of ['front','middle','back']) {
+    for (const c of [...game.rows[row]]) {
+      if (c._placedRound === game.round) {
+        const rz = game._rowZones && game._rowZones[row];
+        if (rz) {
+          const cIdx = game.rows[row].indexOf(c);
+          const cs = getCardSize(false);
+          const cx = getRowSlotX(row, cIdx, false);
+          const cy = getRowY(row, false);
+          if (p.x >= cx && p.x <= cx + cs.w && p.y >= cy && p.y <= cy + cs.h) {
+            startDrag(c, e.clientX, e.clientY, false, row);
+            return;
+          }
+        }
+      }
+    }
+  }
+});
+
+canvas.addEventListener('mouseup', (e) => {
+  if (game.drag) endDrag(e.clientX, e.clientY);
 });
 
 canvas.addEventListener('click', (e) => {
   handleTap(e.clientX, e.clientY);
 });
 
-// Touch 支援（手機）
+// Touch 支援（手機）— 支援拖曳
+let _touchHoldTimer = null;
+let _touchStartPos = null;
+let _touchStartCard = null;
+
 canvas.addEventListener('touchstart', (e) => {
   e.preventDefault();
   const t = e.changedTouches[0];
   const p = screenToCanvas(t.clientX, t.clientY);
   mousePos.x = p.x; mousePos.y = p.y;
-}, { passive: false });
+  _touchStartPos = { x: t.clientX, y: t.clientY };
+  _touchStartCard = null;
 
-canvas.addEventListener('touchend', (e) => {
-  e.preventDefault();
-  const t = e.changedTouches[0];
-  handleTap(t.clientX, t.clientY);
+  // 找是否點到手牌
+  if (game.phase === 'placing') {
+    for (const c of game.hand) {
+      const cW = c._cW || CONFIG.CARD_W;
+      const cH = c._cH || CONFIG.CARD_H;
+      if (c._x !== undefined && p.x >= c._x && p.x <= c._x + cW &&
+          p.y >= c._y && p.y <= c._y + cH) {
+        _touchStartCard = c;
+        break;
+      }
+    }
+    // 也找三道裡的牌（允許從三道拖回）
+    if (!_touchStartCard) {
+      for (const row of ['front','middle','back']) {
+        for (const c of game.rows[row]) {
+          const rz = game._rowZones && game._rowZones[row];
+          if (rz && p.x >= rz.x && p.x <= rz.x + rz.w &&
+                    p.y >= rz.y && p.y <= rz.y + rz.h) {
+            _touchStartCard = { card: c, fromRow: row };
+            break;
+          }
+        }
+      }
+    }
+  }
 }, { passive: false });
 
 canvas.addEventListener('touchmove', (e) => {
@@ -3591,11 +3876,63 @@ canvas.addEventListener('touchmove', (e) => {
   const t = e.changedTouches[0];
   const p = screenToCanvas(t.clientX, t.clientY);
   mousePos.x = p.x; mousePos.y = p.y;
+
+  // 拖曳中：更新位置
+  if (game.drag) {
+    moveDrag(t.clientX, t.clientY);
+    return;
+  }
+
+  // 移動超過 8px 且有起始牌 → 開始拖曳
+  if (_touchStartPos && _touchStartCard) {
+    const dx = t.clientX - _touchStartPos.x;
+    const dy = t.clientY - _touchStartPos.y;
+    if (Math.sqrt(dx*dx + dy*dy) > 8) {
+      if (_touchStartCard.fromRow) {
+        // 從三道拖出
+        const c = _touchStartCard.card;
+        if (c._placedRound === game.round) {
+          startDrag(c, t.clientX, t.clientY, false, _touchStartCard.fromRow);
+        }
+      } else {
+        startDrag(_touchStartCard, t.clientX, t.clientY, true, null);
+      }
+      _touchStartCard = null;
+      _touchStartPos = null;
+    }
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchend', (e) => {
+  e.preventDefault();
+  const t = e.changedTouches[0];
+
+  if (game.drag) {
+    endDrag(t.clientX, t.clientY);
+  } else {
+    handleTap(t.clientX, t.clientY);
+  }
+  _touchStartCard = null;
+  _touchStartPos = null;
 }, { passive: false });
 
 function handleTap(clientX, clientY) {
   const p = screenToCanvas(clientX, clientY);
   const mx = p.x, my = p.y;
+
+  // 確認送出按鈕優先
+  if (game.confirmPending) {
+    const cb = game._confirmBtn;
+    if (cb && mx >= cb.x && mx <= cb.x+cb.w && my >= cb.y && my <= cb.y+cb.h) {
+      doConfirm(); return;
+    }
+    const rb = game._confirmResetBtn;
+    if (rb && mx >= rb.x && mx <= rb.x+rb.w && my >= rb.y && my <= rb.y+rb.h) {
+      cancelConfirm(); return;
+    }
+    return; // 確認等待中，不處理其他點擊
+  }
+
   if (game.phase === 'menu') {
     const b = game._menuBtn;
     if (b && mx >= b.x && mx <= b.x+b.w && my >= b.y && my <= b.y+b.h) startGame();
