@@ -3149,22 +3149,22 @@ _preloadPortraits();       // 預載立繪 base64
 // 【神兵 Sprite Sheet】relic_sheet.png — 8×6 格，每格 181×181 px
 // ============================================================
 const RELIC_SHEET_COLS = 8;
-const RELIC_SHEET_CELL = 181;   // 每格像素
+const RELIC_SHEET_CELL = 256;   // 每格像素 (v0.7.3 新版 sheet 2048×1536, 8×6 格)
 
 // ID → [col, row] 映射（依 AI 生圖規格文件排列順序）
 const RELIC_SHEET_MAP = {
-  zilong_legend:[0,0], dragon_soul:[1,0], bagua_reversal:[2,0], wuhou_scroll:[3,0], heavenly_spear:[4,0],
-  changban:[5,0],      ahdou:[6,0],       yiqiankudun:[7,0],
-  iron_wall:[0,1],     double_down:[1,1], queen_grace:[2,1],   changban_charge:[3,1], zilong_shield:[4,1],
-  blood_pact:[5,1],    death_defier:[6,1],berserker:[7,1],
-  qingang_ying:[0,2],  douxin:[1,2],      qinggang:[2,2],      tongque:[3,2],         discard_dmg:[4,2],
-  baima:[5,2],         longdan:[6,2],     chain_slash:[7,2],
-  boiling_blood:[0,3], war_trophy:[1,3],  four_generals:[2,3], flush_master:[3,3],    ace_assault:[4,3],
-  momentum:[5,3],      qiyou:[6,3],       low_card:[7,3],
-  imperial_seal:[0,4], wuhu:[1,4],        qixing_lamp:[2,4],   kongming_fan:[3,4],    silver_armor:[4,4],
-  medic_tent:[5,4],    dragon_scale:[6,4],fortune_star:[7,4],
-  zhuge:[0,5],         jiading:[1,5],     lubu:[2,5],          red_hare:[3,5],        dragon_spear:[4,5],
-  karma_wheel:[5,5],   twin_dragon:[6,5],
+  changban:[0,3], ahdou:[7,3], yiqiankudun:[7,0], iron_wall:[0,1],
+  double_down:[1,0], queen_grace:[2,1], qingang_ying:[5,2], douxin:[1,2],
+  qinggang:[2,2], tongque:[4,2], discard_dmg:[3,5], baima:[6,2],
+  longdan:[4,1], qiyou:[7,2], low_card:[4,4], imperial_seal:[1,3],
+  wuhu:[7,1], zhuge:[6,3], jiading:[5,1], lubu:[2,5],
+  changban_charge:[4,0], zilong_shield:[2,4], chain_slash:[2,3], boiling_blood:[1,1],
+  war_trophy:[5,0], qixing_lamp:[7,4], kongming_fan:[3,0], silver_armor:[6,4],
+  red_hare:[3,1], dragon_spear:[5,3], zilong_legend:[0,4], dragon_soul:[6,5],
+  bagua_reversal:[2,0], wuhou_scroll:[3,4], heavenly_spear:[4,3], blood_pact:[6,1],
+  death_defier:[0,5], berserker:[0,2], four_generals:[1,4], flush_master:[3,3],
+  ace_assault:[3,2], momentum:[4,5], medic_tent:[5,4], dragon_scale:[1,5],
+  fortune_star:[6,0], karma_wheel:[5,5], twin_dragon:[0,0],
 };
 
 let _RELIC_SHEET_IMG = null;
