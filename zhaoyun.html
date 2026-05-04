@@ -4233,69 +4233,75 @@ function drawBattlefield() {
     ctx.textAlign = 'left';
   }
 
-  // 棄牌框 — 前鋒牌右邊（v0.7 堆疊式：保持框大小不縮，牌疊起來但每張露點數+花色，七進七出可點換）
+  // 棄牌堆 — 前鋒牌右邊（v0.7.2 橫向堆疊：卡片同手牌大小、左→右排、每張露左邊點數+花色、最右最新完整顯示）
   {
     const _discards = game.discards || [];
     const _frontCap = game.cardCaps.front || CONFIG.ROW_CAPS.front;
     const _cardStartX = CONFIG.LAYOUT.PORTRAIT_W + CONFIG.LAYOUT.ROW_LABEL_W;
     const _dX = _cardStartX + _frontCap * CONFIG.CARD_W + (_frontCap - 1) * 6 + 10;
     const _dY = getRowY('front', false) - 4;
-    const _dW = Math.min(CONFIG.W - _dX - 6, 2 * CONFIG.CARD_W + 6);
-    const _dH = CONFIG.CARD_H + 8;
+    const _dW = CONFIG.W - _dX - 8;            // 用滿剩餘畫面寬度
+    const _dH = CONFIG.CARD_H + 8;             // 同一張手牌高度
 
-    // 背景
+    // 背景框（七進七出 mode 邊框金光）
     const _dBg = ctx.createLinearGradient(_dX, _dY, _dX, _dY+_dH);
-    _dBg.addColorStop(0,'rgba(4,12,35,0.88)'); _dBg.addColorStop(1,'rgba(3,8,24,0.82)');
+    _dBg.addColorStop(0,'rgba(4,12,35,0.55)'); _dBg.addColorStop(1,'rgba(3,8,24,0.45)');
     ctx.fillStyle=_dBg; roundRect(_dX,_dY,_dW,_dH,6,true,false);
-    // 七進七出 swap 模式：邊框金色高亮
     if (game._skillMode2) {
       ctx.strokeStyle = `rgba(255,215,0,${0.7 + 0.3 * Math.sin(Date.now()/200)})`;
       ctx.lineWidth = 2;
     } else {
-      ctx.strokeStyle='rgba(50,90,180,0.50)'; ctx.lineWidth=1;
+      ctx.strokeStyle='rgba(50,90,180,0.35)'; ctx.lineWidth=1;
     }
     roundRect(_dX,_dY,_dW,_dH,6,false,true);
 
-    // 標題
-    ctx.fillStyle = game._skillMode2 ? '#ffe066' : '#5588bb';
-    ctx.font='bold 11px "Noto Serif TC",serif';
-    ctx.textAlign='left'; ctx.textBaseline='top';
-    ctx.fillText(`棄 牌  ${_discards.length}` + (game._skillMode2 ? '  (點選交換)' : ''), _dX+6, _dY+4);
-    ctx.textBaseline='alphabetic';
-
-    // 堆疊式：每張露 22px 條紋，最新（最後 push）在最上層完整顯示
+    // 橫向堆疊（最舊在左→最新在右，最新完整顯示，舊張只露左邊 stripe）
     game._discardClickBoxes = [];
     if (_discards.length === 0) {
-      ctx.fillStyle='rgba(60,100,180,0.25)'; ctx.font='11px sans-serif';
-      ctx.textAlign='center';
-      ctx.fillText('—', _dX+_dW/2, _dY+_dH/2+5);
+      ctx.fillStyle='rgba(60,100,180,0.18)'; ctx.font='11px sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('棄牌堆', _dX+_dW/2, _dY+_dH/2);
+      ctx.textBaseline='alphabetic';
     } else {
-      const _stripeH = 22;
-      const _dcScale = 0.55;
-      const _dcW = Math.floor(CONFIG.CARD_W * _dcScale);
-      const _dcH = Math.floor(CONFIG.CARD_H * _dcScale);
-      const _availH = _dH - 22;
-      const _maxStack = Math.max(1, Math.floor((_availH - _dcH) / _stripeH) + 1);
-      const _showCount = Math.min(_discards.length, _maxStack);
-      // 從底往上畫（最舊在底、最新在最上層）
-      for (let i = _showCount - 1; i >= 0; i--) {
-        const card = _discards[_discards.length - 1 - i];
-        const _cx = _dX + 6;
-        const _cy = _dY + 20 + i * _stripeH;
-        drawCardScaled(_cx, _cy, card, _dcScale);
-        // 註冊點擊區（露出條紋部分；最上一張為完整卡）
-        const boxH = (i === 0) ? _dcH : _stripeH;
+      const _cW = CONFIG.CARD_W;
+      const _cH = CONFIG.CARD_H;
+      const _stripeW = 22;                      // 每張露 22px（足夠看點數+花色）
+      // 算最多塞幾張：rightmost full + (n-1) stripes
+      const _maxFit = Math.max(1, Math.floor((_dW - _cW - 8) / _stripeW) + 1);
+      const _showCount = Math.min(_discards.length, _maxFit);
+      // 從左到右畫：第 i 個（i=0 最舊在左）位置 _cx = startX + i * stripeW
+      // 最新在右側完整：實際從 [length-_showCount .. length-1] 顯示
+      const _startX = _dX + 4;
+      const _cardCY = _dY + 4;
+      for (let i = 0; i < _showCount; i++) {
+        const cardIdx = _discards.length - _showCount + i;
+        const card = _discards[cardIdx];
+        const _cx = _startX + i * _stripeW;
+        // i 越大越右（z-order 越上）— 用順序 painter 演算法保證新牌覆蓋舊牌右側
+        drawCard(_cx, _cardCY, card, true);
+        // 點擊區：每張卡只 register 自己「露出」的部分
+        // 中間張：x 到 x+stripeW （22px 寬）
+        // 最右一張：x 到 x+_cW （完整 76px）
+        const boxW = (i === _showCount - 1) ? _cW : _stripeW;
         game._discardClickBoxes.push({
-          x: _cx, y: _cy, w: _dcW, h: boxH,
-          originalIdx: _discards.length - 1 - i, card,
+          x: _cx, y: _cardCY, w: boxW, h: _cH,
+          originalIdx: cardIdx, card,
         });
       }
-      // 隱藏的舊牌數量提示
+      // 隱藏舊牌數量
       if (_discards.length > _showCount) {
-        ctx.fillStyle = 'rgba(80,120,180,0.5)';
-        ctx.font = '10px monospace';
-        ctx.textAlign = 'right';
-        ctx.fillText(`+${_discards.length - _showCount}`, _dX + _dW - 4, _dY + _dH - 4);
+        ctx.fillStyle = 'rgba(150,180,220,0.6)';
+        ctx.font = 'bold 11px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(`+${_discards.length - _showCount}`, _dX + 4, _dY + _dH - 4);
+      }
+      // 七進七出 mode 提示文字
+      if (game._skillMode2 && game._swap2HandCard) {
+        ctx.fillStyle = '#ffe066';
+        ctx.font = 'bold 11px "Noto Serif TC",serif';
+        ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+        ctx.fillText('▲ 點任一張交換', _dX + _dW - 4, _dY - 14);
+        ctx.textBaseline = 'alphabetic';
       }
     }
   }
