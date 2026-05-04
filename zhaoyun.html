@@ -4258,8 +4258,8 @@ function drawBattlefield() {
     drawScrollButton(406, btnY, 154, 40, '重置', game.phase === 'placing', 'reset');
   }
 
-  // 右上角牌局紀錄按鈕
-  drawLogButton();
+  // 主選單按鈕（取代之前的牌局紀錄按鈕位置）
+  drawMenuBtn();
 
   // 遺物列（底部按鈕下方）
   drawRelicsBar(20, btnY + 56);
@@ -4323,8 +4323,7 @@ function drawBattlefield() {
 
   drawRelicTooltip();
 
-  // 牌局紀錄面板
-  drawLogPanel();
+  // (drawLogPanel 已移除)
 
   // 回顧模式
   if (game.logViewIdx >= 0) {
@@ -6272,6 +6271,23 @@ function drawCardScaled(x, y, card, scale) {
 }
 
 // 右上角紀錄按鈕
+function drawMenuBtn() {
+  const bw = 100, bh = 32;
+  const bx = CONFIG.W - bw - 12, by = 12;
+  const hovering = mousePos.x >= bx && mousePos.x <= bx + bw &&
+                   mousePos.y >= by && mousePos.y <= by + bh;
+  ctx.fillStyle = hovering ? '#3a2018' : '#2a1810';
+  roundRect(bx, by, bw, bh, 4, true, false);
+  ctx.strokeStyle = hovering ? '#ffd700' : 'rgba(255,215,0,0.5)';
+  ctx.lineWidth = 1.5;
+  roundRect(bx, by, bw, bh, 4, false, true);
+  ctx.fillStyle = hovering ? '#ffd700' : '#cca860';
+  ctx.font = 'bold 14px "Noto Serif TC",serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('↩ 主選單', bx + bw/2, by + 20);
+  game._menuReturnBtn = { x: bx, y: by, w: bw, h: bh };
+}
+
 function drawLogButton() {
   const bx = CONFIG.W - 108, by = 54, bw = 100, bh = 28;
   const hovering = mousePos.x >= bx && mousePos.x <= bx + bw &&
@@ -7909,7 +7925,7 @@ function handleBattleResultClick(mx, my) {
           game._resBtns = null;
           finishBattle();
         } else if (_rb.action === 'review') {
-          if (game.matchLog.length > 0) { game.logViewIdx = 0; game.showLog = false; }
+          // (牌局紀錄已移除，review 動作 no-op)
           playSound('place');
         } else if (_rb.action === 'menu') {
           game._resBtns = null;
@@ -7930,25 +7946,13 @@ function handleBattleResultClick(mx, my) {
   return false;
 }
 
-// Layer 4: 牌局紀錄按鈕 + 紀錄列表項
+// Layer 4: 主選單返回按鈕（取代之前的牌局紀錄）
 function handleLogPanelClick(mx, my) {
-  // 牌局紀錄按鈕
-  if (_hit(game._logBtn, mx, my)) {
-    game.showLog = !game.showLog;
-    if (!game.showLog) game.logViewIdx = -1;
-    playSound('deal');
+  if (_hit(game._menuReturnBtn, mx, my)) {
+    if (window._vibrate) window._vibrate(20);
+    // 顯示確認 modal（用 React state — 透過 game._showMenuConfirm flag 給 React 偵測）
+    game._showMenuConfirm = true;
     return true;
-  }
-  // 牌局紀錄面板列表點擊
-  if (game.showLog) {
-    for (const log of game.matchLog) {
-      const b = log._logBox;
-      if (_hit(b, mx, my)) {
-        game.logViewIdx = game.logViewIdx === b.idx ? -1 : b.idx;
-        playSound('place');
-        return true;
-      }
-    }
   }
   return false;
 }
@@ -8306,7 +8310,6 @@ function RulesModal({ onClose }) {
 // ── 設定 Modal ───────────────────────────────────────────────
 function SettingsModal({ onClose }) {
   const [muted, setMuted] = useState(window._audioMuted === true);
-  const [logCount] = useState(window.game?.matchLog?.length || 0);
   const [save, setSave] = useState(() => window.readSave?.() || null);
   const [confirmingClear, setConfirmingClear] = useState(false);
 
@@ -8314,12 +8317,6 @@ function SettingsModal({ onClose }) {
     if (typeof window.toggleAudioMute === 'function') {
       window.toggleAudioMute();
       setMuted(window._audioMuted === true);
-    }
-  };
-  const showLog = () => {
-    if (window.game) {
-      window.game.showLog = true;
-      onClose();
     }
   };
   const doClearSave = () => {
@@ -8344,9 +8341,6 @@ function SettingsModal({ onClose }) {
           <button onClick={() => { toggleMute(); window._vibrate?.(20); }} style={btnSm(muted)}>{muted ? '🔇 開啟' : '🔊 靜音'}</button>
         } />
         <VolumeRow muted={muted} />
-        <SettingRow label="牌 局 紀 錄" sub={`已紀錄 ${logCount} 場（須在戰鬥中查看）`} action={
-          <button onClick={showLog} disabled={!window.game?.matchLog?.length} style={btnSm(false, !window.game?.matchLog?.length)}>查看</button>
-        } />
         <SettingRow label="存 檔 進 度" sub={save ? `${formatStage(save)} · 最後存檔 ${formatTime(save.savedAt)}` : '尚無存檔（通關後自動存）'} action={
           confirmingClear ? (
             <div style={{ display:'flex', gap:6 }}>
@@ -8576,20 +8570,25 @@ function MenuApp() {
   const [modal, setModal] = useState(null);  // 'rules' | 'settings' | 'heroes' | null
   const [toast, setToast] = useState(null);
   const [save, setSave] = useState(() => window.readSave?.() || null);
+  const [confirmReturn, setConfirmReturn] = useState(false);
 
-  // 每 200ms poll game.phase + save
+  // 每 200ms poll game.phase + save + 主選單確認 flag
   useEffect(() => {
     const id = setInterval(() => {
       const p = window.game?.phase;
       if (p && p !== phase) setPhase(p);
-      // 重新讀存檔（chooseReward 後 / 死亡後可能變動）
       const s = window.readSave?.() || null;
       const sigOld = save ? `${save.stage}_${save.savedAt}` : 'none';
       const sigNew = s ? `${s.stage}_${s.savedAt}` : 'none';
       if (sigOld !== sigNew) setSave(s);
+      // 戰鬥中按主選單按鈕的偵測
+      if (window.game?._showMenuConfirm && !confirmReturn) {
+        window.game._showMenuConfirm = false;
+        setConfirmReturn(true);
+      }
     }, 300);
     return () => clearInterval(id);
-  }, [phase, save]);
+  }, [phase, save, confirmReturn]);
 
   const visible = phase === 'menu';
   if (!visible) return null;
@@ -8702,7 +8701,7 @@ function MenuApp() {
           </div>
           <div style={{ display:'flex', gap:10 }}>
             <ListBtn label="戰場規則" sub="新手必讀" onClick={() => setModal('rules')} />
-            <ListBtn label="設　定" sub="音效 · 牌局紀錄" onClick={() => setModal('settings')} />
+            <ListBtn label="設　定" sub="音效 · 音量 · 存檔" onClick={() => setModal('settings')} />
           </div>
         </div>
 
@@ -8723,6 +8722,41 @@ function MenuApp() {
       {modal === 'rules' && <RulesModal onClose={() => setModal(null)} />}
       {modal === 'settings' && <SettingsModal onClose={() => setModal(null)} />}
       {modal === 'heroes' && <HeroesModal onClose={() => setModal(null)} />}
+      {confirmReturn && (
+        <div onClick={() => setConfirmReturn(false)} style={{
+          position:'fixed', inset:0, zIndex:3000, background:'rgba(0,0,0,0.85)',
+          display:'flex', alignItems:'center', justifyContent:'center', padding:20
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{
+            position:'relative', maxWidth:400, padding:28,
+            background:`linear-gradient(180deg, ${TT.color.ink700}, ${TT.color.ink800})`,
+            border:`1px solid ${TT.color.crimson400}`,
+            boxShadow:`0 0 60px rgba(196,30,30,0.3)`,
+          }}>
+            <BeastCorner pos="tl" size={28} />
+            <BeastCorner pos="br" size={28} />
+            <div style={{ fontFamily: TT.font.display, fontSize: 22, color: TT.color.bronze300, letterSpacing: '0.3em', textAlign: 'center', marginBottom: 16 }}>
+              退 出 戰 鬥
+            </div>
+            <div style={{ color: TT.color.text, fontSize: 14, lineHeight: 1.8, letterSpacing: '0.1em', textAlign: 'center', marginBottom: 24 }}>
+              當前戰鬥進度將遺失。<br/>
+              （已通關的關卡仍保留在「繼續征途」存檔）
+            </div>
+            <div style={{ display:'flex', gap: 10 }}>
+              <button onClick={() => setConfirmReturn(false)} style={{ flex:1, padding:'12px', background: TT.color.ink700, border:`1px solid ${TT.color.bronze700}`, color: TT.color.textSoft, fontFamily: TT.font.serif, fontSize: 14, letterSpacing: '0.3em', cursor:'pointer' }}>
+                繼續戰鬥
+              </button>
+              <button onClick={() => {
+                window._vibrate?.(20);
+                if (window.game) window.game.phase = 'menu';
+                setConfirmReturn(false);
+              }} style={{ flex:1, padding:'12px', background: TT.color.crimson500, border:`1px solid ${TT.color.crimson400}`, color: TT.color.bronze100, fontFamily: TT.font.serif, fontSize: 14, letterSpacing: '0.3em', cursor:'pointer' }}>
+                回主選單
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
