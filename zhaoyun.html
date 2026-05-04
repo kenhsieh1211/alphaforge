@@ -994,9 +994,9 @@ function initGame() {
     inFantasyland: false,
 
     // 牌局紀錄（最多保留 8 局）
-    matchLog: [],
-    showLog: false,       // 右上角紀錄面板開關
-    logViewIdx: -1,       // 正在回顧第幾局（-1=不在回顧）
+    matchLog: [],         // 已停用（UI 移除）但保留空陣列免破壞 isReview 邏輯
+    showLog: false,
+    logViewIdx: -1,
 
     message: "",
     shake: 0,
@@ -2367,32 +2367,7 @@ function showNextBattleStep() {
     game.message = `我 -${toPlayer} HP ／ 敵 -${toEnemy} HP`;
     game.battleAnimDone = true;
 
-    // 儲存牌局紀錄
-    const logEntry = {
-      stage: game.stage,
-      enemyName: ENEMIES[game.stage].name,
-      round: game.matchLog.length + 1,
-      playerRows: {
-        front: game.rows.front.map(c => ({ ...c })),
-        middle: game.rows.middle.map(c => ({ ...c })),
-        back: game.rows.back.map(c => ({ ...c })),
-      },
-      enemyRows: {
-        front: game.enemyRows.front.map(c => ({ ...c })),
-        middle: game.enemyRows.middle.map(c => ({ ...c })),
-        back: game.enemyRows.back.map(c => ({ ...c })),
-      },
-      playerDiscards: game.discards.map(c => ({ ...c })),
-      enemyDiscards: game.enemyDiscards.map(c => ({ ...c })),
-      steps: [...game.battleResults],
-      dmgToEnemy: toEnemy,
-      dmgToPlayer: toPlayer,
-      playerHpBefore: game.playerHp + toPlayer,
-      enemyHpBefore: game.enemyHp + toEnemy,
-      inFantasyland: game.inFantasyland,
-    };
-    game.matchLog.unshift(logEntry);      // 最新的在最前面
-    if (game.matchLog.length > 8) game.matchLog.pop();
+    // 牌局紀錄（matchLog）已停用 — UI 移除後，記錄無用途
 
     game._resAnimStart = Date.now();
     if (game._battleResultTimer) clearTimeout(game._battleResultTimer);
@@ -6373,145 +6348,15 @@ function drawMenuBtn() {
   game._menuReturnBtn = { x: bx, y: by, w: bw, h: bh };
 }
 
-function drawLogButton() {
-  const bx = CONFIG.W - 108, by = 54, bw = 100, bh = 28;
-  const hovering = mousePos.x >= bx && mousePos.x <= bx + bw &&
-                   mousePos.y >= by && mousePos.y <= by + bh;
-  ctx.fillStyle = game.showLog ? '#3a1808' : (hovering ? '#4a2010' : '#2a1208');
-  roundRect(bx, by, bw, bh, 4, true, false);
-  ctx.strokeStyle = game.showLog ? '#ffd700' : 'rgba(255,215,0,0.5)';
-  ctx.lineWidth = 1.5;
-  roundRect(bx, by, bw, bh, 4, false, true);
-  ctx.fillStyle = '#ffd700';
-  ctx.font = 'bold 17px "Noto Serif TC",serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(`📜 牌局(${game.matchLog.length})`, bx + bw/2, by + 20);
-  game._logBtn = { x: bx, y: by, w: bw, h: bh };
-}
+// drawLogButton() — 已移除（dead code，cleanup）
+
 
 // 牌局紀錄面板（直版：滿版底層蓋上，捲動列表）
-function drawLogPanel() {
-  if (!game.showLog) return;
-  const pw = CONFIG.W - 20, ph = CONFIG.H - 80;
-  const px = 10, py = 50;
+// drawLogPanel() — 已移除（dead code，cleanup）
 
-  ctx.fillStyle = 'rgba(15,6,3,0.97)';
-  roundRect(px, py, pw, ph, 8, true, false);
-  ctx.strokeStyle = '#ffd700';
-  ctx.lineWidth = 1.5;
-  roundRect(px, py, pw, ph, 8, false, true);
 
-  ctx.fillStyle = '#ffd700';
-  ctx.font = 'bold 22px "Noto Serif TC",serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('── 牌局紀錄 ──', px + pw/2, py + 24);
+// drawDiscardPile() — 已移除（dead code，現在 inline 在 drawBattlefield）
 
-  if (game.matchLog.length === 0) {
-    ctx.fillStyle = '#666';
-    ctx.font = '18px "Noto Serif TC",serif';
-    ctx.fillText('尚無紀錄', px + pw/2, py + 80);
-    return;
-  }
-
-  let ey = py + 40;
-  game.matchLog.forEach((log, idx) => {
-    const isSelected = game.logViewIdx === idx;
-    const hovering = mousePos.x >= px + 8 && mousePos.x <= px + pw - 8 &&
-                     mousePos.y >= ey && mousePos.y <= ey + 68;
-
-    ctx.fillStyle = isSelected ? 'rgba(255,215,0,0.15)' : hovering ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.3)';
-    roundRect(px + 8, ey, pw - 16, 66, 4, true, false);
-    ctx.strokeStyle = isSelected ? '#ffd700' : 'rgba(255,215,0,0.2)';
-    ctx.lineWidth = 1;
-    roundRect(px + 8, ey, pw - 16, 66, 4, false, true);
-
-    // 關卡
-    ctx.fillStyle = '#ffd700';
-    ctx.font = 'bold 17px "Noto Serif TC",serif';
-    ctx.textAlign = 'left';
-    ctx.fillText(`第 ${log.stage + 1} 關 · vs ${log.enemyName}`, px + 16, ey + 16);
-    if (log.inFantasyland) {
-      ctx.fillStyle = '#ff44ff';
-      ctx.font = 'bold 15px sans-serif';
-      ctx.fillText('★夢幻', px + pw - 55, ey + 16);
-    }
-
-    // 三道牌型
-    const arr = getBestArrangement(log.playerRows);
-    ['front','middle','back'].forEach((row, ri) => {
-      const ev = arr[row];
-      const step = log.steps.find(s => s.type === 'row' && s.row === row);
-      const col = step ? (step.winner === 'player' ? '#88ff88' : step.winner === 'tie' ? '#ffff88' : '#ff8888') : '#888';
-      ctx.fillStyle = col;
-      ctx.font = '16px "Noto Serif TC",serif';
-      ctx.textAlign = 'left';
-      ctx.fillText(`${['前','中','後'][ri]}: ${handTypeName(ev.type)}`, px + 16 + ri * 92, ey + 32);
-    });
-
-    // 傷害數字
-    ctx.textAlign = 'right';
-    ctx.font = 'bold 18px "Noto Serif TC",serif';
-    ctx.fillStyle = '#88ff88';
-    ctx.fillText(`+${log.dmgToEnemy}`, px + pw - 10, ey + 50);
-    ctx.fillStyle = '#ff8888';
-    ctx.fillText(`-${log.dmgToPlayer}`, px + pw - 60, ey + 50);
-
-    // 點擊區
-    log._logBox = { x: px + 8, y: ey, w: pw - 16, h: 66, idx };
-    ey += 74;
-    if (ey + 74 > py + ph) return;
-  });
-}
-
-function drawDiscardPile(x, y, cards, label, pileKey) {
-  // 棄牌區：堆疊式（v0.7 改造）— 卡牌縱向堆疊，每張只露頂部點數+花色，框大小不變
-  const cW = Math.round(CONFIG.CARD_W * 0.55);   // 42
-  const cH = Math.round(CONFIG.CARD_H * 0.55);   // 58
-  const totalW = cW + 6;
-  const totalH = 110;  // 跟原本一樣高
-  const stripeH = 18;  // 每張露出 18px 條紋
-  const maxStack = Math.floor((totalH - cH) / stripeH) + 1;  // 約 3-4 張
-  const showCount = Math.min(cards.length, maxStack);
-
-  // 外框背景（保持跟原本相同尺寸）
-  const grad = ctx.createLinearGradient(x, y, x, y + totalH);
-  grad.addColorStop(0, 'rgba(40,20,10,0.70)');
-  grad.addColorStop(1, 'rgba(20,8,4,0.70)');
-  ctx.fillStyle = grad;
-  roundRect(x - 3, y - 3, totalW + 6, totalH + 6, 4, true, false);
-  ctx.strokeStyle = 'rgba(180,120,20,0.55)';
-  ctx.lineWidth = 1;
-  roundRect(x - 3, y - 3, totalW + 6, totalH + 6, 4, false, true);
-
-  // 卡片堆疊：第一張在底部最不可見，最新在最上層完整顯示
-  // (cards[length-1] = 最新棄掉的)
-  // 為了讓最新的「最上面」露最多，從底部往上畫
-  game._discardClickBoxes = game._discardClickBoxes || {};
-  game._discardClickBoxes[pileKey || label] = [];
-  
-  for (let i = showCount - 1; i >= 0; i--) {
-    const card = cards[cards.length - 1 - i];
-    // i=0 是最新（最上層），畫在 y+0
-    // i=showCount-1 是最舊，畫在 y+(showCount-1)*stripeH
-    const cy = y + i * stripeH;
-    const cx = x + 3;
-    // 畫卡（縮小版）
-    drawCardScaled(cx, cy, card, 0.55);
-    // 紀錄點擊區（每張只佔露出的 stripe 區，最上一張包含整個露出部分）
-    const boxH = (i === 0) ? cH : stripeH;
-    game._discardClickBoxes[pileKey || label].push({
-      x: cx, y: cy, w: cW, h: boxH,
-      card, originalIdx: cards.length - 1 - i,
-    });
-  }
-
-  // 計數標籤（右上角）
-  ctx.fillStyle = '#cc9933';
-  ctx.font = 'bold 11px monospace';
-  ctx.textAlign = 'right';
-  ctx.fillText(`${label}${cards.length}`, x + totalW + 3, y - 5);
-  ctx.textAlign = 'left';
-}
 
 function drawMiniCard(x, y, card) {
   // T5 重構：使用 fillRoundRectVGrad + drawDoubleBorder + textCentered
