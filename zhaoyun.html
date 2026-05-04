@@ -7975,47 +7975,48 @@ const btnSm = (active, disabled) => ({
 
 // ── 武將資料（11 位：1 主角 + 10 BOSS）─────────────────────
 const HEROES = [
-  { id:'zhaoyun', name:'常山趙子龍', faction:'蜀', portrait:'characters/zhaoyun_s5.jpg', rarity:5,
+  { id:'zhaoyun', name:'常山趙子龍', faction:'蜀', portrait:'characters/zhaoyun_s1.jpg', rarity:5,
     desc:'白馬銀槍，七進七出救阿斗',
-    story:'蜀漢五虎上將之一，常山真定人。長坂坡之戰，獨身闖入曹軍懷抱阿斗，殺得七進七出。劉備見而嘆曰：「子龍一身都是膽也！」一桿亮銀槍，一匹白龍駒，是三國最為人津津樂道的單騎救主。' },
+    story:'蜀漢五虎上將之一，常山真定人。長坂坡之戰，獨身闖入曹軍懷抱阿斗，殺得七進七出。劉備見而嘆曰：「子龍一身都是膽也！」一桿亮銀槍，一匹白龍駒，是三國最為人津津樂道的單騎救主。', joke:'阿斗被救醒後第一句話：「大哥你能不能別抖了，我剛睡著。」' },
   { id:'caosoldier', name:'曹軍小兵', faction:'魏', portrait:'characters/01_Level1_CaoSoldier.jpg', rarity:1,
     desc:'前方有人！給我拿下！',
-    story:'魏軍前線散兵游勇。長坂坡之戰被趙雲輕鬆擊退的第一道阻礙。雖無名無姓，卻是曹軍人海戰術的縮影。' },
+    story:'魏軍前線散兵游勇。長坂坡之戰被趙雲輕鬆擊退的第一道阻礙。雖無名無姓，卻是曹軍人海戰術的縮影。', joke:'履歷表自我介紹欄：「主要技能：被趙雲打飛」、「次要技能：報數時站第一個」。' },
   { id:'xiahoudun', name:'夏侯惇', faction:'魏', portrait:'characters/02_Level2_BOSS_XiahouDun.jpg', rarity:3,
     desc:'獨眼將軍，性烈剛勇',
-    story:'曹操族弟，魏國宿將。少時為父報仇殺人，剛烈聞名。一次中箭傷及左目，拔箭時竟連睛珠一同拔出，自食之曰「父精母血，不可棄也」，一吞而盡。世稱「盲夏侯」。' },
+    story:'曹操族弟，魏國宿將。少時為父報仇殺人，剛烈聞名。一次中箭傷及左目，拔箭時竟連睛珠一同拔出，自食之曰「父精母血，不可棄也」，一吞而盡。世稱「盲夏侯」。', joke:'眼科醫生看到他直接放棄治療：「下次受傷麻煩留下來給我們處理好嗎？」' },
   { id:'zhanghe', name:'張郃', faction:'魏', portrait:'characters/03_Level3_BOSS_ZhangHe.jpg', rarity:4,
     desc:'五子良將，巧變多謀',
-    story:'魏五子良將之一。原為袁紹部將，官渡之戰歸曹。善用地形、巧變多端，街亭大破馬謖，奪諸葛亮第一次北伐勝局。後追擊諸葛亮中伏，膝中弩箭而亡。' },
+    story:'魏五子良將之一。原為袁紹部將，官渡之戰歸曹。善用地形、巧變多端，街亭大破馬謖，奪諸葛亮第一次北伐勝局。後追擊諸葛亮中伏，膝中弩箭而亡。', joke:'諸葛亮戰報：「敵將張郃追擊木牛流馬五百里」——五百里追的不是糧車，是膝蓋的人生。' },
   { id:'xuchu', name:'許褚', faction:'魏', portrait:'characters/04_Level4_BOSS_XuChu.jpg', rarity:4,
     desc:'虎癡，力大無窮',
-    story:'人稱「虎癡」，曹操貼身護衛。能逆拖牛尾百步，潼關赤膊鬥馬超數百回合不分勝負。曹操常嘆：「吾若有惡夢，子也（典韋）為前，仲康（許褚）為後，魂亦安矣。」' },
+    story:'人稱「虎癡」，曹操貼身護衛。能逆拖牛尾百步，潼關赤膊鬥馬超數百回合不分勝負。曹操常嘆：「吾若有惡夢，子也（典韋）為前，仲康（許褚）為後，魂亦安矣。」', joke:'赤膊上陣的好處是省下盔甲錢，缺點是潼關之後身上多了好幾個「馬超牌通風口」。' },
   { id:'wenpin', name:'文聘', faction:'魏', portrait:'characters/05_Level5_BOSS_WenPin.jpg', rarity:3,
     desc:'江夏太守，鎮守荊州',
-    story:'原為劉表部將，劉表死後降曹。曹操以為江夏太守，鎮守荊州北面門戶數十年。孫權親率五萬大軍攻江夏，文聘空城以待，孫權疑而退兵。穩重少言，深得人心。' },
+    story:'原為劉表部將，劉表死後降曹。曹操以為江夏太守，鎮守荊州北面門戶數十年。孫權親率五萬大軍攻江夏，文聘空城以待，孫權疑而退兵。穩重少言，深得人心。', joke:'孫權親率五萬大軍兵臨城下——文聘一個人坐在城樓上喝茶，孫權看完默默原車返回。江東弟兄都說「該不會在城裡打麻將吧」。' },
   { id:'caoren', name:'曹仁', faction:'魏', portrait:'characters/06_Level6_BOSS_CaoRen.jpg', rarity:4,
     desc:'守城如山，鐵壁銅牆',
-    story:'曹氏宗族，魏國大將軍。守城功夫無人能及，赤壁戰後死守南郡一年餘抗周瑜，襄樊保衛戰擋住關羽水陸雙圍。曹操曰：「曹大司馬之勇，賁、育弗加也。」' },
+    story:'曹氏宗族，魏國大將軍。守城功夫無人能及，赤壁戰後死守南郡一年餘抗周瑜，襄樊保衛戰擋住關羽水陸雙圍。曹操曰：「曹大司馬之勇，賁、育弗加也。」', joke:'曹仁守城教學第一課：把門關上。第二課：確認門真的關上了。第三課：再確認一次。' },
   { id:'caohong', name:'曹洪', faction:'魏', portrait:'characters/07_Level7_BOSS_CaoHong.jpg', rarity:3,
     desc:'掠奪財寶，刁鑽狡詐',
-    story:'曹氏宗族。汴水之戰捨馬讓曹操，曹操得脫，曹洪步行追隨。家財鉅萬卻吝嗇，曹丕為太子時向其借錢被拒，遂懷恨在心，後幾乎被處死，賴卞太后求情方免。' },
+    story:'曹氏宗族。汴水之戰捨馬讓曹操，曹操得脫，曹洪步行追隨。家財鉅萬卻吝嗇，曹丕為太子時向其借錢被拒，遂懷恨在心，後幾乎被處死，賴卞太后求情方免。', joke:'家財萬貫卻不肯借錢給太子曹丕——三國最早的「親戚之間談錢傷感情」教學案例。後來真的傷感情（差點丟命）。' },
   { id:'zhangliao', name:'張遼', faction:'魏', portrait:'characters/08_Level8_BOSS_ZhangLiao.jpg', rarity:5,
     desc:'威震逍遙津，前鋒奪命',
-    story:'魏五子良將之首，原為呂布部將，下邳兵敗後降曹。合肥之戰以八百精兵衝破孫權十萬大軍，幾乎生擒孫權，江東小兒夜啼，聞「張遼來」即止。「八百破十萬」千古名戰。' },
+    story:'魏五子良將之首，原為呂布部將，下邳兵敗後降曹。合肥之戰以八百精兵衝破孫權十萬大軍，幾乎生擒孫權，江東小兒夜啼，聞「張遼來」即止。「八百破十萬」千古名戰。', joke:'江東家長哄小孩標準台詞：「再哭就叫張遼來」——比恐龍剋星還好用，CP 值最高的恐嚇道具。' },
   { id:'simayi', name:'司馬懿', faction:'魏', portrait:'characters/09_Level9_BOSS_SimaYi.jpg', rarity:5,
     desc:'仲達，鷹視狼顧',
-    story:'字仲達，魏國重臣。曹操在世時忌其「鷹視狼顧」之相，臨終誡曹丕：「司馬懿非人臣也，必預汝家事。」抵禦諸葛亮北伐有功，後發動高平陵之變，奪曹魏實權，奠基晉朝。隱忍七十年，一朝逆天。' },
+    story:'字仲達，魏國重臣。曹操在世時忌其「鷹視狼顧」之相，臨終誡曹丕：「司馬懿非人臣也，必預汝家事。」抵禦諸葛亮北伐有功，後發動高平陵之變，奪曹魏實權，奠基晉朝。隱忍七十年，一朝逆天。', joke:'諸葛亮派人送女裝罵他不敢出戰，司馬懿開心收下穿給軍營看：「料子不錯，再來一件。」' },
   { id:'caocao', name:'曹操', faction:'魏', portrait:'characters/10_Level10_FinalBoss_CaoCao.jpg', rarity:5,
     desc:'魏武帝，治世能臣亂世奸雄',
-    story:'字孟德，沛國譙人。挾天子以令諸侯，統一中原北方。許劭評曰：「治世之能臣，亂世之奸雄。」橫槊賦詩，《短歌行》「對酒當歌，人生幾何」千古絕唱。文武雙全、雄才大略，三國第一梟雄。' },
+    story:'字孟德，沛國譙人。挾天子以令諸侯，統一中原北方。許劭評曰：「治世之能臣，亂世之奸雄。」橫槊賦詩，《短歌行》「對酒當歌，人生幾何」千古絕唱。文武雙全、雄才大略，三國第一梟雄。', joke:'「寧教我負天下人」其實後面還有半句沒說完：「⋯⋯反正天下人也都記得了，省了我自我介紹。」' },
 ];
 
 function HeroesModal({ onClose }) {
   const [selected, setSelected] = useState(null);
+  const [zoom, setZoom] = useState(false);
   const factionColor = (f) => f === '蜀' ? TT.color.bronze300 : TT.color.crimson400;
   return (
     <ModalShell title="武 將 圖 鑑" onClose={onClose} wide={true}>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:8 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(2, 1fr)', gap:12 }}>
         {HEROES.map(h => (
           <button key={h.id} onClick={() => setSelected(h)} style={{
             position:'relative', padding:0, cursor:'pointer',
@@ -8030,15 +8031,16 @@ function HeroesModal({ onClose }) {
           >
             {/* 派系徽章 — top-right 朱印風 */}
             <div style={{
-              position:'absolute', top:4, right:4, width:20, height:20,
-              background: factionColor(h.faction), color: TT.color.ink900, fontSize:12, fontWeight:900,
+              position:'absolute', top:6, right:6, width:28, height:28,
+              background: factionColor(h.faction), color: TT.color.ink900, fontSize:15, fontWeight:900,
               display:'flex', alignItems:'center', justifyContent:'center',
               border:`1.5px solid ${TT.color.bronze100}`, letterSpacing:0,
-              boxShadow:'0 2px 4px rgba(0,0,0,0.6)',
+              boxShadow:'0 2px 6px rgba(0,0,0,0.7)',
               zIndex: 5,
+              fontFamily: TT.font.display,
             }}>{h.faction}</div>
             {/* 立繪 — 戰鬥畫面尺寸（大） */}
-            <div style={{ position:'relative', width:'100%', aspectRatio:'1/1.4', background: TT.color.ink900, overflow:'hidden' }}>
+            <div style={{ position:'relative', width:'100%', aspectRatio:'1/1.65', background: TT.color.ink900, overflow:'hidden' }}>
               <img src={h.portrait} alt={h.name} style={{
                 width:'100%', height:'100%', objectFit:'cover', objectPosition:'center top',
                 display:'block',
@@ -8051,15 +8053,33 @@ function HeroesModal({ onClose }) {
               }} />
             </div>
             {/* 文字資訊區 */}
-            <div style={{ padding:'8px 8px 10px' }}>
-              <div style={{ fontFamily:TT.font.display, fontSize:13, color:TT.color.text, letterSpacing:'0.08em', marginBottom:2, fontWeight:700, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{h.name}</div>
-              <div style={{ color: factionColor(h.faction), fontSize:10, letterSpacing:'0', marginTop:2 }}>
+            <div style={{ padding:'10px 14px 14px' }}>
+              <div style={{ fontFamily:TT.font.display, fontSize:18, color:TT.color.text, letterSpacing:'0.15em', marginBottom:4, fontWeight:700 }}>{h.name}</div>
+              <div style={{ fontSize:11, color:TT.color.textMuted, letterSpacing:'0.08em', lineHeight:1.4, marginBottom:6, minHeight:30 }}>{h.desc}</div>
+              <div style={{ color: factionColor(h.faction), fontSize:12, letterSpacing:'0.05em' }}>
                 {'★'.repeat(h.rarity)}{'☆'.repeat(5-h.rarity)}
               </div>
             </div>
           </button>
         ))}
       </div>
+      {/* Zoom 全屏立繪 */}
+      {zoom && selected && (
+        <div onClick={() => setZoom(false)} style={{
+          position:'fixed', inset:0, zIndex:5000, background:'rgba(0,0,0,0.97)',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          cursor:'zoom-out',
+        }}>
+          <img src={selected.portrait} alt={selected.name} style={{
+            maxWidth:'95vw', maxHeight:'95vh', objectFit:'contain',
+            border:`2px solid ${factionColor(selected.faction)}`,
+            boxShadow:`0 0 60px ${factionColor(selected.faction)}80`,
+          }} />
+          <div style={{ position:'fixed', top:20, right:20, color: TT.color.bronze300, fontSize:13, background:'rgba(0,0,0,0.7)', padding:'6px 14px', border:`1px solid ${TT.color.bronze500}`, letterSpacing:'0.3em' }}>
+            ✕ 點擊關閉
+          </div>
+        </div>
+      )}
       {selected && (
         <div onClick={() => setSelected(null)} style={{
           position:'fixed', inset:0, zIndex:3000, background:'rgba(0,0,0,0.95)',
@@ -8085,10 +8105,14 @@ function HeroesModal({ onClose }) {
 
             {/* 立繪 — 近全寬大圖，filling top 60% */}
             <div style={{ position:'relative', width:'100%', height:'58%', background: TT.color.ink900, overflow:'hidden', flexShrink:0 }}>
-              <img src={selected.portrait} alt={selected.name} style={{
-                width:'100%', height:'100%', objectFit:'cover', objectPosition:'center top',
-                display:'block',
-              }} onError={(e) => e.target.style.display='none'} />
+              <img src={selected.portrait} alt={selected.name}
+                onClick={(e) => { e.stopPropagation(); setZoom(true); }}
+                style={{
+                  width:'100%', height:'100%', objectFit:'cover', objectPosition:'center top',
+                  display:'block', cursor:'zoom-in',
+                }} onError={(e) => e.target.style.display='none'} />
+              {/* 提示可縮放 */}
+              <div style={{ position:'absolute', top:14, right:74, color: TT.color.bronze300, fontSize:11, background:'rgba(0,0,0,0.55)', padding:'4px 10px', border:`1px solid ${TT.color.bronze700}`, letterSpacing:'0.2em' }}>🔍 點圖放大</div>
               {/* 底部漸層融入 */}
               <div style={{ position:'absolute', left:0, right:0, bottom:0, height:'45%',
                 background: `linear-gradient(180deg, transparent 0%, ${TT.color.ink800}cc 50%, ${TT.color.ink800} 100%)`,
@@ -8116,6 +8140,12 @@ function HeroesModal({ onClose }) {
               <div style={{ borderTop:`1px solid ${TT.color.bronze900}`, paddingTop:14, color:TT.color.text, fontSize:14, lineHeight:1.95, letterSpacing:'0.06em', textAlign:'justify' }}>
                 {selected.story}
               </div>
+              {selected.joke && (
+                <div style={{ marginTop:18, padding:'14px 16px', background:'rgba(216,167,88,0.08)', border:`1px dashed ${TT.color.bronze700}`, color: TT.color.bronze300, fontSize:13, lineHeight:1.8, fontStyle:'italic', letterSpacing:'0.04em' }}>
+                  <span style={{ color: TT.color.bronze500, fontSize:11, letterSpacing:'0.4em', display:'block', marginBottom:6 }}>— 冷 知 識 —</span>
+                  {selected.joke}
+                </div>
+              )}
             </div>
           </div>
         </div>
