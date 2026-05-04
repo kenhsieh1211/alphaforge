@@ -21,34 +21,37 @@
       #0a0503;
     color: #f4e4bc;
     font-family: "Noto Serif TC", "Microsoft JhengHei", serif;
-    display: flex; justify-content: center; align-items: center;
-    min-height: 100vh; overflow: hidden;
-    position: relative;
+    /* 取消 flex centering，改 absolute centering 配合 transform scale，避免行動裝置 viewport 計算誤差 */
+    margin: 0; padding: 0;
+    width: 100vw; height: 100vh; height: 100dvh;
+    overflow: hidden;
+    position: fixed; inset: 0;
     touch-action: none;
     -webkit-user-select: none;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* 雜訊紋理覆蓋層 — 增添歷史感 */
+  /* 雜訊紋理覆蓋層 */
   body::before {
     content: '';
     position: fixed; inset: 0;
-    background-image:
-      repeating-linear-gradient(
-        0deg,
-        transparent 0,
-        transparent 2px,
-        rgba(0,0,0,0.03) 2px,
-        rgba(0,0,0,0.03) 3px
-      );
+    background-image: repeating-linear-gradient(
+      0deg, transparent 0, transparent 2px,
+      rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 3px
+    );
     pointer-events: none;
     z-index: 100;
   }
 
-  /* === 手機外殼（phone frame）720×1280 固定尺寸，響應式 scale 適配視窗 === */
+  /* === 手機外殼（720×1280）+ 響應式 scale ===
+     v0.7 mobile fix:
+     - 用 absolute centering + translate(-50%,-50%) 取代 body flex 居中（手機 flex+scale 容易出問題）
+     - 用 100dvh（dynamic viewport height）解 mobile 瀏覽器 URL bar 高度動態變化
+     - transform-origin 改為 center 以配合 translate(-50%,-50%) */
   .game-frame {
-    position: relative;
+    position: absolute;
+    top: 50%; left: 50%;
     width: 720px; height: 1280px;
     background: linear-gradient(135deg, #1a2238 0%, #0a0f1c 100%);
     border-radius: 12px;
@@ -57,10 +60,12 @@
       0 0 0 1px #b8893a,
       0 0 80px rgba(216, 167, 88, 0.18),
       0 20px 60px rgba(0,0,0,0.9);
-    flex-shrink: 0;
-    /* 響應式：viewport 不夠 720×1280 時等比縮放 */
-    --frame-scale: min(calc((100vw - 24px) / 720), calc((100vh - 24px) / 1280), 1);
-    transform: scale(var(--frame-scale));
+    /* dvh: dynamic viewport height (mobile 友善，會排除 URL bar) */
+    transform: translate(-50%, -50%) scale(min(
+      calc((100vw - 8px) / 720),
+      calc((100dvh - 8px) / 1280),
+      1
+    ));
     transform-origin: center center;
   }
   .game-frame::after {
