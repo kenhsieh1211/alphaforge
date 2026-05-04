@@ -172,17 +172,23 @@ function _loadExternalAssets() {
     { key: 'divider',       url: ASSET_PATHS.base + ASSET_PATHS.ui.divider              },
     // 敵將立繪（外部高品質版，覆蓋 base64 嵌入版）
     // 優先嘗試用戶放置的 ./characters/ 高品質立繪
-    { key: 'player',   url: './characters/00_ZhaoYun_MainHero.png'          },
-    { key: '曹軍小兵', url: './characters/01_Level1_CaoSoldier.png'         },
-    { key: '夏侯惇',   url: './characters/02_Level2_BOSS_XiahouDun.png'     },
-    { key: '張郃',     url: './characters/03_Level3_BOSS_ZhangHe.png'       },
-    { key: '許褚',     url: './characters/04_Level4_BOSS_XuChu.png'         },
-    { key: '文聘',     url: './characters/05_Level5_BOSS_WenPin.png'        },
-    { key: '曹仁',     url: './characters/06_Level6_BOSS_CaoRen.png'        },
-    { key: '曹洪',     url: './characters/07_Level7_BOSS_CaoHong.png'       },
-    { key: '張遼',     url: './characters/08_Level8_BOSS_ZhangLiao.png'     },
-    { key: '司馬懿',   url: './characters/09_Level9_BOSS_SimaYi.png'        },
-    { key: '曹操',     url: './characters/10_Level10_FinalBoss_CaoCao.png'  },
+    // 趙雲 5 階段（每 2 關進化一次：s1=1-2 / s2=3-4 / s3=5-6 / s4=7-8 / s5=9-10 終戰）
+    { key: 'player_s1', url: './characters/zhaoyun_s1.jpg' },
+    { key: 'player_s2', url: './characters/zhaoyun_s2.jpg' },
+    { key: 'player_s3', url: './characters/zhaoyun_s3.jpg' },
+    { key: 'player_s4', url: './characters/zhaoyun_s4.jpg' },
+    { key: 'player_s5', url: './characters/zhaoyun_s5.jpg' },
+    // 10 BOSS — 改用 JPG 壓縮版（從 25MB → 1.2MB）
+    { key: '曹軍小兵', url: './characters/01_Level1_CaoSoldier.jpg'         },
+    { key: '夏侯惇',   url: './characters/02_Level2_BOSS_XiahouDun.jpg'     },
+    { key: '張郃',     url: './characters/03_Level3_BOSS_ZhangHe.jpg'       },
+    { key: '許褚',     url: './characters/04_Level4_BOSS_XuChu.jpg'         },
+    { key: '文聘',     url: './characters/05_Level5_BOSS_WenPin.jpg'        },
+    { key: '曹仁',     url: './characters/06_Level6_BOSS_CaoRen.jpg'        },
+    { key: '曹洪',     url: './characters/07_Level7_BOSS_CaoHong.jpg'       },
+    { key: '張遼',     url: './characters/08_Level8_BOSS_ZhangLiao.jpg'     },
+    { key: '司馬懿',   url: './characters/09_Level9_BOSS_SimaYi.jpg'        },
+    { key: '曹操',     url: './characters/10_Level10_FinalBoss_CaoCao.jpg'  },
     // Logo: 兩個 URL 都指向同樣內容（容錯）— 加 cache-bust query 強制 browser 重抓
     { key: '_logo',    url: './logo.png?v=2'      },
     { key: '_logo2',   url: './logo.png.png?v=2'  },
@@ -4001,7 +4007,11 @@ function drawBattlefield() {
   {
     const pPX = 0, pPY = L.PLAYER_SECT_Y;
     const pPW = L.PORTRAIT_W, pPH = L.PLAYER_SECT_H;
-    const _pi2 = _ASSET_IMGS['player'] || ((typeof _PORTRAIT_IMGS !== 'undefined') && _PORTRAIT_IMGS['player']);
+    // 趙雲依關卡進化 (1-2 → s1, 3-4 → s2, 5-6 → s3, 7-8 → s4, 9-10 → s5)
+    const _stageIdx = Math.min(5, Math.floor((game.stage || 0) / 2) + 1);
+    const _pi2 = _ASSET_IMGS[`player_s${_stageIdx}`]
+              || _ASSET_IMGS['player_s1']
+              || ((typeof _PORTRAIT_IMGS !== 'undefined') && _PORTRAIT_IMGS['player']);
     if (_pi2) {
       ctx.save();
       // 保持圖片原始比例，置中裁切填滿欄位
@@ -8372,37 +8382,37 @@ const btnSm = (active, disabled) => ({
 
 // ── 武將資料（11 位：1 主角 + 10 BOSS）─────────────────────
 const HEROES = [
-  { id:'zhaoyun', name:'常山趙子龍', faction:'蜀', portrait:'characters/00_ZhaoYun_MainHero.png', rarity:5,
+  { id:'zhaoyun', name:'常山趙子龍', faction:'蜀', portrait:'characters/zhaoyun_s5.jpg', rarity:5,
     desc:'白馬銀槍，七進七出救阿斗',
     story:'蜀漢五虎上將之一，常山真定人。長坂坡之戰，獨身闖入曹軍懷抱阿斗，殺得七進七出。劉備見而嘆曰：「子龍一身都是膽也！」一桿亮銀槍，一匹白龍駒，是三國最為人津津樂道的單騎救主。' },
-  { id:'caosoldier', name:'曹軍小兵', faction:'魏', portrait:'characters/01_Level1_CaoSoldier.png', rarity:1,
+  { id:'caosoldier', name:'曹軍小兵', faction:'魏', portrait:'characters/01_Level1_CaoSoldier.jpg', rarity:1,
     desc:'前方有人！給我拿下！',
     story:'魏軍前線散兵游勇。長坂坡之戰被趙雲輕鬆擊退的第一道阻礙。雖無名無姓，卻是曹軍人海戰術的縮影。' },
-  { id:'xiahoudun', name:'夏侯惇', faction:'魏', portrait:'characters/02_Level2_BOSS_XiahouDun.png', rarity:3,
+  { id:'xiahoudun', name:'夏侯惇', faction:'魏', portrait:'characters/02_Level2_BOSS_XiahouDun.jpg', rarity:3,
     desc:'獨眼將軍，性烈剛勇',
     story:'曹操族弟，魏國宿將。少時為父報仇殺人，剛烈聞名。一次中箭傷及左目，拔箭時竟連睛珠一同拔出，自食之曰「父精母血，不可棄也」，一吞而盡。世稱「盲夏侯」。' },
-  { id:'zhanghe', name:'張郃', faction:'魏', portrait:'characters/03_Level3_BOSS_ZhangHe.png', rarity:4,
+  { id:'zhanghe', name:'張郃', faction:'魏', portrait:'characters/03_Level3_BOSS_ZhangHe.jpg', rarity:4,
     desc:'五子良將，巧變多謀',
     story:'魏五子良將之一。原為袁紹部將，官渡之戰歸曹。善用地形、巧變多端，街亭大破馬謖，奪諸葛亮第一次北伐勝局。後追擊諸葛亮中伏，膝中弩箭而亡。' },
-  { id:'xuchu', name:'許褚', faction:'魏', portrait:'characters/04_Level4_BOSS_XuChu.png', rarity:4,
+  { id:'xuchu', name:'許褚', faction:'魏', portrait:'characters/04_Level4_BOSS_XuChu.jpg', rarity:4,
     desc:'虎癡，力大無窮',
     story:'人稱「虎癡」，曹操貼身護衛。能逆拖牛尾百步，潼關赤膊鬥馬超數百回合不分勝負。曹操常嘆：「吾若有惡夢，子也（典韋）為前，仲康（許褚）為後，魂亦安矣。」' },
-  { id:'wenpin', name:'文聘', faction:'魏', portrait:'characters/05_Level5_BOSS_WenPin.png', rarity:3,
+  { id:'wenpin', name:'文聘', faction:'魏', portrait:'characters/05_Level5_BOSS_WenPin.jpg', rarity:3,
     desc:'江夏太守，鎮守荊州',
     story:'原為劉表部將，劉表死後降曹。曹操以為江夏太守，鎮守荊州北面門戶數十年。孫權親率五萬大軍攻江夏，文聘空城以待，孫權疑而退兵。穩重少言，深得人心。' },
-  { id:'caoren', name:'曹仁', faction:'魏', portrait:'characters/06_Level6_BOSS_CaoRen.png', rarity:4,
+  { id:'caoren', name:'曹仁', faction:'魏', portrait:'characters/06_Level6_BOSS_CaoRen.jpg', rarity:4,
     desc:'守城如山，鐵壁銅牆',
     story:'曹氏宗族，魏國大將軍。守城功夫無人能及，赤壁戰後死守南郡一年餘抗周瑜，襄樊保衛戰擋住關羽水陸雙圍。曹操曰：「曹大司馬之勇，賁、育弗加也。」' },
-  { id:'caohong', name:'曹洪', faction:'魏', portrait:'characters/07_Level7_BOSS_CaoHong.png', rarity:3,
+  { id:'caohong', name:'曹洪', faction:'魏', portrait:'characters/07_Level7_BOSS_CaoHong.jpg', rarity:3,
     desc:'掠奪財寶，刁鑽狡詐',
     story:'曹氏宗族。汴水之戰捨馬讓曹操，曹操得脫，曹洪步行追隨。家財鉅萬卻吝嗇，曹丕為太子時向其借錢被拒，遂懷恨在心，後幾乎被處死，賴卞太后求情方免。' },
-  { id:'zhangliao', name:'張遼', faction:'魏', portrait:'characters/08_Level8_BOSS_ZhangLiao.png', rarity:5,
+  { id:'zhangliao', name:'張遼', faction:'魏', portrait:'characters/08_Level8_BOSS_ZhangLiao.jpg', rarity:5,
     desc:'威震逍遙津，前鋒奪命',
     story:'魏五子良將之首，原為呂布部將，下邳兵敗後降曹。合肥之戰以八百精兵衝破孫權十萬大軍，幾乎生擒孫權，江東小兒夜啼，聞「張遼來」即止。「八百破十萬」千古名戰。' },
-  { id:'simayi', name:'司馬懿', faction:'魏', portrait:'characters/09_Level9_BOSS_SimaYi.png', rarity:5,
+  { id:'simayi', name:'司馬懿', faction:'魏', portrait:'characters/09_Level9_BOSS_SimaYi.jpg', rarity:5,
     desc:'仲達，鷹視狼顧',
     story:'字仲達，魏國重臣。曹操在世時忌其「鷹視狼顧」之相，臨終誡曹丕：「司馬懿非人臣也，必預汝家事。」抵禦諸葛亮北伐有功，後發動高平陵之變，奪曹魏實權，奠基晉朝。隱忍七十年，一朝逆天。' },
-  { id:'caocao', name:'曹操', faction:'魏', portrait:'characters/10_Level10_FinalBoss_CaoCao.png', rarity:5,
+  { id:'caocao', name:'曹操', faction:'魏', portrait:'characters/10_Level10_FinalBoss_CaoCao.jpg', rarity:5,
     desc:'魏武帝，治世能臣亂世奸雄',
     story:'字孟德，沛國譙人。挾天子以令諸侯，統一中原北方。許劭評曰：「治世之能臣，亂世之奸雄。」橫槊賦詩，《短歌行》「對酒當歌，人生幾何」千古絕唱。文武雙全、雄才大略，三國第一梟雄。' },
 ];
@@ -8412,32 +8422,48 @@ function HeroesModal({ onClose }) {
   const factionColor = (f) => f === '蜀' ? TT.color.bronze300 : TT.color.crimson400;
   return (
     <ModalShell title="武 將 圖 鑑" onClose={onClose}>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:10 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(2, 1fr)', gap:14 }}>
         {HEROES.map(h => (
           <button key={h.id} onClick={() => setSelected(h)} style={{
-            position:'relative', padding:8, cursor:'pointer',
+            position:'relative', padding:0, cursor:'pointer',
             background: `linear-gradient(180deg, ${TT.color.steel900}, ${TT.color.ink800})`,
-            border: `1px solid ${factionColor(h.faction)}40`,
-            color: TT.color.text, textAlign:'center',
-            transition: 'all 0.15s',
+            border: `1.5px solid ${factionColor(h.faction)}50`,
+            color: TT.color.text, textAlign:'left',
+            transition: 'all 0.18s',
+            overflow: 'hidden',
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = factionColor(h.faction); e.currentTarget.style.transform = 'translateY(-2px)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = factionColor(h.faction)+'40'; e.currentTarget.style.transform = 'none'; }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = factionColor(h.faction); e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = `0 8px 20px ${factionColor(h.faction)}40`; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = factionColor(h.faction)+'50'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
           >
+            {/* 派系徽章 — top-right 朱印風 */}
             <div style={{
-              position:'absolute', top:4, right:4, width:18, height:18,
-              background: factionColor(h.faction), color: TT.color.ink900, fontSize:11, fontWeight:900,
+              position:'absolute', top:6, right:6, width:24, height:24,
+              background: factionColor(h.faction), color: TT.color.ink900, fontSize:14, fontWeight:900,
               display:'flex', alignItems:'center', justifyContent:'center',
-              border:`1px solid ${TT.color.ink900}`, letterSpacing:0,
+              border:`1.5px solid ${TT.color.bronze100}`, letterSpacing:0,
+              boxShadow:'0 2px 4px rgba(0,0,0,0.6)',
+              zIndex: 5,
             }}>{h.faction}</div>
-            <img src={h.portrait} alt={h.name} style={{
-              width:'100%', height:90, objectFit:'cover', objectPosition:'center top',
-              border: `1px solid ${TT.color.bronze900}`, marginBottom:6,
-            }} onError={(e) => e.target.style.display='none'} />
-            <div style={{ fontFamily:TT.font.display, fontSize:13, color:TT.color.text, letterSpacing:'0.1em', marginBottom:2 }}>{h.name}</div>
-            <div style={{ fontSize:9, color:TT.color.textMuted, letterSpacing:'0.1em', lineHeight:1.4 }}>{h.desc}</div>
-            <div style={{ marginTop:4, color: factionColor(h.faction), fontSize:9 }}>
-              {'★'.repeat(h.rarity)}{'☆'.repeat(5-h.rarity)}
+            {/* 立繪 — 戰鬥畫面尺寸（大） */}
+            <div style={{ position:'relative', width:'100%', aspectRatio:'1/1.25', background: TT.color.ink900, overflow:'hidden' }}>
+              <img src={h.portrait} alt={h.name} style={{
+                width:'100%', height:'100%', objectFit:'cover', objectPosition:'center top',
+                display:'block',
+              }} onError={(e) => e.target.style.display='none'} />
+              {/* 底部漸層融入卡片資訊 */}
+              <div style={{
+                position:'absolute', left:0, right:0, bottom:0, height:'40%',
+                background: `linear-gradient(180deg, transparent 0%, ${TT.color.ink800}cc 60%, ${TT.color.ink800} 100%)`,
+                pointerEvents:'none',
+              }} />
+            </div>
+            {/* 文字資訊區 */}
+            <div style={{ padding:'10px 12px 12px' }}>
+              <div style={{ fontFamily:TT.font.display, fontSize:17, color:TT.color.text, letterSpacing:'0.15em', marginBottom:4, fontWeight:700 }}>{h.name}</div>
+              <div style={{ fontSize:11, color:TT.color.textMuted, letterSpacing:'0.1em', lineHeight:1.4, marginBottom:6, minHeight:32 }}>{h.desc}</div>
+              <div style={{ color: factionColor(h.faction), fontSize:11, letterSpacing:'0.05em' }}>
+                {'★'.repeat(h.rarity)}{'☆'.repeat(5-h.rarity)}
+              </div>
             </div>
           </button>
         ))}
