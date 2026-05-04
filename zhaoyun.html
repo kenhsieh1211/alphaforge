@@ -1931,20 +1931,68 @@ function useSkill() {
 }
 
 // 技能2：七進七出（需5氣，回復55HP）— Balance v0.7
+// 七進七出（v0.7 改）：消 5 氣進入交換模式，
+// 點選一張手牌 + 點選棄牌堆裡一張牌 → 互換
 function activateSkill2() {
   if (game.phase !== 'placing') return;
+  if (game._skillMode2) {
+    // 已在模式中再點 = 取消
+    game._skillMode2 = false;
+    game._swap2HandCard = null;
+    flashMessage('七進七出已取消');
+    return;
+  }
   const qi = game._qi || 0;
   if (qi < 5) {
     flashMessage(`七進七出需要 5 氣（現有 ${qi}）`);
     return;
   }
-  game._qi -= 5;
-  const healAmt = 55;
-  game.playerHp = Math.min(CONFIG.PLAYER_MAX_HP, game.playerHp + healAmt);
-  flashMessage(`七進七出！殺出重圍，回復 ${healAmt} HP！`);
-  spawnFloatScore(getPlayerHpBarX() + 100, CONFIG.LAYOUT.PLAYER_INFO_Y + 38, `+${healAmt} HP`, '#88ff88');
-  spawnParticles(CONFIG.W/2, CONFIG.LAYOUT.PLAYER_INFO_Y + 38, '#88ffaa', 50);
+  if (!game.discards || game.discards.length === 0) {
+    flashMessage('棄牌堆無牌，無法交換');
+    return;
+  }
+  // 不立即扣氣 — 完成交換才扣（取消無代價）
+  game._skillMode2 = true;
+  game._swap2HandCard = null;
+  // 取消其他 mode 互斥
+  game._skillMode = false;
+  game._swapFirst = null;
+  flashMessage('七進七出：選一張手牌');
   playSound('skill');
+}
+
+// 七進七出 — 第一步：選手牌
+function trySwap2HandPick(card) {
+  if (!game._skillMode2) return false;
+  game._swap2HandCard = card;
+  flashMessage(`已選手牌 [${card.rank === 14 ? 'A' : card.rank}${card.suit}]，再點棄牌堆裡的牌`);
+  playSound('deal');
+  return true;
+}
+
+// 七進七出 — 第二步：選棄牌堆牌 → 完成交換
+function trySwap2DiscardPick(discardIdx) {
+  if (!game._skillMode2 || !game._swap2HandCard) return false;
+  const handCard = game._swap2HandCard;
+  const discardCard = game.discards[discardIdx];
+  if (!discardCard) return false;
+  // 交換：手牌位置放棄牌，棄牌堆位置放手牌
+  const handPos = game.hand.indexOf(handCard);
+  if (handPos < 0) {
+    game._skillMode2 = false; game._swap2HandCard = null;
+    return false;
+  }
+  game.hand[handPos] = discardCard;
+  game.discards[discardIdx] = handCard;
+  // 扣氣 + 退出模式
+  game._qi -= 5;
+  game._skillMode2 = false;
+  game._swap2HandCard = null;
+  game.selectedCard = null;
+  flashMessage(`七進七出！手牌與棄牌完成交換`);
+  spawnParticles(CONFIG.W/2, CONFIG.LAYOUT.PLAYER_INFO_Y + 38, '#ffe066', 30);
+  playSound('crit');
+  return true;
 }
 
 // 龍膽換位：選擇兩張已放置的牌互換位置
@@ -3312,12 +3360,8 @@ function drawCharTransition() {
   const t = (Date.now() - game._charTransStart) / 1000;
   const W = CONFIG.W, H = CONFIG.H;
 
-  // 2.5 秒後自動進入下一關（資訊在 t=2.35 全顯完，留 0.15s 喘息）— TODO-G 縮時
-  if (t >= 2.5 && !game._charTransAdvanced) {
-    game._charTransAdvanced = true;
-    setTimeout(() => { if (game.phase === 'char_transition') { game.phase = 'placing'; startStage(); } }, 0);
-    return;
-  }
+  // (取消自動推進 — 改成必須點擊才進入下一關，避免玩家還沒看清楚就跳掉)
+  // handlePhaseScreenClick 仍處理點擊跳過（>200ms 後）
 
   const enemy = ENEMIES[game.stage];
   if (!enemy) { startStage(); return; }
@@ -3415,8 +3459,8 @@ function drawCharTransition() {
     ctx.restore();
   }
 
-  // ── 「點擊繼續」提示（t=2.0，呼吸閃爍）— TODO-G 提早顯示
-  const hintA = Math.min(1, Math.max(0, (t - 2.0) / 0.4));
+  // ── 「點擊繼續」提示（t=1.5，呼吸閃爍）— 必點才進，提早提示
+  const hintA = Math.min(1, Math.max(0, (t - 1.5) / 0.4));
   if (hintA > 0) {
     const pulse = 0.45 + 0.55 * Math.abs(Math.sin(t * 2.2));
     ctx.save();
@@ -4189,47 +4233,70 @@ function drawBattlefield() {
     ctx.textAlign = 'left';
   }
 
-  // 棄牌框 — 前鋒牌右邊
+  // 棄牌框 — 前鋒牌右邊（v0.7 堆疊式：保持框大小不縮，牌疊起來但每張露點數+花色，七進七出可點換）
   {
     const _discards = game.discards || [];
     const _frontCap = game.cardCaps.front || CONFIG.ROW_CAPS.front;
-    const _cardStartX = CONFIG.LAYOUT.PORTRAIT_W + CONFIG.LAYOUT.ROW_LABEL_W; // 229
-    // 緊接前鋒最後一張牌後方
+    const _cardStartX = CONFIG.LAYOUT.PORTRAIT_W + CONFIG.LAYOUT.ROW_LABEL_W;
     const _dX = _cardStartX + _frontCap * CONFIG.CARD_W + (_frontCap - 1) * 6 + 10;
     const _dY = getRowY('front', false) - 4;
-    const _dW = Math.min(CONFIG.W - _dX - 6, 2 * CONFIG.CARD_W + 6); // 2 卡寬
+    const _dW = Math.min(CONFIG.W - _dX - 6, 2 * CONFIG.CARD_W + 6);
     const _dH = CONFIG.CARD_H + 8;
 
     // 背景
     const _dBg = ctx.createLinearGradient(_dX, _dY, _dX, _dY+_dH);
     _dBg.addColorStop(0,'rgba(4,12,35,0.88)'); _dBg.addColorStop(1,'rgba(3,8,24,0.82)');
     ctx.fillStyle=_dBg; roundRect(_dX,_dY,_dW,_dH,6,true,false);
-    ctx.strokeStyle='rgba(50,90,180,0.50)'; ctx.lineWidth=1;
+    // 七進七出 swap 模式：邊框金色高亮
+    if (game._skillMode2) {
+      ctx.strokeStyle = `rgba(255,215,0,${0.7 + 0.3 * Math.sin(Date.now()/200)})`;
+      ctx.lineWidth = 2;
+    } else {
+      ctx.strokeStyle='rgba(50,90,180,0.50)'; ctx.lineWidth=1;
+    }
     roundRect(_dX,_dY,_dW,_dH,6,false,true);
 
     // 標題
-    ctx.fillStyle='#5588bb'; ctx.font='bold 11px "Noto Serif TC",serif';
+    ctx.fillStyle = game._skillMode2 ? '#ffe066' : '#5588bb';
+    ctx.font='bold 11px "Noto Serif TC",serif';
     ctx.textAlign='left'; ctx.textBaseline='top';
-    ctx.fillText(`棄 牌  ${_discards.length}`, _dX+6, _dY+4);
+    ctx.fillText(`棄 牌  ${_discards.length}` + (game._skillMode2 ? '  (點選交換)' : ''), _dX+6, _dY+4);
     ctx.textBaseline='alphabetic';
 
-    // 牌面（橫排，最多顯示一列，比例縮放）
-    const _dScale = 0.40;
-    const _dcW = Math.floor(CONFIG.CARD_W * _dScale);
-    const _dcH = Math.floor(CONFIG.CARD_H * _dScale);
-    const _maxCols = Math.floor((_dW - 8) / (_dcW + 2));
-    const _showD = _discards.slice(-_maxCols * 2);
-    _showD.forEach((card, di) => {
-      const _col = di % _maxCols, _row = Math.floor(di / _maxCols);
-      const _cx = _dX + 4 + _col * (_dcW + 2);
-      const _cy = _dY + 18 + _row * (_dcH + 2);
-      if (_cy + _dcH > _dY + _dH - 2) return;
-      drawCardScaled(_cx, _cy, card, _dScale);
-    });
+    // 堆疊式：每張露 22px 條紋，最新（最後 push）在最上層完整顯示
+    game._discardClickBoxes = [];
     if (_discards.length === 0) {
       ctx.fillStyle='rgba(60,100,180,0.25)'; ctx.font='11px sans-serif';
       ctx.textAlign='center';
       ctx.fillText('—', _dX+_dW/2, _dY+_dH/2+5);
+    } else {
+      const _stripeH = 22;
+      const _dcScale = 0.55;
+      const _dcW = Math.floor(CONFIG.CARD_W * _dcScale);
+      const _dcH = Math.floor(CONFIG.CARD_H * _dcScale);
+      const _availH = _dH - 22;
+      const _maxStack = Math.max(1, Math.floor((_availH - _dcH) / _stripeH) + 1);
+      const _showCount = Math.min(_discards.length, _maxStack);
+      // 從底往上畫（最舊在底、最新在最上層）
+      for (let i = _showCount - 1; i >= 0; i--) {
+        const card = _discards[_discards.length - 1 - i];
+        const _cx = _dX + 6;
+        const _cy = _dY + 20 + i * _stripeH;
+        drawCardScaled(_cx, _cy, card, _dcScale);
+        // 註冊點擊區（露出條紋部分；最上一張為完整卡）
+        const boxH = (i === 0) ? _dcH : _stripeH;
+        game._discardClickBoxes.push({
+          x: _cx, y: _cy, w: _dcW, h: boxH,
+          originalIdx: _discards.length - 1 - i, card,
+        });
+      }
+      // 隱藏的舊牌數量提示
+      if (_discards.length > _showCount) {
+        ctx.fillStyle = 'rgba(80,120,180,0.5)';
+        ctx.font = '10px monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(`+${_discards.length - _showCount}`, _dX + _dW - 4, _dY + _dH - 4);
+      }
     }
   }
 
@@ -4260,9 +4327,11 @@ function drawBattlefield() {
       : '龍膽換位';
     const sk1Active = skillLeft > 0 && curQi >= 4 && game.phase === 'placing';
     drawScrollButton(20, btnY, 185, 40, sk1Label, sk1Active, 'skill');
-    // 技能2：七進七出（需6氣）
-    const sk2Label = '七進七出';
-    const sk2Active = curQi >= 6 && game.phase === 'placing';
+    // 技能2：七進七出（需 5 氣，棄牌堆換牌）
+    const sk2Label = game._skillMode2
+      ? (game._swap2HandCard ? '選棄牌' : '選手牌')
+      : '七進七出';
+    const sk2Active = curQi >= 5 && game.phase === 'placing' && (game.discards?.length || 0) > 0;
     drawScrollButton(213, btnY, 185, 40, sk2Label, sk2Active, 'skill2');
     // 重置
     drawScrollButton(406, btnY, 154, 40, '重置', game.phase === 'placing', 'reset');
@@ -6388,16 +6457,17 @@ function drawLogPanel() {
   });
 }
 
-function drawDiscardPile(x, y, cards, label) {
-  // 棄牌區：2×2 半尺寸牌格，外框等同「兩格牌寬 × 一格牌高」
-  const scale = 0.5;
-  const cW = Math.round(CONFIG.CARD_W * scale);  // 38
-  const cH = Math.round(CONFIG.CARD_H * scale);  // 53
-  const gap = 4;
-  const totalW = cW * 2 + gap;  // 80
-  const totalH = cH * 2 + gap;  // 110
+function drawDiscardPile(x, y, cards, label, pileKey) {
+  // 棄牌區：堆疊式（v0.7 改造）— 卡牌縱向堆疊，每張只露頂部點數+花色，框大小不變
+  const cW = Math.round(CONFIG.CARD_W * 0.55);   // 42
+  const cH = Math.round(CONFIG.CARD_H * 0.55);   // 58
+  const totalW = cW + 6;
+  const totalH = 110;  // 跟原本一樣高
+  const stripeH = 18;  // 每張露出 18px 條紋
+  const maxStack = Math.floor((totalH - cH) / stripeH) + 1;  // 約 3-4 張
+  const showCount = Math.min(cards.length, maxStack);
 
-  // 外框背景
+  // 外框背景（保持跟原本相同尺寸）
   const grad = ctx.createLinearGradient(x, y, x, y + totalH);
   grad.addColorStop(0, 'rgba(40,20,10,0.70)');
   grad.addColorStop(1, 'rgba(20,8,4,0.70)');
@@ -6407,30 +6477,26 @@ function drawDiscardPile(x, y, cards, label) {
   ctx.lineWidth = 1;
   roundRect(x - 3, y - 3, totalW + 6, totalH + 6, 4, false, true);
 
-  // 4 個小凹槽（2 列 × 2 欄）
-  for (let row = 0; row < 2; row++) {
-    for (let col = 0; col < 2; col++) {
-      const cx = x + col * (cW + gap);
-      const cy = y + row * (cH + gap);
-      const sGrad = ctx.createLinearGradient(cx, cy, cx, cy + cH);
-      sGrad.addColorStop(0, '#200606');
-      sGrad.addColorStop(1, '#130303');
-      ctx.fillStyle = sGrad;
-      roundRect(cx, cy, cW, cH, 3, true, false);
-      ctx.strokeStyle = 'rgba(140,90,0,0.3)';
-      ctx.lineWidth = 1;
-      roundRect(cx, cy, cW, cH, 3, false, true);
-    }
-  }
-
-  // 最近 4 張牌（左上=最新，橫排優先）
-  const maxShow = Math.min(cards.length, 4);
-  for (let i = 0; i < maxShow; i++) {
-    const col = i % 2;
-    const row = Math.floor(i / 2);
-    const cx = x + col * (cW + gap);
-    const cy = y + row * (cH + gap);
-    drawCardScaled(cx, cy, cards[cards.length - 1 - i], scale);
+  // 卡片堆疊：第一張在底部最不可見，最新在最上層完整顯示
+  // (cards[length-1] = 最新棄掉的)
+  // 為了讓最新的「最上面」露最多，從底部往上畫
+  game._discardClickBoxes = game._discardClickBoxes || {};
+  game._discardClickBoxes[pileKey || label] = [];
+  
+  for (let i = showCount - 1; i >= 0; i--) {
+    const card = cards[cards.length - 1 - i];
+    // i=0 是最新（最上層），畫在 y+0
+    // i=showCount-1 是最舊，畫在 y+(showCount-1)*stripeH
+    const cy = y + i * stripeH;
+    const cx = x + 3;
+    // 畫卡（縮小版）
+    drawCardScaled(cx, cy, card, 0.55);
+    // 紀錄點擊區（每張只佔露出的 stripe 區，最上一張包含整個露出部分）
+    const boxH = (i === 0) ? cH : stripeH;
+    game._discardClickBoxes[pileKey || label].push({
+      x: cx, y: cy, w: cW, h: boxH,
+      card, originalIdx: cards.length - 1 - i,
+    });
   }
 
   // 計數標籤（右上角）
@@ -7992,11 +8058,30 @@ function handlePlacingButtonClick(mx, my) {
   return false;
 }
 
-// Layer 5b (placing only): 點擊手牌（選/取消選）
+// 七進七出：點擊棄牌堆裡的牌（第二步，完成交換）
+function handleSkill2DiscardClick(mx, my) {
+  if (!game._skillMode2 || !game._swap2HandCard) return false;
+  const boxes = game._discardClickBoxes || [];
+  for (const b of boxes) {
+    if (mx >= b.x && mx <= b.x + b.w && my >= b.y && my <= b.y + b.h) {
+      trySwap2DiscardPick(b.originalIdx);
+      return true;
+    }
+  }
+  return false;
+}
+
+// Layer 5b (placing only): 點擊手牌（選/取消選 / 七進七出第一步）
 function handleHandCardClick(mx, my) {
   for (const c of game.hand) {
     if (c._x !== undefined && mx >= c._x && mx <= c._x + CONFIG.CARD_W &&
         my >= c._y && my <= c._y + CONFIG.CARD_H) {
+      // 七進七出模式 — 選定要交換的手牌
+      if (game._skillMode2) {
+        trySwap2HandPick(c);
+        return true;
+      }
+      // 普通模式：選 / 取消選
       game.selectedCard = (game.selectedCard === c) ? null : c;
       playSound('deal');
       return true;
@@ -8047,6 +8132,7 @@ function handleClick(mx, my) {
   // placing phase 專屬層
   if (game.phase === 'placing') {
     if (handlePlacingButtonClick(mx, my)) return;
+    if (handleSkill2DiscardClick(mx, my)) return;  // 七進七出第二步：點棄牌
     if (handleHandCardClick(mx, my))      return;
     if (handleSkillModeClick(mx, my))     return;
     if (handleRowZoneClick(mx, my))       return;
@@ -8421,8 +8507,8 @@ function HeroesModal({ onClose }) {
   const [selected, setSelected] = useState(null);
   const factionColor = (f) => f === '蜀' ? TT.color.bronze300 : TT.color.crimson400;
   return (
-    <ModalShell title="武 將 圖 鑑" onClose={onClose}>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(2, 1fr)', gap:14 }}>
+    <ModalShell title="武 將 圖 鑑" onClose={onClose} wide={true}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(2, 1fr)', gap:10 }}>
         {HEROES.map(h => (
           <button key={h.id} onClick={() => setSelected(h)} style={{
             position:'relative', padding:0, cursor:'pointer',
@@ -8445,7 +8531,7 @@ function HeroesModal({ onClose }) {
               zIndex: 5,
             }}>{h.faction}</div>
             {/* 立繪 — 戰鬥畫面尺寸（大） */}
-            <div style={{ position:'relative', width:'100%', aspectRatio:'1/1.25', background: TT.color.ink900, overflow:'hidden' }}>
+            <div style={{ position:'relative', width:'100%', aspectRatio:'1/1.55', background: TT.color.ink900, overflow:'hidden' }}>
               <img src={h.portrait} alt={h.name} style={{
                 width:'100%', height:'100%', objectFit:'cover', objectPosition:'center top',
                 display:'block',
@@ -8559,18 +8645,18 @@ function SettingRow({ label, sub, action }) {
 }
 
 // ── Modal 通用外殼 ──────────────────────────────────────────
-function ModalShell({ title, onClose, children }) {
+function ModalShell({ title, onClose, children, wide }) {
   return (
     <div onClick={onClose} style={{
       position:'fixed', inset:0, zIndex:2000,
       background:'rgba(0,0,0,0.85)',
-      display:'flex', alignItems:'center', justifyContent:'center', padding: 20,
+      display:'flex', alignItems:'center', justifyContent:'center', padding: wide ? 8 : 20,
       animation: 'fadeIn 0.18s ease-out',
     }}>
       <div onClick={e => e.stopPropagation()} style={{
         position:'relative',
-        width: 'min(640px, 92vw)', maxHeight: '88vh', overflowY: 'auto',
-        padding: 32,
+        width: wide ? 'min(700px, 98vw)' : 'min(640px, 92vw)', maxHeight: wide ? '94vh' : '88vh', overflowY: 'auto',
+        padding: wide ? 18 : 32,
         background: `linear-gradient(180deg, ${TT.color.ink700}, ${TT.color.ink800})`,
         border: `1px solid ${TT.color.bronze500}`,
         boxShadow: `0 20px 60px rgba(0,0,0,0.8), 0 0 60px rgba(216,167,88,0.15)`,
