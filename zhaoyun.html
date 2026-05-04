@@ -45,10 +45,8 @@
   }
 
   /* === 手機外殼（720×1280）+ 響應式 scale ===
-     v0.7 mobile fix:
-     - 用 absolute centering + translate(-50%,-50%) 取代 body flex 居中（手機 flex+scale 容易出問題）
-     - 用 100dvh（dynamic viewport height）解 mobile 瀏覽器 URL bar 高度動態變化
-     - transform-origin 改為 center 以配合 translate(-50%,-50%) */
+     v0.7 mobile fix v2: scale 改由 JS 算寫入 CSS 變數 --scale
+     原因：CSS min(calc()) 在某些 mobile 瀏覽器 fall back 到 1（不縮），導致超框 */
   .game-frame {
     position: absolute;
     top: 50%; left: 50%;
@@ -60,13 +58,9 @@
       0 0 0 1px #b8893a,
       0 0 80px rgba(216, 167, 88, 0.18),
       0 20px 60px rgba(0,0,0,0.9);
-    /* dvh: dynamic viewport height (mobile 友善，會排除 URL bar) */
-    transform: translate(-50%, -50%) scale(min(
-      calc((100vw - 8px) / 720),
-      calc((100dvh - 8px) / 1280),
-      1
-    ));
+    transform: translate(-50%, -50%) scale(var(--scale, 1));
     transform-origin: center center;
+    will-change: transform;
   }
   .game-frame::after {
     /* 雜訊掃描線 — 史詩感濾鏡 */
@@ -103,6 +97,30 @@
   #menu-root > * { pointer-events: auto; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<script>
+// === Mobile fit: 動態計算 .game-frame 縮放比例 ===
+// 比 CSS min(calc()) 可靠（不依賴 100dvh / min() 的瀏覽器支援）
+(function() {
+  function updateScale() {
+    var el = document.querySelector('.game-frame');
+    if (!el) { setTimeout(updateScale, 50); return; }
+    var vw = window.innerWidth || document.documentElement.clientWidth;
+    var vh = window.innerHeight || document.documentElement.clientHeight;
+    var sx = (vw - 8) / 720;
+    var sy = (vh - 8) / 1280;
+    var scale = Math.min(sx, sy, 1);
+    el.style.setProperty('--scale', String(scale));
+  }
+  window.addEventListener('resize', updateScale, { passive: true });
+  window.addEventListener('orientationchange', function() { setTimeout(updateScale, 100); });
+  if (document.readyState !== 'loading') updateScale();
+  else document.addEventListener('DOMContentLoaded', updateScale);
+  // 多排程幾次確保 mobile URL bar 動態調整後也校正
+  setTimeout(updateScale, 100);
+  setTimeout(updateScale, 500);
+  setTimeout(updateScale, 1500);
+})();
+</script>
 </head>
 <body>
 <div class="game-frame">
