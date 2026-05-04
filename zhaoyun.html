@@ -8015,7 +8015,7 @@ function HeroesModal({ onClose }) {
   const factionColor = (f) => f === '蜀' ? TT.color.bronze300 : TT.color.crimson400;
   return (
     <ModalShell title="武 將 圖 鑑" onClose={onClose} wide={true}>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(2, 1fr)', gap:10 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:8 }}>
         {HEROES.map(h => (
           <button key={h.id} onClick={() => setSelected(h)} style={{
             position:'relative', padding:0, cursor:'pointer',
@@ -8030,15 +8030,15 @@ function HeroesModal({ onClose }) {
           >
             {/* 派系徽章 — top-right 朱印風 */}
             <div style={{
-              position:'absolute', top:6, right:6, width:24, height:24,
-              background: factionColor(h.faction), color: TT.color.ink900, fontSize:14, fontWeight:900,
+              position:'absolute', top:4, right:4, width:20, height:20,
+              background: factionColor(h.faction), color: TT.color.ink900, fontSize:12, fontWeight:900,
               display:'flex', alignItems:'center', justifyContent:'center',
               border:`1.5px solid ${TT.color.bronze100}`, letterSpacing:0,
               boxShadow:'0 2px 4px rgba(0,0,0,0.6)',
               zIndex: 5,
             }}>{h.faction}</div>
             {/* 立繪 — 戰鬥畫面尺寸（大） */}
-            <div style={{ position:'relative', width:'100%', aspectRatio:'1/1.55', background: TT.color.ink900, overflow:'hidden' }}>
+            <div style={{ position:'relative', width:'100%', aspectRatio:'1/1.4', background: TT.color.ink900, overflow:'hidden' }}>
               <img src={h.portrait} alt={h.name} style={{
                 width:'100%', height:'100%', objectFit:'cover', objectPosition:'center top',
                 display:'block',
@@ -8051,10 +8051,9 @@ function HeroesModal({ onClose }) {
               }} />
             </div>
             {/* 文字資訊區 */}
-            <div style={{ padding:'10px 12px 12px' }}>
-              <div style={{ fontFamily:TT.font.display, fontSize:17, color:TT.color.text, letterSpacing:'0.15em', marginBottom:4, fontWeight:700 }}>{h.name}</div>
-              <div style={{ fontSize:11, color:TT.color.textMuted, letterSpacing:'0.1em', lineHeight:1.4, marginBottom:6, minHeight:32 }}>{h.desc}</div>
-              <div style={{ color: factionColor(h.faction), fontSize:11, letterSpacing:'0.05em' }}>
+            <div style={{ padding:'8px 8px 10px' }}>
+              <div style={{ fontFamily:TT.font.display, fontSize:13, color:TT.color.text, letterSpacing:'0.08em', marginBottom:2, fontWeight:700, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{h.name}</div>
+              <div style={{ color: factionColor(h.faction), fontSize:10, letterSpacing:'0', marginTop:2 }}>
                 {'★'.repeat(h.rarity)}{'☆'.repeat(5-h.rarity)}
               </div>
             </div>
@@ -8063,40 +8062,60 @@ function HeroesModal({ onClose }) {
       </div>
       {selected && (
         <div onClick={() => setSelected(null)} style={{
-          position:'fixed', inset:0, zIndex:3000, background:'rgba(0,0,0,0.92)',
-          display:'flex', alignItems:'center', justifyContent:'center', padding:20,
+          position:'fixed', inset:0, zIndex:3000, background:'rgba(0,0,0,0.95)',
+          display:'flex', alignItems:'stretch', justifyContent:'center', padding:8,
         }}>
           <div onClick={e => e.stopPropagation()} style={{
-            position:'relative', maxWidth:520, padding:24,
+            position:'relative', width:'100%', maxWidth: 700, height:'100%',
             background:`linear-gradient(180deg, ${TT.color.ink700}, ${TT.color.ink800})`,
-            border:`1px solid ${factionColor(selected.faction)}`,
-            boxShadow:`0 0 60px ${factionColor(selected.faction)}40`,
+            border:`2px solid ${factionColor(selected.faction)}`,
+            boxShadow:`0 0 80px ${factionColor(selected.faction)}60`,
+            display:'flex', flexDirection:'column', overflow:'hidden',
           }}>
-            <BeastCorner pos="tl" size={28} />
-            <BeastCorner pos="br" size={28} />
+            <BeastCorner pos="tl" size={36} />
+            <BeastCorner pos="tr" size={36} />
+            <BeastCorner pos="bl" size={36} />
+            <BeastCorner pos="br" size={36} />
             <button onClick={() => setSelected(null)} style={{
-              position:'absolute', top:8, right:8, background:'transparent',
-              border:`1px solid ${TT.color.bronze700}`, color:TT.color.bronze400,
-              padding:'2px 10px', cursor:'pointer', fontSize:12, letterSpacing:'0.2em',
-            }}>✕</button>
-            <div style={{ display:'flex', gap:16, marginBottom:16 }}>
+              position:'absolute', top:10, right:10, zIndex:10,
+              background:'rgba(0,0,0,0.6)',
+              border:`1px solid ${TT.color.bronze500}`, color:TT.color.bronze300,
+              padding:'4px 14px', cursor:'pointer', fontSize:14, letterSpacing:'0.3em',
+            }}>✕ 關 閉</button>
+
+            {/* 立繪 — 近全寬大圖，filling top 60% */}
+            <div style={{ position:'relative', width:'100%', height:'58%', background: TT.color.ink900, overflow:'hidden', flexShrink:0 }}>
               <img src={selected.portrait} alt={selected.name} style={{
-                width:140, height:170, objectFit:'cover', objectPosition:'center top',
-                border:`1px solid ${factionColor(selected.faction)}`,
+                width:'100%', height:'100%', objectFit:'cover', objectPosition:'center top',
+                display:'block',
               }} onError={(e) => e.target.style.display='none'} />
-              <div style={{ flex:1 }}>
-                <div style={{ fontSize:11, color: factionColor(selected.faction), letterSpacing:'0.4em', marginBottom:4 }}>
-                  {selected.faction === '蜀' ? '蜀 漢' : '曹 魏'}
-                </div>
-                <div style={{ fontFamily:TT.font.display, fontSize:24, color:TT.color.text, letterSpacing:'0.15em', marginBottom:6 }}>{selected.name}</div>
-                <div style={{ color: factionColor(selected.faction), fontSize:13, letterSpacing:'0.15em', marginBottom:8 }}>{selected.desc}</div>
-                <div style={{ color: TT.color.bronze400, fontSize:14 }}>
-                  {'★'.repeat(selected.rarity)}{'☆'.repeat(5-selected.rarity)}
-                </div>
-              </div>
+              {/* 底部漸層融入 */}
+              <div style={{ position:'absolute', left:0, right:0, bottom:0, height:'45%',
+                background: `linear-gradient(180deg, transparent 0%, ${TT.color.ink800}cc 50%, ${TT.color.ink800} 100%)`,
+                pointerEvents:'none' }} />
+              {/* 派系大徽章 — 左上角 */}
+              <div style={{
+                position:'absolute', top:14, left:14,
+                width:50, height:50,
+                background: factionColor(selected.faction), color: TT.color.ink900,
+                fontSize: 28, fontWeight:900,
+                display:'flex', alignItems:'center', justifyContent:'center',
+                border:`2px solid ${TT.color.bronze100}`,
+                boxShadow:'0 4px 12px rgba(0,0,0,0.7)',
+                fontFamily: TT.font.display,
+              }}>{selected.faction}</div>
             </div>
-            <div style={{ borderTop:`1px solid ${TT.color.bronze900}`, paddingTop:14, color:TT.color.text, fontSize:14, lineHeight:1.9, letterSpacing:'0.05em' }}>
-              {selected.story}
+
+            {/* 文字資訊區 — 下半部 */}
+            <div style={{ flex:1, padding:'18px 24px 24px', overflowY:'auto' }}>
+              <div style={{ fontSize:11, color: factionColor(selected.faction), letterSpacing:'0.5em', marginBottom:6 }}>
+                {selected.faction === '蜀' ? '蜀 漢' : '曹 魏'} · {'★'.repeat(selected.rarity)}{'☆'.repeat(5-selected.rarity)}
+              </div>
+              <div style={{ fontFamily:TT.font.display, fontSize:32, color:TT.color.text, letterSpacing:'0.2em', marginBottom:8, fontWeight:900 }}>{selected.name}</div>
+              <div style={{ color: factionColor(selected.faction), fontSize:15, letterSpacing:'0.18em', marginBottom:14, fontStyle:'italic' }}>「{selected.desc}」</div>
+              <div style={{ borderTop:`1px solid ${TT.color.bronze900}`, paddingTop:14, color:TT.color.text, fontSize:14, lineHeight:1.95, letterSpacing:'0.06em', textAlign:'justify' }}>
+                {selected.story}
+              </div>
             </div>
           </div>
         </div>
