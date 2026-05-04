@@ -3339,7 +3339,9 @@ function drawCharTransition() {
     const slideX = (1 - portA) * 40;
     ctx.save();
     ctx.globalAlpha = portA * 0.92;
-    const _pe = (typeof _PORTRAIT_IMGS !== 'undefined') && _PORTRAIT_IMGS[enemy.name];
+    // v0.7.4: 優先用新 JPG 立繪（_ASSET_IMGS），fallback 才用 base64 _PORTRAIT_IMGS
+    const _pe = _ASSET_IMGS[enemy.name]
+             || ((typeof _PORTRAIT_IMGS !== 'undefined') && _PORTRAIT_IMGS[enemy.name]);
     if (_pe) {
       ctx.drawImage(_pe, W/2 - iW/2 + slideX, H * 0.08, iW, iH);
     } else {
@@ -3696,7 +3698,7 @@ function drawGameOver() {
   ctx.fillStyle = '#ffe680';
   ctx.font = 'bold 40px "Noto Serif TC", serif';
   ctx.textAlign = 'center';
-  ctx.fillText('再  戰  一  場', CONFIG.W/2, btnY + 54);
+  ctx.fillText('返 回 主 選 單', CONFIG.W/2, btnY + 54);
   game._endBtn = { x: btnX, y: btnY, w: btnW, h: btnH };
 }
 
@@ -3787,7 +3789,7 @@ function drawVictory() {
   ctx.fillStyle = '#ffe680';
   ctx.font = 'bold 40px "Noto Serif TC",serif';
   ctx.textAlign = 'center';
-  ctx.fillText('再  戰  一  場', CONFIG.W/2, btnY + 54);
+  ctx.fillText('返 回 主 選 單', CONFIG.W/2, btnY + 54);
   game._endBtn = { x: btnX, y: btnY, w: btnW, h: btnH };
 }
 
@@ -7475,7 +7477,10 @@ function handlePhaseScreenClick(mx, my) {
     return true;
   }
   if (game.phase === 'gameover' || game.phase === 'victory') {
-    if (_hit(game._endBtn, mx, my)) { initGame(); startGame(); }
+    if (_hit(game._endBtn, mx, my)) {
+      // v0.7.4: 遊戲結束點擊 → 回主選單（不直接開新局）
+      initGame();  // initGame 預設 phase='menu'，React 主選單會自動偵測顯示
+    }
     return true;
   }
   if (game.phase === 'reward') {
@@ -7505,8 +7510,9 @@ function handleBattleResultClick(mx, my) {
           // (牌局紀錄已移除，review 動作 no-op)
           playSound('place');
         } else if (_rb.action === 'menu') {
+          // v0.7.4: 結算頁面回主選單按鈕也回 menu，不直接開新局
           game._resBtns = null;
-          initGame(); startGame();
+          initGame();
         }
         return true;
       }
