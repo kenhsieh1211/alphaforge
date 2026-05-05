@@ -3913,9 +3913,9 @@ function drawBattlefield() {
       ctx.drawImage(_ASSET_IMGS.enemyPanelBg, 0, eSectY, CONFIG.W, eSectH);
     } else {
       const eSectBg = ctx.createLinearGradient(0, eSectY, 0, eSectY + eSectH);
-      eSectBg.addColorStop(0, 'rgba(22,8,8,0.97)');
-      eSectBg.addColorStop(0.5, 'rgba(16,6,6,0.95)');
-      eSectBg.addColorStop(1, 'rgba(13,5,5,0.90)');
+      eSectBg.addColorStop(0, '#6a1414');       // CommanderHeader wei 頂色
+      eSectBg.addColorStop(0.5, '#4a0c0c');
+      eSectBg.addColorStop(1, '#3a0808');       // CommanderHeader wei 底色
       ctx.fillStyle = eSectBg;
       ctx.fillRect(0, eSectY, CONFIG.W, eSectH);
       // 頂底金線
@@ -4000,9 +4000,9 @@ function drawBattlefield() {
       ctx.drawImage(_ASSET_IMGS.playerPanelBg, 0, pSectY, CONFIG.W, pSectH);
     } else {
       const pSectBg = ctx.createLinearGradient(0, pSectY, 0, pSectY + pSectH);
-      pSectBg.addColorStop(0, 'rgba(10,15,34,0.97)');
-      pSectBg.addColorStop(0.5, 'rgba(8,12,26,0.95)');
-      pSectBg.addColorStop(1, 'rgba(6,10,20,0.90)');
+      pSectBg.addColorStop(0, '#1a2238');       // CommanderHeader shu 頂色 (steel700)
+      pSectBg.addColorStop(0.5, '#111828');
+      pSectBg.addColorStop(1, '#0d1220');       // CommanderHeader shu 底色
       ctx.fillStyle = pSectBg;
       ctx.fillRect(0, pSectY, CONFIG.W, pSectH);
       // 頂底藍線
@@ -4039,8 +4039,8 @@ function drawBattlefield() {
       ctx.drawImage(_pi2, _pSX, _pSY, _pSW, _pSH, pPX, pPY, pPW, pPH);
       // 右側漸層遮罩
       const fadeG2 = ctx.createLinearGradient(pPX + pPW - 30, 0, pPX + pPW, 0);
-      fadeG2.addColorStop(0, 'rgba(10,15,34,0)');
-      fadeG2.addColorStop(1, 'rgba(10,15,34,0.85)');
+      fadeG2.addColorStop(0, 'rgba(13,18,32,0)');
+      fadeG2.addColorStop(1, 'rgba(13,18,32,0.88)');
       ctx.fillStyle = fadeG2;
       ctx.fillRect(pPX + pPW - 30, pPY, 30, pPH);
       ctx.restore();
@@ -4077,8 +4077,8 @@ function drawBattlefield() {
 
     // 背景板
     const pBgGrad = ctx.createLinearGradient(0, pIY, 0, pIY + pH);
-    pBgGrad.addColorStop(0, 'rgba(10,15,34,0.97)');
-    pBgGrad.addColorStop(1, 'rgba(8,12,28,0.95)');
+    pBgGrad.addColorStop(0, '#1a2238');     // steel700
+    pBgGrad.addColorStop(1, '#0d1220');     // 底色
     ctx.fillStyle = pBgGrad;
     ctx.fillRect(0, pIY, CONFIG.W, pH);
     // 頂部金線
@@ -4136,12 +4136,14 @@ function drawBattlefield() {
         if (qi2 < _qi) {
           const pulse3 = qi2 === _qi - 1 ? (0.85 + 0.15 * Math.sin(_t2 * 3)) : 1;
           const cg = ctx.createLinearGradient(cellX, qbY, cellX, qbY + qbH);
-          cg.addColorStop(0, `rgba(100,190,255,${pulse3})`);
-          cg.addColorStop(1, `rgba(20,70,180,${pulse3})`);
+          // ChiMeter filled: #8ec5ff → #3a7ad9 → #1a3a7a
+          cg.addColorStop(0,   `rgba(142,197,255,${pulse3})`);  // #8ec5ff
+          cg.addColorStop(0.6, `rgba(58,122,217,${pulse3})`);   // #3a7ad9
+          cg.addColorStop(1,   `rgba(26,58,122,${pulse3})`);    // #1a3a7a
           ctx.fillStyle = cg;
           roundRect(cellX, qbY + 1, qCellW, qbH - 2, 1.5, true, false);
         } else {
-          ctx.fillStyle = 'rgba(8,16,40,0.55)';
+          ctx.fillStyle = 'rgba(58,77,122,0.18)';  // ChiMeter empty cell
           roundRect(cellX, qbY + 1, qCellW, qbH - 2, 1.5, true, false);
         }
       }
@@ -4350,12 +4352,16 @@ function drawBattlefield() {
     ctx.textBaseline = 'alphabetic';
     ctx.shadowBlur = 0;
   } else {
-    const msgGrad = ctx.createLinearGradient(0, msgTop, 0, msgBottom);
-    msgGrad.addColorStop(0, 'rgba(0,0,0,0.85)');
-    msgGrad.addColorStop(1, 'rgba(0,0,0,0.7)');
+    // TurnBanner 風格：朱紅（左/敵方）→ 鋼藍（右/玩家方）水平漸層
+    const msgGrad = ctx.createLinearGradient(0, msgTop, CONFIG.W, msgTop);
+    msgGrad.addColorStop(0,    '#3a0808');
+    msgGrad.addColorStop(0.25, '#5a1414');
+    msgGrad.addColorStop(0.5,  '#2a1818');
+    msgGrad.addColorStop(0.75, '#1a2238');
+    msgGrad.addColorStop(1,    '#0d1220');
     ctx.fillStyle = msgGrad;
     ctx.fillRect(0, msgTop, CONFIG.W, L.MSG_H);
-    ctx.strokeStyle = 'rgba(217, 181, 88, 0.4)';
+    ctx.strokeStyle = '#b8893a';  // bronze500
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(0, msgTop); ctx.lineTo(CONFIG.W, msgTop);
