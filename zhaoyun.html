@@ -3923,6 +3923,8 @@ function drawBattlefield() {
       ctx.beginPath(); ctx.moveTo(0, eSectY); ctx.lineTo(CONFIG.W, eSectY); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(0, eSectY + eSectH); ctx.lineTo(CONFIG.W, eSectY + eSectH); ctx.stroke();
     }
+    // 敵方區塊頂部 CloudBar 雲紋分隔
+    drawCloudBar(0, eSectY, CONFIG.W);
     // 行分隔虛線（永遠疊上去）
     ctx.strokeStyle = 'rgba(100,25,15,0.28)'; ctx.lineWidth = 0.7;
     ctx.setLineDash([4, 6]);
@@ -3930,6 +3932,8 @@ function drawBattlefield() {
       ctx.beginPath(); ctx.moveTo(L.PORTRAIT_W, eSectY + dy - 50); ctx.lineTo(CONFIG.W, eSectY + dy - 50); ctx.stroke();
     });
     ctx.setLineDash([]);
+    // 敵方區塊底部 CloudBar
+    drawCloudBar(0, eSectY + eSectH - 14, CONFIG.W);
 
   }
 
@@ -4010,6 +4014,8 @@ function drawBattlefield() {
       ctx.beginPath(); ctx.moveTo(0, pSectY); ctx.lineTo(CONFIG.W, pSectY); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(0, pSectY + pSectH); ctx.lineTo(CONFIG.W, pSectY + pSectH); ctx.stroke();
     }
+    // 玩家區塊頂部 CloudBar 雲紋分隔
+    drawCloudBar(0, pSectY, CONFIG.W);
     // 行分隔虛線（永遠疊上去）
     ctx.strokeStyle = 'rgba(30,55,130,0.28)'; ctx.lineWidth = 0.7;
     ctx.setLineDash([4, 6]);
@@ -4017,6 +4023,8 @@ function drawBattlefield() {
       ctx.beginPath(); ctx.moveTo(L.PORTRAIT_W, pSectY + dy); ctx.lineTo(CONFIG.W, pSectY + dy); ctx.stroke();
     });
     ctx.setLineDash([]);
+    // 玩家區塊底部 CloudBar
+    drawCloudBar(0, pSectY + pSectH - 14, CONFIG.W);
   }
 
   // === 玩家大圖立繪（整欄填滿）===
@@ -4091,26 +4099,85 @@ function drawBattlefield() {
     ctx.beginPath(); ctx.moveTo(0, pIY); ctx.lineTo(CONFIG.W, pIY); ctx.stroke();
     ctx.strokeStyle = 'rgba(180,140,50,0.15)'; ctx.lineWidth = 0.7;
     ctx.beginPath(); ctx.moveTo(0, pIY + 3); ctx.lineTo(CONFIG.W, pIY + 3); ctx.stroke();
+    // 底部金線
+    ctx.strokeStyle = pTopLine; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, pIY + pH - 0.5); ctx.lineTo(CONFIG.W, pIY + pH - 0.5); ctx.stroke();
+    // 四角獸首角飾
+    drawBeastCorner(0,        pIY,      'tl', 28);
+    drawBeastCorner(CONFIG.W, pIY,      'tr', 28);
+    drawBeastCorner(0,        pIY + pH, 'bl', 28);
+    drawBeastCorner(CONFIG.W, pIY + pH, 'br', 28);
 
     // 三段佈局
     const secW = CONFIG.W / 3;
 
-    // ── 段一：♥ 兵力（血條全寬獨佔一列）──
+    // ── 段一：♥ 兵力（HpBar 設計：朱漆血條 + HeartIcon + 條紋光澤）──
     {
       const hpBarX = 8, hpBarY = pIY + 4, hpBarW = CONFIG.W - 16, hpBarH = 18;
-      // 標籤
-      ctx.fillStyle = '#ff6666'; ctx.font = 'bold 13px sans-serif';
+      const _hpPct = Math.max(0, Math.min(1, game.playerHp / CONFIG.PLAYER_MAX_HP));
+      // HeartIcon（canvas 心形路徑）
+      ctx.save();
+      ctx.translate(hpBarX + 13, hpBarY + hpBarH/2);
+      const _hr = 10;
+      ctx.fillStyle = '#c41e1e'; ctx.strokeStyle = '#5a0c0c'; ctx.lineWidth = 0.6;
+      ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 2;
+      ctx.beginPath();
+      ctx.moveTo(0,  _hr*0.9);
+      ctx.bezierCurveTo(-_hr*0.3, _hr*0.5,   -_hr,        _hr*0.1,  -_hr, -_hr*0.3);
+      ctx.bezierCurveTo(-_hr,     -_hr*0.85, -_hr*0.5,    -_hr,       0,  -_hr*0.55);
+      ctx.bezierCurveTo( _hr*0.5, -_hr,       _hr,        -_hr*0.85, _hr,  -_hr*0.3);
+      ctx.bezierCurveTo( _hr,      _hr*0.1,   _hr*0.3,    _hr*0.5,    0,   _hr*0.9);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.shadowBlur = 0; ctx.restore();
+      // HP 數值（米金 / 暗金 / 淡金分色）
       ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-      ctx.fillText('♥ 兵力', hpBarX, hpBarY + hpBarH/2);
-      // HP 數值（右側）
-      ctx.fillStyle = '#aaffaa'; ctx.font = 'bold 12px monospace';
-      ctx.textAlign = 'right';
-      ctx.fillText(`${game.playerHp} / ${CONFIG.PLAYER_MAX_HP}`, CONFIG.W - 8, hpBarY + hpBarH/2);
+      ctx.fillStyle = '#e8d8b0';
+      ctx.font = 'bold 14px "Noto Serif TC", serif';
+      ctx.fillText(String(game.playerHp), hpBarX + 28, hpBarY + hpBarH/2);
+      const _nW = ctx.measureText(String(game.playerHp)).width;
+      ctx.fillStyle = '#7a6240'; ctx.font = '13px "Noto Serif TC", serif';
+      ctx.fillText(' / ', hpBarX + 28 + _nW, hpBarY + hpBarH/2);
+      const _sW = ctx.measureText(' / ').width;
+      ctx.fillStyle = '#b89866';
+      ctx.fillText(String(CONFIG.PLAYER_MAX_HP), hpBarX + 28 + _nW + _sW, hpBarY + hpBarH/2);
       ctx.textBaseline = 'alphabetic';
-      // HP bar（標籤之後，留出文字空間）
-      const hpTextW = 64;
-      drawScrollBar(hpBarX + hpTextW, hpBarY + 2, hpBarW - hpTextW * 2, hpBarH - 4,
-                    game.playerHp, CONFIG.PLAYER_MAX_HP, '#5cd965', '#2c8c30');
+      // 血條軌道（ink900 底 + bronze900 邊框）
+      const _bX = hpBarX + 96, _bW = hpBarW - 100;
+      const _bY = hpBarY + 3,  _bH = hpBarH - 6;
+      ctx.fillStyle = '#06070a'; ctx.strokeStyle = '#3a2a10'; ctx.lineWidth = 1;
+      ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 2; ctx.shadowOffsetY = 1;
+      ctx.fillRect(_bX, _bY, _bW, _bH);
+      ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+      ctx.strokeRect(_bX, _bY, _bW, _bH);
+      // 血條填充（朱漆漸層 #d94c4c → #c41e1e → #5a0c0c）
+      if (_hpPct > 0) {
+        const _fW = Math.max(0, (_bW-2) * _hpPct);
+        const _fg = ctx.createLinearGradient(_bX+1, _bY+1, _bX+1, _bY+_bH-1);
+        _fg.addColorStop(0,   '#d94c4c');
+        _fg.addColorStop(0.5, '#c41e1e');
+        _fg.addColorStop(1,   '#5a0c0c');
+        ctx.fillStyle = _fg;
+        ctx.fillRect(_bX+1, _bY+1, _fW, _bH-2);
+        // 頂部反光
+        ctx.fillStyle = 'rgba(255,150,150,0.35)';
+        ctx.fillRect(_bX+1, _bY+1, _fW, Math.max(1, (_bH-2)*0.35));
+        // 條紋光澤（-45° 斜線）
+        ctx.save();
+        ctx.beginPath(); ctx.rect(_bX+1, _bY+1, _fW, _bH-2); ctx.clip();
+        ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 5;
+        for (let _si = -_bH*2; _si < _fW+_bH; _si += 10) {
+          ctx.beginPath();
+          ctx.moveTo(_bX+1+_si, _bY+1);
+          ctx.lineTo(_bX+1+_si+_bH, _bY+_bH); ctx.stroke();
+        }
+        ctx.restore();
+        // 低血外框 glow 警示
+        if (_hpPct < 0.3) {
+          ctx.shadowColor = 'rgba(196,30,30,0.5)'; ctx.shadowBlur = 8;
+          ctx.strokeStyle = 'rgba(196,30,30,0.75)'; ctx.lineWidth = 1.2;
+          ctx.strokeRect(_bX, _bY, _bW, _bH); ctx.shadowBlur = 0;
+        }
+      }
     }
     // 分隔線
     ctx.strokeStyle = 'rgba(180,140,50,0.22)'; ctx.lineWidth = 0.8;
@@ -4306,15 +4373,15 @@ function drawBattlefield() {
       ? (game._swapFirst ? '選第二張' : '選第一張')
       : '龍膽換位';
     const sk1Active = skillLeft > 0 && curQi >= 4 && game.phase === 'placing';
-    drawScrollButton(20, btnY, 185, 40, sk1Label, sk1Active, 'skill');
+    drawCapsuleBtn(20,  btnY, 185, 44, sk1Label,  'dragon',  sk1Active,                'skill');
     // 技能2：七進七出（需 5 氣，棄牌堆換牌）
     const sk2Label = game._skillMode2
       ? (game._swap2HandCard ? '選棄牌' : '選手牌')
       : '七進七出';
     const sk2Active = curQi >= 5 && game.phase === 'placing' && (game.discards?.length || 0) > 0;
-    drawScrollButton(213, btnY, 185, 40, sk2Label, sk2Active, 'skill2');
-    // 重置
-    drawScrollButton(406, btnY, 154, 40, '重置', game.phase === 'placing', 'reset');
+    drawCapsuleBtn(213, btnY, 185, 44, sk2Label,  'horse',   sk2Active,                'skill2');
+    // 重置（膠囊：佔滿剩餘寬度）
+    drawCapsuleBtn(406, btnY, 294, 44, '重置',    'refresh', game.phase === 'placing', 'reset');
   }
 
   // 主選單按鈕（取代之前的牌局紀錄按鈕位置）
@@ -5334,6 +5401,202 @@ function drawScrollButton(x, y, w, h, label, enabled, key) {
   game._buttons[key] = { x, y, w, h };
 }
 
+// ─────────────────────────────────────────────────────────────────────
+// 設計系統 Canvas 函數（移植自 Battle upgrade / ornaments / battle-buttons）
+// ─────────────────────────────────────────────────────────────────────
+
+/**
+ * drawBeastCorner(x, y, pos, size)
+ * pos: 'tl'|'tr'|'bl'|'br'
+ * 在指定角落畫獸首回紋雷紋 + 鉚釘裝飾（56px 原尺寸，等比縮放）
+ */
+function drawBeastCorner(x, y, pos, size) {
+  ctx.save();
+  const s = (size || 40) / 56;
+  ctx.translate(x, y);
+  if      (pos === 'tr') ctx.rotate(Math.PI / 2);
+  else if (pos === 'bl') ctx.rotate(-Math.PI / 2);
+  else if (pos === 'br') ctx.rotate(Math.PI);
+  ctx.scale(s, s);
+  // 外回紋金色漸層
+  const _bcg = ctx.createLinearGradient(0, 0, 40, 40);
+  _bcg.addColorStop(0,   '#fff0b8');  // bronze100
+  _bcg.addColorStop(0.4, '#d9b558'); // bronze400
+  _bcg.addColorStop(1,   '#7a5a22'); // bronze700
+  ctx.fillStyle = _bcg; ctx.globalAlpha = 0.92;
+  // 外 L 形回紋
+  ctx.beginPath();
+  ctx.moveTo(2,2); ctx.lineTo(26,2); ctx.lineTo(26,6);
+  ctx.lineTo(6,6); ctx.lineTo(6,12); ctx.lineTo(10,12);
+  ctx.lineTo(10,8); ctx.lineTo(22,8); ctx.lineTo(22,14);
+  ctx.lineTo(14,14); ctx.lineTo(14,16); ctx.lineTo(2,16);
+  ctx.closePath(); ctx.fill();
+  // 內 L 形回紋
+  ctx.beginPath();
+  ctx.moveTo(2,2); ctx.lineTo(2,26); ctx.lineTo(6,26);
+  ctx.lineTo(6,12); ctx.lineTo(8,12); ctx.lineTo(8,22);
+  ctx.lineTo(14,22); ctx.lineTo(14,18); ctx.lineTo(16,18);
+  ctx.lineTo(16,26); ctx.lineTo(2,26);
+  ctx.closePath(); ctx.fill();
+  ctx.globalAlpha = 1;
+  // 延伸線
+  ctx.strokeStyle = '#b8893a'; ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(28, 2); ctx.lineTo(34, 2);
+  ctx.moveTo(2, 28); ctx.lineTo(2, 34);
+  ctx.stroke();
+  // 鉚釘
+  const _rg = ctx.createRadialGradient(3.5,3.5,0, 3.5,3.5,3.5);
+  _rg.addColorStop(0,   '#fff0b8');
+  _rg.addColorStop(0.5, '#d9b558');
+  _rg.addColorStop(1,   '#3a2a10');
+  ctx.fillStyle = _rg;
+  ctx.beginPath(); ctx.arc(3.5,3.5,2.2,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#06070a';
+  ctx.beginPath(); ctx.arc(3.5,3.5,0.7,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+/**
+ * drawCloudBar(x, y, w)
+ * 橫向正弦波雲紋分隔線（移植自 CloudBar 元件）
+ */
+function drawCloudBar(x, y, w) {
+  ctx.save();
+  ctx.strokeStyle = '#3a2a10'; ctx.lineWidth = 0.6;
+  ctx.beginPath(); ctx.moveTo(x, y+7); ctx.lineTo(x+w, y+7); ctx.stroke();
+  ctx.strokeStyle = '#b8893a'; ctx.lineWidth = 1.0;
+  ctx.beginPath();
+  ctx.moveTo(x, y+7);
+  for (let _px = 0; _px <= w; _px += 2) {
+    const _py = y + 7 + Math.sin((_px / 40) * Math.PI) * 3.5;
+    ctx.lineTo(x + _px, _py);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+/**
+ * drawCapsuleBtn(x, y, w, h, label, icon, enabled, key)
+ * 膠囊形技能按鈕：左側金徽章 + 圓角邊框 + steel-ink 漸層
+ * icon: 'dragon'|'horse'|'refresh'
+ */
+function drawCapsuleBtn(x, y, w, h, label, icon, enabled, key) {
+  const _hov = enabled &&
+    mousePos.x >= x && mousePos.x <= x+w &&
+    mousePos.y >= y && mousePos.y <= y+h;
+  ctx.save();
+  const _r = h / 2;
+  // 外陰影
+  if (enabled) {
+    ctx.shadowColor = _hov ? 'rgba(216,167,88,0.5)' : 'rgba(0,0,0,0.55)';
+    ctx.shadowBlur = _hov ? 20 : 9;
+    ctx.shadowOffsetY = _hov ? 0 : 3;
+  }
+  // 主體漸層
+  const _bg = ctx.createLinearGradient(x, y, x, y+h);
+  if (!enabled)    { _bg.addColorStop(0,'#13151c'); _bg.addColorStop(1,'#0d0e12'); }
+  else if (_hov)   { _bg.addColorStop(0,'#1a2238'); _bg.addColorStop(1,'#0d0e12'); }
+  else             { _bg.addColorStop(0,'#13151c'); _bg.addColorStop(1,'#0d0e12'); }
+  ctx.fillStyle = _bg;
+  roundRect(x, y, w, h, _r, true, false);
+  ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+  // 外框
+  ctx.strokeStyle = (_hov && enabled) ? '#d9b558' : (enabled ? '#7a5a22' : '#3a2a10');
+  ctx.lineWidth   = (_hov && enabled) ? 1.8 : 1.5;
+  roundRect(x, y, w, h, _r, false, true);
+  // 內側細線（啟用態）
+  if (enabled) {
+    ctx.strokeStyle = 'rgba(255,220,150,0.18)'; ctx.lineWidth = 0.8;
+    roundRect(x+4, y+3, w-8, h-6, _r-2, false, true);
+  }
+  // 頂部光澤
+  if (enabled) {
+    const _sh = ctx.createLinearGradient(x, y, x, y+h*0.45);
+    _sh.addColorStop(0, 'rgba(255,220,150,0.1)');
+    _sh.addColorStop(1, 'rgba(255,220,150,0)');
+    ctx.fillStyle = _sh;
+    roundRect(x+1, y+1, w-2, h*0.45, _r, true, false);
+  }
+  // 徽章
+  const _bSz = h - 6;
+  _drawBadgeIcon(x+4, y+3, _bSz, icon, enabled, _hov);
+  // 文字
+  ctx.fillStyle = enabled ? (_hov ? '#fff0b8' : '#e8d8b0') : '#7a6240';
+  ctx.font = `bold ${h <= 44 ? 17 : 20}px "Noto Serif TC", serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 3;
+  const _tCX = x + _bSz + 8 + (w - _bSz - 10) / 2;
+  ctx.fillText(label, _tCX, y + h/2);
+  ctx.shadowBlur = 0; ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+  ctx.restore();
+  game._buttons = game._buttons || {};
+  game._buttons[key] = { x, y, w, h };
+}
+
+/**
+ * _drawBadgeIcon(x, y, size, kind, enabled, hov)
+ * 膠囊按鈕左側金徽章（龍膽/七進七出/重置）
+ */
+function _drawBadgeIcon(x, y, size, kind, enabled, hov) {
+  ctx.save();
+  const _cx = x + size/2, _cy = y + size/2, _r = size/2;
+  ctx.globalAlpha = enabled ? 1 : 0.45;
+  // 外金圈
+  const _og = ctx.createRadialGradient(_cx-_r*0.3, _cy-_r*0.3, 0, _cx, _cy, _r);
+  _og.addColorStop(0, '#fff0b8'); _og.addColorStop(0.4,'#d9b558'); _og.addColorStop(1,'#7a5a22');
+  ctx.fillStyle = _og;
+  ctx.beginPath(); ctx.arc(_cx,_cy,_r,0,Math.PI*2); ctx.fill();
+  // 內墨底
+  const _ig = ctx.createRadialGradient(_cx,_cy,0, _cx,_cy,_r*0.85);
+  _ig.addColorStop(0,'#2a1808'); _ig.addColorStop(1,'#0a0805');
+  ctx.fillStyle = _ig;
+  ctx.beginPath(); ctx.arc(_cx,_cy,_r*0.85,0,Math.PI*2); ctx.fill();
+  // 虛線環（雷紋環）
+  ctx.strokeStyle = '#7a5a22'; ctx.lineWidth = 0.4; ctx.globalAlpha *= 0.7;
+  ctx.setLineDash([2,1.5]);
+  ctx.beginPath(); ctx.arc(_cx,_cy,_r*0.93,0,Math.PI*2); ctx.stroke();
+  ctx.setLineDash([]); ctx.globalAlpha = enabled ? 1 : 0.45;
+  // 中央圖案
+  ctx.strokeStyle = hov ? '#fff0b8' : '#d9b558';
+  ctx.fillStyle   = hov ? '#fff0b8' : '#d9b558';
+  ctx.lineWidth = Math.max(1, _r*0.12); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const _s = _r * 0.48;
+  if (kind === 'dragon' || kind === 'skill') {
+    // 龍膽：簡化龍形曲線
+    ctx.beginPath();
+    ctx.moveTo(_cx-_s*0.9, _cy+_s*0.3);
+    ctx.quadraticCurveTo(_cx-_s*0.9, _cy-_s,    _cx,       _cy-_s);
+    ctx.quadraticCurveTo(_cx+_s*1.1, _cy-_s,    _cx+_s*1.1, _cy-_s*0.2);
+    ctx.quadraticCurveTo(_cx+_s*1.1, _cy+_s*0.4, _cx+_s*0.5, _cy+_s*0.4);
+    ctx.quadraticCurveTo(_cx+_s*0.15, _cy+_s*0.4, _cx+_s*0.15, _cy);
+    ctx.stroke();
+    ctx.beginPath(); ctx.arc(_cx+_s*0.55, _cy-_s*0.65, _r*0.08, 0, Math.PI*2); ctx.fill();
+  } else if (kind === 'horse' || kind === 'skill2') {
+    // 七進七出：馬蹄形
+    ctx.beginPath();
+    ctx.moveTo(_cx-_s*0.45, _cy+_s);
+    ctx.lineTo(_cx-_s*0.45, _cy-_s*0.25);
+    ctx.quadraticCurveTo(_cx-_s*0.45, _cy-_s, _cx, _cy-_s);
+    ctx.lineTo(_cx+_s*0.4, _cy-_s);
+    ctx.lineTo(_cx+_s*0.8, _cy-_s*0.3);
+    ctx.lineTo(_cx+_s*0.8, _cy+_s);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(_cx+_s*0.85, _cy-_s); ctx.lineTo(_cx+_s*0.62, _cy-_s*1.35); ctx.stroke();
+  } else {
+    // 重置：圓弧箭頭
+    ctx.beginPath();
+    ctx.arc(_cx, _cy, _s*0.88, -0.3, Math.PI*1.55); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(_cx+_s*0.82, _cy-_s*0.35);
+    ctx.lineTo(_cx+_s*0.82, _cy+_s*0.38);
+    ctx.lineTo(_cx+_s*0.22, _cy); ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
+
+
 // 關卡進度指示（頂端中央）
 // drawStageIndicator() — 已移除（TODO-F：之前 disable 的 dead code，函數本體 200+ 行刪除）
 
@@ -6154,6 +6417,16 @@ function drawRow(rowKey, y, cards, cap, label, isEnemy) {
     }
     ctx.fillStyle = slotGrad;
     roundRect(cx, y, CONFIG.CARD_W, CONFIG.CARD_H, 4, true, false);
+    // 空槽青銅圓形水印（移植自 LaneSlot 設計）
+    if (slotEmpty) {
+      const _wCX = cx + CONFIG.CARD_W/2, _wCY = y + CONFIG.CARD_H/2;
+      ctx.strokeStyle = isEnemy ? 'rgba(106,20,20,0.45)' : 'rgba(26,34,56,0.55)';
+      ctx.lineWidth = 0.6;
+      ctx.beginPath(); ctx.arc(_wCX, _wCY, CONFIG.CARD_W*0.32, 0, Math.PI*2); ctx.stroke();
+      ctx.strokeStyle = isEnemy ? 'rgba(106,20,20,0.3)' : 'rgba(26,34,56,0.38)';
+      ctx.lineWidth = 0.4;
+      ctx.beginPath(); ctx.arc(_wCX, _wCY, CONFIG.CARD_W*0.19, 0, Math.PI*2); ctx.stroke();
+    }
 
     // 內陰影
     ctx.strokeStyle = 'rgba(0,0,0,0.4)';
@@ -6209,24 +6482,42 @@ function drawRow(rowKey, y, cards, cap, label, isEnemy) {
     const lw = CONFIG.LAYOUT.ROW_LABEL_W;
     const ly = y;
     const lh = CONFIG.CARD_H;
-    // 背景
+    // 背景（設計系統配色）
     const sealBg = ctx.createLinearGradient(lx, ly, lx, ly + lh);
     if (isEnemy) {
-      sealBg.addColorStop(0, 'rgba(120,15,6,0.92)');
-      sealBg.addColorStop(1, 'rgba(70,6,2,0.88)');
+      sealBg.addColorStop(0, '#3a0808');
+      sealBg.addColorStop(0.5, '#250404');
+      sealBg.addColorStop(1, '#1a0202');
     } else {
-      sealBg.addColorStop(0, 'rgba(15,40,95,0.92)');
-      sealBg.addColorStop(1, 'rgba(8,22,60,0.88)');
+      sealBg.addColorStop(0, '#1a2238');
+      sealBg.addColorStop(0.5, '#101828');
+      sealBg.addColorStop(1, '#0d1220');
     }
     ctx.fillStyle = sealBg;
     ctx.fillRect(lx, ly, lw, lh);
-    // 右側細分隔線
-    ctx.strokeStyle = isEnemy ? 'rgba(200,70,20,0.5)' : 'rgba(50,100,200,0.5)';
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(lx + lw, ly); ctx.lineTo(lx + lw, ly + lh); ctx.stroke();
-    // 文字
-    ctx.fillStyle = isEnemy ? '#ffccaa' : '#aaccff';
-    ctx.font = 'bold 14px "Noto Serif TC", serif';
+    // 左側 accent 光帶
+    const _ab = ctx.createLinearGradient(lx, ly, lx, ly+lh);
+    _ab.addColorStop(0, 'transparent');
+    _ab.addColorStop(0.5, isEnemy ? 'rgba(196,30,30,0.75)' : '#b8893a');
+    _ab.addColorStop(1, 'transparent');
+    ctx.fillStyle = _ab; ctx.fillRect(lx, ly, 2, lh);
+    // 右側 bronze 分隔線
+    ctx.strokeStyle = '#7a5a22'; ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.moveTo(lx+lw, ly); ctx.lineTo(lx+lw, ly+lh); ctx.stroke();
+    // 頂底細金線
+    ctx.strokeStyle = 'rgba(184,137,58,0.38)'; ctx.lineWidth = 0.6;
+    ctx.beginPath(); ctx.moveTo(lx, ly);    ctx.lineTo(lx+lw, ly);    ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(lx, ly+lh); ctx.lineTo(lx+lw, ly+lh); ctx.stroke();
+    // 中央菱形裝飾
+    const _dmX = lx+lw/2, _dmY = ly+lh/2 - 14;
+    ctx.fillStyle = isEnemy ? 'rgba(196,30,30,0.6)' : 'rgba(184,137,58,0.55)';
+    ctx.beginPath();
+    ctx.moveTo(_dmX, _dmY-4); ctx.lineTo(_dmX+4, _dmY);
+    ctx.lineTo(_dmX, _dmY+4); ctx.lineTo(_dmX-4, _dmY);
+    ctx.closePath(); ctx.fill();
+    // 文字（bronze300）
+    ctx.fillStyle = '#f0c560';
+    ctx.font = 'bold 13px "Noto Serif TC", serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.shadowColor = isEnemy ? 'rgba(200,30,10,0.6)' : 'rgba(30,80,200,0.6)';
